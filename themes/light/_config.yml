@@ -1,0 +1,31 @@
+menu:
+  Home: /
+#  Archives: /archives
+  About: /about
+  Feedback: /feedback
+
+widgets: 
+#- search
+- category
+- tag
+- recent_posts
+
+excerpt_link: 全文
+
+twitter:
+  username:
+  show_replies: false
+  tweet_count: 5
+
+addthis:
+#  enable: true
+  pubid:
+  facebook: true
+  twitter: true
+  google: true
+  pinterest: true
+
+fancybox: true
+
+google_analytics:
+rss:
