@@ -1,4 +1,5 @@
 title: Feedback
+layout: page
 date: 2012-03-11 12:37:16
 ---
 

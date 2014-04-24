@@ -3,8 +3,8 @@
 ## Source: https://github.com/tommy351/hexo/
 
 # Site
-title: Jim Liu's Life Blog
-subtitle: Again, Jim Liu's Life Blog
+title: Jim Liu's Blog
+subtitle: Again, Jim Liu's Blog
 description:
 author: Jim Liu
 email:
@@ -12,7 +12,7 @@ language: zh-CN
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: http://life.blog.jimliu.net
+url: http://jimliu.net
 root: /
 permalink: :year/:month/:day/:title/
 tag_dir: tags
@@ -35,7 +35,7 @@ highlight:
   tab_replace:
 
 # Category & Tag
-default_category: uncategorized
+default_category: 未分类
 category_map:
 tag_map:
 
@@ -51,7 +51,7 @@ tag: 2
 ## Hexo uses Connect as a server
 ## You can customize the logger format as defined in
 ## http://www.senchalabs.org/connect/logger.html
-port: 4000
+port: 8099
 logger: false
 logger_format:
 
@@ -84,3 +84,4 @@ plugins:
 deploy:
   type: github
   repository: https://github.com/LiuJi-Jim/life-blog.git
+  #repository: https://github.com/LiuJi-Jim/blog.git

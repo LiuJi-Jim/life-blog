@@ -1,9 +1,11 @@
 {
+  "main": "app.js",
   "name": "hexo",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "private": true,
   "dependencies": {
-    "hexo-migrator-wordpress": "0.0.6",
-    "hexo-generator-feed": "0.0.10"
+    "express": "~3.0.0",
+    "hexo-migrator-wordpress": "*",
+    "hexo-generator-feed": "*"
   }
 }

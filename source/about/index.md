@@ -1,16 +1,15 @@
 title: About Jim
+layout: page
 date: 2012-03-05 13:23:12
 ---
 
-[![](http://jimliu.net/wp-content/uploads/2012/03/猪头180x180-150x150.jpg "猪头180x180")](http://jimliu.net/wp-content/uploads/2012/03/猪头180x180.jpg)
+[![](/uploads/2012/03/Pig.180x180-150x150.jpg "猪头180x180")](/uploads/2012/03/Pig.180x180.jpg)
 
 大名：刘骥
 
 洋名：Jim
 
 花名：吉姆、吉姆刘、吉姆牛、骥母牛、母牛、刘指导……
-
-技术博客：[http://jimliu.net](http://jimliu.net)
 
 旧博客：[http://jimnox.cnblogs.com](http://jimnox.cnblogs.com)
 

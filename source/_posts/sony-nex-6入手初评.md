@@ -72,14 +72,14 @@ tags:
 
 真没怎么拍……两张夜景是1650拍的，其他是35。
 
-[![水立方](http://jimliu.net/wp-content/uploads/2013/01/DSC00908-150x150.jpg)](http://jimliu.net/wp-content/uploads/2013/01/DSC00908.jpg)
+[![水立方](/uploads/2013/01/DSC00908-150x150.jpg)](/uploads/2013/01/DSC00908.jpg)
 
-[![小玩具](http://jimliu.net/wp-content/uploads/2013/01/DSC00975-s2-150x150.jpg)](http://jimliu.net/wp-content/uploads/2013/01/DSC00975-s2.jpg)
+[![小玩具](/uploads/2013/01/DSC00975-s2-150x150.jpg)](/uploads/2013/01/DSC00975-s2.jpg)
 
-[![演出](http://jimliu.net/wp-content/uploads/2013/01/DSC00783-150x150.jpg)](http://jimliu.net/wp-content/uploads/2013/01/DSC00783.jpg)
+[![演出](/uploads/2013/01/DSC00783-150x150.jpg)](/uploads/2013/01/DSC00783.jpg)
 
-[![夜景](http://jimliu.net/wp-content/uploads/2013/01/DSC00157-s-150x150.jpg)](http://jimliu.net/wp-content/uploads/2013/01/DSC00157-s.jpg)
+[![夜景](/uploads/2013/01/DSC00157-s-150x150.jpg)](/uploads/2013/01/DSC00157-s.jpg)
 
-[![香水](http://jimliu.net/wp-content/uploads/2013/01/DSC00295-s-150x150.jpg)](http://jimliu.net/wp-content/uploads/2013/01/DSC00295-s.jpg)
+[![香水](/uploads/2013/01/DSC00295-s-150x150.jpg)](/uploads/2013/01/DSC00295-s.jpg)
 
-[![小孩](http://jimliu.net/wp-content/uploads/2013/03/DSC01076-150x150.jpg)](http://jimliu.net/wp-content/uploads/2013/03/DSC01076.jpg)
+[![小孩](/uploads/2013/03/DSC01076-150x150.jpg)](/uploads/2013/03/DSC01076.jpg)

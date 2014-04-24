@@ -12,7 +12,7 @@
 body {
   background: #eee;
   color: #444;
-  font-family: "Helvetica Neue", "Helvetica", Arial, sans-serif;
+  font-family: "微软雅黑", "STHeiti", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
   text-shadow: 0 0 1px transparent;
 }
@@ -32,7 +32,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: "Lato", Helvetica Neue, Helvetica, Arial, sans-serif;
+  font-family: "微软雅黑", "STHeiti", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 h1 {
   font-size: 1.8em;
@@ -124,7 +124,7 @@ a:hover {
   margin-top: 10px;
 }
 #header #main-nav {
-  font-family: "Lato", Helvetica Neue, Helvetica, Arial, sans-serif;
+  font-family: "微软雅黑", "STHeiti", "Helvetica Neue", Helvetica, Arial, sans-serif;
   line-height: 2.5em;
 }
 #header #main-nav ul {
@@ -258,7 +258,7 @@ article header .icon:before {
 }
 article header time {
   color: #999;
-  font: 0.9em "Lato", Helvetica Neue, Helvetica, Arial, sans-serif;
+  font: 0.9em "微软雅黑", "STHeiti", "Helvetica Neue", Helvetica, Arial, sans-serif;
   margin-bottom: 5px;
   display: block;
   line-height: 1;
@@ -274,7 +274,7 @@ article header .title a:hover {
   text-decoration: none;
 }
 article .entry {
-  text-align: justify;
+  text-align: left;
   line-height: 1.6;
 }
 article .entry p,
@@ -291,14 +291,13 @@ article .entry h6,
 article .entry .video-container {
   margin-top: 15px;
 }
+article .entry strong {
+  color: #f30;
+}
 article .entry blockquote {
-  border-top: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
-  font-style: italic;
-  font-family: "Georgia", serif;
-  font-size: 1.2em;
-  padding: 0 30px 15px;
-  text-align: center;
+  border-left: 5px solid #cdcdcc;
+  padding: 0 0 0 10px;
+  margin: 0 0 18px;
 }
 article .entry blockquote footer {
   border-top: none;
@@ -494,7 +493,7 @@ article footer .addthis iframe {
   padding: 5px 10px;
   background: #ddd;
   color: #999;
-  font-family: "Lato", Helvetica Neue, Helvetica, Arial, sans-serif;
+  font-family: "微软雅黑", "STHeiti", "Helvetica Neue", Helvetica, Arial, sans-serif;
   text-shadow: 0 0 1px #fff;
   margin-bottom: 50px;
 }
@@ -593,7 +592,7 @@ article footer .addthis iframe {
 }
 #sidebar .search input {
   background: #fff;
-  font-family: "Lato", Helvetica Neue, Helvetica, Arial, sans-serif;
+  font-family: "微软雅黑", "STHeiti", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-style: italic;
   font-size: 1em;
   padding: 10px 15px;
@@ -638,10 +637,14 @@ article footer .addthis iframe {
   margin-right: 10px;
   display: inline-block;
 }
+#sidebar .duoshuo_recent_comments .ds-recent-comments>li:first-child {
+  padding-top: 0 !important;
+  border-top: none !important;
+}
 #footer {
   color: #999;
   margin-bottom: 50px;
-  font: 0.9em/1.6 "Lato", Helvetica Neue, Helvetica, Arial, sans-serif;
+  font: 0.9em/1.6 "微软雅黑", "STHeiti", "Helvetica Neue", Helvetica, Arial, sans-serif;
   text-shadow: 0 0 1px #fff;
 }
 .entry .gist {
@@ -688,14 +691,15 @@ figure.highlight {
   background: #eee;
   border: 1px solid #ddd;
   margin-top: 15px;
-  padding: 7px 15px;
+  padding: 7px 15px 7px 10px;
   -webkit-border-radius: 2px;
   border-radius: 2px;
   text-shadow: 0 0 1px #fff;
   line-height: 1.6;
   overflow: auto;
   position: relative;
-  font-size: 0.9em;
+  font-size: 1em;
+  font-family: Monaco, Menlo, Consolas, Courier New, monospace;
 }
 figure.highlight figcaption {
   color: #999;
@@ -717,12 +721,12 @@ figure.highlight table {
 }
 figure.highlight .gutter {
   color: #999;
-  padding-right: 15px;
+  padding-right: 8px;
   border-right: 1px solid #ddd;
   text-align: right;
 }
 figure.highlight .code {
-  padding-left: 15px;
+  padding-left: 8px;
   border-left: 1px solid #fff;
   color: #666;
 }

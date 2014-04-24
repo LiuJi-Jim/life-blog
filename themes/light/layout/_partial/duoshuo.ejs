@@ -1,7 +1,8 @@
+<% if (theme.duoshuo){ %>
 <!-- Duoshuo Comment BEGIN -->
-<div class="ds-thread" data-title="<%= item.title %>" data-url="<%- item.permalink %>"></div>
+<div id="comments" class="ds-thread" data-title="<%= item.title %>" data-url="<%- item.permalink %>"></div>
 <script type="text/javascript">
-var duoshuoQuery = {short_name:"jimliu-life"};
+var duoshuoQuery = {short_name:"<%= theme.duoshuo %>"};
 (function() {
     var ds = document.createElement('script');
     ds.type = 'text/javascript';ds.async = true;
@@ -12,3 +13,4 @@ var duoshuoQuery = {short_name:"jimliu-life"};
 })();
 </script>
 <!-- Duoshuo Comment END -->
+<% } %>
