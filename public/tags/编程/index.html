@@ -54,6 +54,53 @@
     <header>
       
         <div class="icon"></div>
+        <time datetime="2014-03-16T11:23:12.000Z"><a href="/2014/03/16/hrt-in-js/">3月 16 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/03/16/hrt-in-js/">JavaScript中的高精度计时</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>HRT(High Resolution Timing, 高精度计时)在一些场合有很大的作用，比如游戏开发中，需要精确的计算两帧之间的时间差。</p>
+<p>在JS中常常用<code>(new Date()).getTime()</code>来获取毫秒级的时间戳，虽然是毫秒级，但事实上它的真实精度只能达到大概16ms的级别。例如</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre>1
+2
+3
+</pre></td><td class="code"><pre><span class="keyword">while</span> (<span class="literal">true</span>){
+  console<span class="variable">.log</span>((new Date())<span class="variable">.getTime</span>()); <span class="comment">// 这样死循环浏览器会跪的，责任自负</span>
+}
+</pre></td></tr></table></figure>
+
+<p>会发现它事实上大概16ms才跳一次，也许是17ms、又或者15ms吧，反正实际精度是有限的——什么？你跟我说是1ms？我告诉你那是因为新的系统或者浏览器使用了更高精度——但这不影响这篇文章的内容……</p>
+<p>这对于日常应用来说完全够用了，但是对于游戏这样的场合，高精度计时就有它不可取代的意义了。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2014/03/16/hrt-in-js/#more" class="more-link">全文</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
         <time datetime="2014-01-04T12:23:12.000Z"><a href="/2014/01/04/regex-golf/">1月 4 2014</a></time>
       
       
@@ -618,15 +665,15 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/影像/">影像</a><small>2</small></li>
+    <li><a href="/tags/影像/">影像</a><small>3</small></li>
   
     <li><a href="/tags/未分类/">未分类</a><small>1</small></li>
   
     <li><a href="/tags/生活/">生活</a><small>4</small></li>
   
-    <li><a href="/tags/站着说话不腰疼/">站着说话不腰疼</a><small>7</small></li>
+    <li><a href="/tags/站着说话不腰疼/">站着说话不腰疼</a><small>8</small></li>
   
-    <li><a href="/tags/编程/">编程</a><small>14</small></li>
+    <li><a href="/tags/编程/">编程</a><small>15</small></li>
   
     <li><a href="/tags/音乐/">音乐</a><small>2</small></li>
   
@@ -644,6 +691,10 @@
       </li>
     
       <li>
+        <a href="/2014/03/16/hrt-in-js/">JavaScript中的高精度计时</a>
+      </li>
+    
+      <li>
         <a href="/2014/03/16/eyes-on-me/">Jim Plays &lt;Eyes On Me&gt;</a>
       </li>
     
@@ -653,10 +704,6 @@
     
       <li>
         <a href="/2013/11/20/use-hexo-on-bae/">在BAE上使用hexo搭建博客</a>
-      </li>
-    
-      <li>
-        <a href="/2013/11/20/use-solarized-dircolors/">使用Solarized的ls配色</a>
       </li>
     
   </ul>
