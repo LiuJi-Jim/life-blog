@@ -3,3 +3,4 @@ public/
 node_modules/
 app.conf
 debug.log
+db.json
