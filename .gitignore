@@ -1,4 +1,5 @@
 public/**
+.deploy/
 .deploy/**
 node_modules/**
 app.conf
