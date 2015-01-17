@@ -4,7 +4,7 @@ menu:
   Feedback: /feedback
 #  Archives: /archives
 
-widgets: 
+widgets:
 #- search
 - about_me
 - category
@@ -41,6 +41,8 @@ links:
   link: http://blog.sina.com.cn/s/blog_66783fc50101bzjy.html?from=jimlius_blog
 - name: licstar的博客
   link: http://licstar.net/?from=jimlius_blog
+- name: Odin的自我修养
+  link: http://odinliu.com/?from=jimlius_blog
 - name: Lijia Yu's Website
   link: http://yulijia.net/cn/
 - name: 持之以恒

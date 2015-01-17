@@ -83,6 +83,6 @@ plugins:
 ## Docs: http://zespia.tw/hexo/docs/deploy.html
 deploy:
   type: github
-  #repository: https://github.com/LiuJi-Jim/life-blog.git
-  repository: git@github.com:LiuJi-Jim/life-blog.git
+  repository: https://github.com/LiuJi-Jim/life-blog.git
+  #repository: git@github.com:LiuJi-Jim/life-blog.git
   #repository: https://github.com/LiuJi-Jim/blog.git

@@ -1,8 +1,8 @@
-public/**
-.deploy/
-.deploy/**
-node_modules/**
-app.conf
 debug.log
+.DS_Store
+Thumbs.db
 db.json
 **/*.swp
+node_modules/
+public/
+.deploy/
