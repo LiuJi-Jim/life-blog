@@ -56,8 +56,9 @@ about_me:
   title: ABOUT JIM
   avatar: /uploads/2012/03/Pig.180x180-150x150.jpg
   texts:
-  - <a href="/about" target="_BLANK">刘骥</a>
+  - <a href="/about">刘骥</a>
   - 微博：<a href="http://weibo.com/jimnox" target="_BLANK">@刘骥-JimLiu</a>
+  - 知乎：<a href="http://www.zhihu.com/people/jimnox" target="_BLANK">@Jim Liu</a>
   - 旧博客：<a href="http://jimnox.cnblogs.com/" target="_BLANK">博客园</a>
 
 duoshuo: jimliu-net
