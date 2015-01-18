@@ -17,9 +17,7 @@ OK不扯了，打算边学边写一点文章介绍下Go的入门，那么这一�
 安装：官网提供了常用系统的安装包，无需再自己编译，安装完了需要配一下`GOPATH`环境变量
 ```
 package main
-
 import "fmt"
-
 func main() {
   fmt.Println("Hello, Go!")
 }
@@ -31,7 +29,7 @@ func main() {
 
 运行：`go run hello.go`
 编译：`go build -o hello hello.go`
-开发工具：我使用的是SublimeText配合GoSublime插件
+开发工具：我使用的是SublimeText配合GoSublime插件，官方自带了gofmt程序用来格式化源代码，于是代码风格的争论可以减少了，GoSublime会在保存文件的时候自动调用gofmt。
 
 ## 数据类型
 ### 基础数据类型
