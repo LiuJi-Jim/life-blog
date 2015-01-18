@@ -31,8 +31,9 @@ addthis:
 fancybox: true
 
 google_analytics:
-rss: http://feeds.feedburner.com/JimLiu
-#rss:
+
+#rss: http://feeds.feedburner.com/JimLiu
+rss:
 
 links:
 - name: Dora Blog

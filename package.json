@@ -5,6 +5,7 @@
   "dependencies": {
 	"hexo-migrator-wordpress": "*",
 	"hexo-generator-feed": "*",
+	"hexo-generator-sitemap": "*",
     "hexo-renderer-ejs": "*",
     "hexo-renderer-stylus": "*",
     "hexo-renderer-marked": "*"
