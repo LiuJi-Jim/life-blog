@@ -7,7 +7,7 @@ menu:
 widgets:
 #- search
 - about_me
-- category
+#- category
 - tag
 - recent_posts
 - duoshuo_recent_comments

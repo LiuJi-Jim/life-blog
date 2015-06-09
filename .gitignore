@@ -1,8 +1,9 @@
-debug.log
 .DS_Store
 Thumbs.db
 db.json
-**/*.swp
+*.log
 node_modules/
-/public/**
-.deploy/
+public/
+.deploy*/
+*.swp
+debug.log
