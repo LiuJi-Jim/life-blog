@@ -1,0 +1,1084 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  
+  <title><![CDATA[Jim Liu's Blog]]></title>
+  <subtitle><![CDATA[Again, Jim Liu's Blog]]></subtitle>
+  <link href="/atom.xml" rel="self"/>
+  <link href="http://jimliu.net//"/>
+  <updated>2015-06-09T10:12:14.000Z</updated>
+  <id>http://jimliu.net//</id>
+  
+  <author>
+    <name><![CDATA[Jim Liu]]></name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[一个关于JavaScript解构（destructuring）语法的……呃，陷阱？]]></title>
+    <link href="http://jimliu.net/2015/06/10/trap-in-es6-destructuring-syntax/"/>
+    <id>http://jimliu.net/2015/06/10/trap-in-es6-destructuring-syntax/</id>
+    <published>2015-06-10T10:31:35.000Z</published>
+    <updated>2015-06-09T10:12:14.000Z</updated>
+    <content type="html"><![CDATA[<p>没有摘要，直接看文可好？<br><a id="more"></a></p>
+<figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">arr</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> [<span class="number">1</span>, <span class="number">2</span>];</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> [a, b] = arr();</span><br><span class="line"><span class="comment">// a = 1, b = 2;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">obj</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> &#123; foo: <span class="string">'bar'</span> &#125;;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> &#123;foo: fu&#125; = obj();</span><br><span class="line"><span class="comment">// fu = 'bar'</span></span><br></pre></td></tr></table></figure>
+<p>上面是两种最基本的解构语法</p>
+<p>那么看看下面的例子（来源<a href="http://weibo.com/2930876843/Ckzs5kD76" target="_blank" rel="external">@SYSU_Joyee的微博</a>）</p>
+<figure class="highlight autohotkey"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="label">var foo = ['a', [&#123; foo:</span> 'bar' &#125;, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]]<span class="comment">;</span></span><br><span class="line"><span class="label">var [a, [&#123; foo:</span> fu &#125;, , ...tail], missing, def = 'default value'] = foo<span class="comment">;</span></span><br></pre></td></tr></table></figure>
+<p>晕了吧，解读一下。</p>
+<p>第一步，整体上，左边是一个数组解构，其中几个声明分别为<code>a, 一个数组, missing, def（带默认值）</code>。</p>
+<ul>
+<li><code>a</code>对应的是<code>&#39;a&#39;</code>。</li>
+<li><code>一个数组</code>是一个嵌套的解构，这个下面再看。</li>
+<li><code>missing</code>对应数组越界，也就是<code>undefined</code>。</li>
+<li><code>def</code>对应数组越界，本来也是<code>undefined</code>，但是它带默认值了，所以应该是<code>&#39;default value&#39;</code>。</li>
+</ul>
+<p>上面的<code>一个数组</code>是嵌套在解构里的另一个数组解构，对它单独拆开，左边的几个声明是<code>一个对象, 抛弃, 剩余</code>。</p>
+<ul>
+<li><code>一个对象</code>是一个对象解构，结果是<code>fu = &#39;bar&#39;</code>。</li>
+<li><code>抛弃</code>这个就不用说了，它抛弃了<code>1</code>。</li>
+<li><code>剩余</code>就是剩下的<strong>数组</strong>，结果是<code>tail = [2, 3, 4, 5]</code>。</li>
+</ul>
+<p>so far，看起来还是比较简单的。</p>
+<p>下面看一些复杂的。</p>
+<p>以下例子来自<a href="http://typeof.net/2014/m/dont-invent-a-language-when-idle.html" target="_blank" rel="external">Belleve Invis的博客</a></p>
+<figure class="highlight autohotkey"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">var <span class="literal">a</span> = &#123;&#125;<span class="comment">;</span></span><br><span class="line">var b = <span class="literal">a</span><span class="comment">;</span></span><br><span class="line">[<span class="literal">a</span>.x, <span class="literal">a</span>.y, <span class="literal">a</span>.x] = [<span class="number">1</span>, (<span class="literal">a</span> = &#123;&#125;), <span class="number">3</span>]<span class="comment">;</span></span><br></pre></td></tr></table></figure>
+<p>注意第三行的赋值语句右边也有一个赋值语句，那么执行顺序是怎样？</p>
+<p>按照人类知觉的理解，上面的代码应该等价于：</p>
+<figure class="highlight autohotkey"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="literal">a</span>.x = <span class="number">1</span><span class="comment">;</span></span><br><span class="line"><span class="literal">a</span>.y = (<span class="literal">a</span> = &#123;&#125;)<span class="comment">;</span></span><br><span class="line"><span class="literal">a</span>.x = <span class="number">3</span><span class="comment">;</span></span><br></pre></td></tr></table></figure>
+<p>于是最终结果是<code>a = { x: 3 }, b = { x: 1, y: { x: 3 } }</code></p>
+<p>然而实际结果却是</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">a = &#123; <span class="string">x:</span> <span class="number">3</span>, <span class="string">y:</span> Object &#125; <span class="comment">// 其中y就是a</span></span><br><span class="line">b = &#123;&#125;</span><br></pre></td></tr></table></figure>
+<p>虽然绝大多数人这辈子也不会写这种shit一样的代码，但还是需要知道为什么会是这样。</p>
+<p>因为es6的草案对解构的策略是：</p>
+<ul>
+<li>先分析左侧，得到一个赋值模式（AssignmentPattern）</li>
+<li>计算右侧，得到一个值</li>
+<li>按照左侧的模式，将右侧的值当中一部分赋值到左侧</li>
+</ul>
+<p>其中第三步隐含了左侧的模式可能内嵌了另一个解构，所以上述步骤是递归进行的。</p>
+<p>于是乎上面的代码正确的等价应该是：</p>
+<figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">var <span class="variable">a =</span> &#123;&#125;;</span><br><span class="line">var <span class="variable">b =</span> a;</span><br><span class="line">var <span class="variable">_tmp =</span> [<span class="number">1</span>, (<span class="variable">a =</span> &#123;&#125;), <span class="number">3</span>];</span><br><span class="line">a.<span class="variable">x =</span> _tmp[<span class="number">0</span>];</span><br><span class="line">a.<span class="variable">y =</span> _tmp[<span class="number">1</span>];</span><br><span class="line">a.<span class="variable">x =</span> _tmp[<span class="number">2</span>];</span><br></pre></td></tr></table></figure>
+<p>在上述代码中，第3行将<code>a</code>赋值为了<code>{}</code>，此时<code>a</code>与<code>b</code>不再指向同一个对象。第4行中，（新的）<code>a</code>被赋值<code>a.x = 1</code>。第4行，（新的）<code>a</code>被复制<code>a.y = a</code>，这里行程了一个循环引用的结构。第5行就不用说了，<code>a.x = 3</code>。而至始至终，<code>b</code>还是最早的那个<code>{}</code>。</p>
+<p>这样的策略虽然反直觉，但细想之下不难理解。</p>
+<p>首先是这样的策略非常的普适，如果左边的结构复杂，那么就会有一些分歧，比如应该按照深度优先还是广度优先来求值赋值呢？另一方面就是实现起来的话这种方式会变得更复杂一些，而现在的策略则只是需要在语法分析层面对赋值语句的语法树递归展开就行了。</p>
+<p>我们把上面两段代码分别扔进<a href="https://babeljs.io" target="_blank" rel="external">babel</a>里可以得到如下的transpile结果：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">function _toArray(arr) &#123; <span class="keyword">return</span> Array.isArray(arr) ? arr : Array.from(arr); &#125;</span><br><span class="line"></span><br><span class="line"><span class="variable"><span class="keyword">var</span> foo</span> = ['a', [&#123; foo: 'bar' &#125;, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]];</span><br><span class="line"><span class="variable"><span class="keyword">var</span> a</span> = foo[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line"><span class="variable"><span class="keyword">var</span> _foo</span>$<span class="number">1</span> = _toArray(foo[<span class="number">1</span>]);</span><br><span class="line"></span><br><span class="line"><span class="variable"><span class="keyword">var</span> fu</span> = _foo$<span class="number">1</span>[<span class="number">0</span>].foo;</span><br><span class="line"></span><br><span class="line"><span class="variable"><span class="keyword">var</span> tail</span> = _foo$<span class="number">1.</span>slice(<span class="number">2</span>);</span><br><span class="line"></span><br><span class="line"><span class="variable"><span class="keyword">var</span> missing</span> = foo[<span class="number">2</span>];</span><br><span class="line"><span class="variable"><span class="keyword">var</span> _foo</span>$<span class="number">3</span> = foo[<span class="number">3</span>];</span><br><span class="line"><span class="variable"><span class="keyword">var</span> def</span> = _foo$<span class="number">3</span> === undefined ? '<span class="keyword">default</span> value' : _foo$<span class="number">3</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ---------------------------------</span></span><br><span class="line"><span class="variable"><span class="keyword">var</span> a</span> = &#123;&#125;;</span><br><span class="line"><span class="variable"><span class="keyword">var</span> b</span> = a;</span><br><span class="line"><span class="variable"><span class="keyword">var</span> _ref</span> = [<span class="number">1</span>, a = &#123;&#125;, <span class="number">3</span>];</span><br><span class="line">a.x = _ref[<span class="number">0</span>];</span><br><span class="line">a.y = _ref[<span class="number">1</span>];</span><br><span class="line">a.x = _ref[<span class="number">2</span>];</span><br><span class="line">_ref;</span><br></pre></td></tr></table></figure>
+<p>可以发现babel的转译是非常遵循于es6草案的。</p>
+<p>到了这里，我们应该可以安心的玩解构了，对于一些场景它会显得非常非常的有用，例如：</p>
+<figure class="highlight scheme"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="list">[<span class="keyword">a</span>, b] = <span class="list">[<span class="keyword">b</span>, a]<span class="comment">; // swap</span></span><br><span class="line"></span><br><span class="line">function hsl2rgb<span class="list">(<span class="keyword">h</span>, s, l)</span> &#123;</span><br><span class="line">  // ...</span><br><span class="line">  return <span class="list">[<span class="keyword">r</span>, g, b]<span class="comment">;</span></span><br><span class="line">&#125;</span><br><span class="line">var <span class="list">[<span class="keyword">r</span>, g, b] = hsl2rgb<span class="list">(<span class="keyword">h</span>, s, l)</span><span class="comment">;</span></span><br><span class="line"></span><br><span class="line">function negate<span class="list">(<span class="keyword">x</span>, y)</span> &#123;</span><br><span class="line">  // ...</span><br><span class="line">  return <span class="list">[<span class="keyword">x</span>, y]<span class="comment">;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="list">[<span class="keyword">x</span>, y] = negate<span class="list">(<span class="keyword">x</span>, y)</span><span class="comment">;</span></span></span></span></span></span></span></span><br></pre></td></tr></table></figure>
+<p>在一些函数当中为了实现多返回值通常都会用返回一个数组或者KV来当元组的概念，但在接收返回值的时候却需要很麻烦的手工展开。有解构就可以更愉快的写这些代码了。</p>
+<p>对于上面举例的解构在求值策略上的坑，只要注意用的姿势就OK了。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>没有摘要，直接看文可好？<br>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[编码歪传——番外篇]]></title>
+    <link href="http://jimliu.net/2015/03/07/something-about-encoding-extra/"/>
+    <id>http://jimliu.net/2015/03/07/something-about-encoding-extra/</id>
+    <published>2015-03-07T13:23:12.000Z</published>
+    <updated>2015-03-26T11:21:23.000Z</updated>
+    <content type="html"><![CDATA[<p>我保证这是最后一篇了，而且这次的内容绝对都是很具体的，具体得连每篇博客开头例行的摘要我都不知道该写什么了！</p>
+<a id="more"></a>
+<h2 id="典型乱码">典型乱码</h2><h3 id="乱码、问号、方块">乱码、问号、方块</h3><p>用文本编辑器打开一个文件，如果编码不兼容，有时候会看到<code>??????</code>的东西，有时候会看到一团乱七八糟的文字，通常我们就统称乱码了。怎么用编码的知识来理解呢？</p>
+<p>前文中我们有说到实用的很多编码方式都用的是变长字节编码，很多字节都要结合它的上下文去解释才是对的。例如：用UTF-8的算法去解析GBK的文件，就很容易发些这么些种情况：</p>
+<ol>
+<li>一个字节序列并不是合法的UTF-8字符，比如以<code>11111110</code>开头的字节序列。</li>
+<li>一个字节序列碰巧符合UTF-8规则。</li>
+</ol>
+<p>反过来看，用GBK的算法去解析UTF-8的文件其实也差不多，遇到第一种情况在显示的时候可能就用问号代替，而遇到第二种情况就是出现一些风马牛不相及的杂乱文字。</p>
+<p>方块其实和问号本质上一样的，但方块在现代浏览器里还有个很常见的情况，就是一个字符的编号在字体当中并没有定义，于是在排版和渲染的适合“智能”地用一个方块来表示它了。看到方块可以结合上下文，如果上下文当中的非英字符显示正确的，那么方块可能是一些特殊符号，比如Emoji。</p>
+<p>在写服务端程序的时候要小心处理“半个字符”的问题，例如我们在前级对超长的数据进行截断处理，刚好截断掉一个变长编码的字节序列，就会出现“半个字符”。一般半个字符都是铁定会乱码，一些容错比较差的程序甚至会挂，比如一些做的不好的PHP的C扩展，严重的时候会出core。所以程序不懂编码就别瞎截，甚至考虑到某些语言文字里的组合字符，就是知道编码也别瞎截（真是细思恐极）；</p>
+<h3 id="BOM">BOM</h3><p><del>BOM就是Browser Object Model浏览器对象模型，</del>不好意思拿错剧本了。</p>
+<p>BOM（Byte-Order Mark，字节序标记）是Unicode码点<code>U+FEFF</code>。它被定义来放在一个UTF-16文件的开头，如果字节序列是<code>FEFF</code>那么这个文件就是大端序，如果字节序列是<code>FFFE</code>那么这个文件就是小端序。</p>
+<p>UTF-8本身是没有字节序的问题的（因为它是以单个字节为最小单位），但是Windows里面很多编辑器（比如记事本）会多此一举的在UTF-8文件开头加入<code>EF BB FF</code>也就是<code>U+FEFF</code>的UTF-8编码。</p>
+<p>如果你的PHP文件里面有一个这东西你就倒了大霉了，可能会：</p>
+<ul>
+<li>什么也看不见，可能是PHP引擎根本处理不了这个源代码。</li>
+<li>页面展现错乱的情况，一般是因为在<code>&lt;doctype&gt;</code>之前输出的非空格内容造成了浏览器选择错误的doctype。</li>
+<li>页面上面有及格乱七八糟的字符，浏览器把它当字符展示出来了。</li>
+</ul>
+<p>于是建议在Windows上做开发的同学，一定要选择“使用UTF-8无BOM格式”保存，<del>所以用记事本写代码装X就不好使了，</del>用Notepad++的可以注意选一下，它支持的文件编码格式挺丰富的，用一些比较先进的跨平台编辑器比如WebStorm、SublimeText它们都是没BOM的。</p>
+<h3 id="锟斤拷">锟斤拷</h3><p>乱码之所以叫乱码，就是因为它是“乱”的。但是乱码当中最出名的就是“锟斤拷”，他出现次数太多了以至于看起来根本就没那么“乱”。这就纳了闷了，为什么全中国的网站乱码里面都会有这个？</p>
+<p>原因是，在将一些国家语言编码体系，比如GB、BIG-5、EUC-JP等，转换为Unicode的过程中，多少有一些字符是不在Unicode中的（比如一些偏旁部首在Unicode里是后来才收录的），甚至它本身在原来的编码体系里面就是非法字符的情况。</p>
+<p>Unicode规定了<code>U+FFFD</code>当作一个占位符用来表示这些字符，用UTF-8编码它就是<code>EF BF BD</code>，连续多个这样的字节序列出现就成了<code>EF BF BD EF BF BD</code>。如果是一个UTF-8的解析程序还好，而如果用一个GB的解析程序去打开，一个汉字2字节，就成了“锟斤拷”。<a href="/uploads/2015/kunjinkao.txt">这里</a>就是一个例子，用UTF-8编码打开是问号，用GBK编码打开的话就会看到锟斤拷，用hexdump或者UltraEdit这类任何16进制编辑器看的话就能看到里面都是<code>EF BF BD</code>。</p>
+<p>要避免锟斤拷一个重要的点就是尽量减少程序当中的编码转换。比如输入是UTF-8，但是一个旧的模块是GBK，把UTF-8转成GBK交给旧的模块处理，处理过程中旧模块多多少少有些BUG的可能，再转回来的时候就容易锟斤拷了。一个项目的源代码在团队里面被不同的人（他们编辑器配置不尽相同）开来开去，存来存去，也很容易出现锟斤拷。</p>
+<h3 id="烫烫烫、屯屯屯">烫烫烫、屯屯屯</h3><p>这个和编码转换其实没啥关系，在VC的DEBUG模式下，会把未初始化的栈内存全部填成<code>0xCC</code>，未初始化的堆内存填成<code>0xCD</code>，这样做是让你一眼就能看出来你开了内存没初始化。</p>
+<p>而用GBK编码的话，<code>CC CC</code>就是“烫”，<code>CD CD</code>就是“屯”。</p>
+<h2 id="URL_Encode和Base64">URL Encode和Base64</h2><h3 id="URL_Encode">URL Encode</h3><p>URL Encode又称为“百分号编码”它主要用来在URI里面将特殊字符进行转义，因为像<code>/</code>、<code>&amp;</code>、<code>=</code>等等这类字符在URI里面本身是有功能性的。</p>
+<p>对于ASCII字符的编码很简单就是用<code>%</code>后跟ASCII编码的16进制表示，例如<code>/</code>的ASCII char code是<code>47</code>，16进制表示是<code>2F</code>，于是它的URL Encode结果就是<code>%2F</code>。</p>
+<p>对于非ASCII字符，将它的每个字节进行相同规则的转换，例如中文“编码”的Unicode char code是<code>U+7F16 7801</code>，UTF-8编码的字节序列是<code>E7 BC 96 E7 A0 81</code>，所以它按照UTF-8编码的URL Encode结果就是<code>%E7%BC%96%E7%A0%81</code>。</p>
+<p>可以看出，URL Encode编码非ASCII字符的时候，结果与使用的字符编码有关。因此在页面上提交表单、发起Ajax请求等操作的时候需要注意编码。浏览器会按照当前页面所使用的字符编码对表单体提交进行URL Encode，但使用JavaScript的<code>encodeURI</code>和<code>encodeURIComponent</code>的时候则总是会使用UTF-8（<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent" target="_blank" rel="external">参考MDN</a>）。</p>
+<p>表单提交的时候编码是非常非常重要的，一旦错了服务端解开数据的时候就会跪。比如Github在它们的搜索表单里面放了一个<code>&lt;input name=&quot;utf8&quot; type=&quot;hidden&quot; value=&quot;✓&quot;&gt;</code>，其中那个对钩&#x2713;是<code>U+2713</code>，UTF-8编码是<code>E2 9C 93</code>，他们可以在服务端检测这个参数的值对不对从而对URL里用的编码进行一个初步检测。虽然我没有看到他们使用其他编码的情况，不过这样也算是一个编码协商和Check的手段吧。</p>
+<p>在JavaScript中使用<code>escape</code>也可以达到URL Encode的效果，但是它对于非ASCII字符使用了一种非标准的的实现，例如“编码”会被<code>escape</code>成<code>%u7F16%u7801</code>这种<code>%uxxxx</code>奇怪的表示，W3C把这个函数废弃了，身为一名前端还用是打脸的哦。</p>
+<h3 id="Base64">Base64</h3><p>Base64是一种<strong>用可见字符表示二进制数据</strong>的方法。它用了64个可见字符<code>[A-Za-z0-9+/]</code>。</p>
+<p>Base64的编码程序非常简单，由于64=2^6，6和8的最小公倍数是24，也就是3byte，因此对输入数据以3byte为一个单位，查表把它转换成4个可见字符。</p>
+<p>如果输入末尾不足3byte，那就补足，补1个byte就在输出末尾添加一个<code>=</code>，补2个byte同理。</p>
+<p>Base64经常用来在一些文本协议里面保存二进制数据，比如HTTP协议，或者电子邮件的附件啊什么的。同时因为它的输出对于人类而言不可读，可以起到一些“混淆加密”的作用，事实上就有修改64个字符的排布来做一个变形Base64实现一个简单加密算法的例子。从密码学的角度看它基本上没什么强度可言，但是足够简单，可以起到防君子不防小人的作用。</p>
+<p>由于一个字符只能编码6bit，自身却占了8bit，8/6=1.33，因此使用Base64来表示数据的时候会浪费1/3的体积。对于在CSS里面用Base64的data-url方式表示图片，用之前不妨简单估算一下，膨胀的体积和一个HTTP请求头比起来会相差多少，说不定涨太多了已经损失掉省一个请求的收益了。</p>
+<h2 id="尾声">尾声</h2><p>终于整个系列都要结束了，理论的也好，实用的也好，基本上我觉得该说的都说了，要是以后再遇到乱码，一定会很快知道问题所在。</p>
+<p>最后还是要佩服并感谢一下ISO和Unicode联盟，做了这么伟大的事情将全世界的语言文字统一收录和编码，而这当中包括了那么多我们根本没听说过的奇怪的语言文字。正是因为他们的努力奠定了互联网是一个无国界的世界，每天我们都能通过它获得来自任何地方任何语言的信息。</p>
+<p>哦，我上面说的不是某国的互联网。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>我保证这是最后一篇了，而且这次的内容绝对都是很具体的，具体得连每篇博客开头例行的摘要我都不知道该写什么了！</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[编码歪传——Web篇]]></title>
+    <link href="http://jimliu.net/2015/03/07/something-about-encoding-web/"/>
+    <id>http://jimliu.net/2015/03/07/something-about-encoding-web/</id>
+    <published>2015-03-07T03:23:12.000Z</published>
+    <updated>2015-03-26T11:21:23.000Z</updated>
+    <content type="html"><![CDATA[<p>继续上一篇。</p>
+<p>身为一名Web开发者，这一篇将介绍一下在Web应用当中常会出现编码问题的地方。文中经常会乱用“字符集”和“编码”，不过看明白了第一篇的话相信你不会混淆概念，而且我个人觉得这两个概念很多时候混淆也无妨……</p>
+<a id="more"></a>
+<h2 id="概念">概念</h2><p>出于把问题描述得稍微清楚一点的目的，我打算先把我们的概念进行一下定义。</p>
+<p>一般而言我们常遇到乱码的场景有这样两种：</p>
+<ol>
+<li>作为写入端，我应该用什么编码来<strong>存储</strong>/<strong>传输</strong>？</li>
+<li>作为读出端，我应该用什么编码来<strong>消费</strong>我所收到的字节流？</li>
+</ol>
+<p>因为我觉得绝大多数具体场景都可以归纳成上述两种，所以这样应该可以简化一下问题。</p>
+<h2 id="程序内部处理">程序内部处理</h2><p>现代编程语言一般都内建<strong>字符串</strong>作为自带的数据类型，一门强大且又实用的编程语言通常来说都有高效的字符串实现以及大量配套的字符串处理函数。</p>
+<p>在上一篇中我们有顺带提到，<strong>UTF-16</strong>因为是一种在处理效率和存储空间之间比较平衡的，同时编码空间又足够大的编码方式，在一些编程语言当中被采用来当作字符串的内部编码。比如C#、Java（可能因JVM/JDK而异）。</p>
+<p>一般而言编程的String类型编码都是固定的，但是通常会提供丰富的编码转换函数。一种（我认为）比较可靠的方式是：String用固定编码方式实现，以使得标准的字符串函数能够只关注一种编码，从而保证它的正确性，也能够最大程度地针对性优化；而通过使用类库来将String转换为特定编码的字节流，或将字节流以特定编码转换成String。</p>
+<p>反过来看，像PHP里的字符串就比较糙，它的编码有很大问题，如果一个字符串是多字节的（通过上一篇我们了解到除了ASCII以外基本上常用的编码都是多字节的），处理它就要用mb_xxxx系列的函数。这对编程是一种负担，因为这样就意味着String类型对字符的抽象力度不足，还是得花很多精力去关注字符串的编码。对于PHP的程序一个办法就是在整个程序内部统一编码，同时基于此选择好使用那一组字符串处理函数（作为项目规范），避免程序内部关心编码的问题，只把编码暴露在与外界交换数据的地方。</p>
+<h2 id="存储/传输">存储/传输</h2><p>管你是什么程序，程序所生成的东西总要被消费才有意义（不然就变成烤机程序了）。Web应用里最常见的两种对程序结果的消费方式，一是把它存储（数据库、文件）起来，二是把它传输给用户（浏览器）以供展现。</p>
+<p>当需要存储/传输文本的时候，就需要高度关心字符编码了。</p>
+<h3 id="存储">存储</h3><p>很多人遇到的问题是把用户表单提交的东西写进MySQL里面以后乱码了，这个问题一些可能的原因有：</p>
+<ol>
+<li>提交内容的字符编码</li>
+<li>服务端程序（如PHP）内部使用的编码</li>
+<li>MySQL传输时候使用的编码</li>
+<li>MySQL数据库声明和使用的字符集</li>
+</ol>
+<p>第1点下一步会更详细的展开。</p>
+<p>第2点在上文当中有一定介绍了，PHP程序所接收的字节流被当作字符串看待后，我们的程序必须要选择合适的字符串处理函数，结果才会是对的。比如一个截断程序要能正确处理多字节编码，如果把多字节编码切断成“半个字符”严重的时候甚至会造成PHP出core。</p>
+<p>第3点就是PHP中常见的<code>mysqli_set_charset</code>所覆盖的范围，没错，因为MySQL其实是服务，所以这个存储其实也是传输。</p>
+<p>第4点就是在建库建表的时候选的那个字符集和编码。</p>
+<p>这当中的重点的就是2需要对1的编码有预期，正确的把1的字节流解析出来，转换成程序内部字符串实现所使用的编码，套用正确的算法，接下来与MySQL驱动和服务之间使用双方预期的编码，最终以数据库定义的时候所声明的字符集保存下来。</p>
+<h3 id="传输">传输</h3><p>一个HTTP请求发出的时候，用户代理（UserAgent，通常是浏览器）可以通过HTTP Request Header中的<code>Accept-Charset</code>字段来显式声明预期返回的编码，这是一种协商手段。现在的浏览器都很流弊，啥编码都能解析，于是直接懒得发这个，言下之意就是服务端给返回什么就消化什么。</p>
+<p>对于服务端而言，如果收到的请求指定了<code>Accept-Charset</code>那么应该按照请求者的预期来决定响应内容的编码，如果没有指定，则可以“自由发挥”，这种时候理论上说你用什么编码都可以，但最终都必须通过某种手段告诉请求者响应内容是什么编码。</p>
+<p>方式1：使用HTTP Response Header中<code>Content-Type</code>来给响应内容声明编码。比如<code>Content-Type: text/html; charset=UTF-8</code>。这里有个小插曲，在IE6（没记错的话）里用Ajax请求的时候如果Response写的是小写<code>utf-8</code>就会跪，必须要大写。<del>别问我为什么知道，说起来都是泪，那是一个风雨交加的深夜……</del></p>
+<p>方式2：通过HTML页面头部的<code>&lt;meta charset=&quot;xxx&quot;&gt;</code>标签来给页面声明编码。如果Response Header里不写编码，浏览器就会尝试找这个标签，然后将接下来的内容以这个编码解读。这就是为什么我们提倡将<code>&lt;meta charset=&quot;xxx&quot;&gt;</code>写在<code>&lt;title&gt;</code>标签之前的原因，如果<code>&lt;title&gt;</code>出现在此之前，它里面的字符就不知道该用什么编码来解读了，直观的说就是可能造成title乱码。</p>
+<p>一旦决定了编码，服务端程序就会将字符以该种编码最终写入字节流，传给客户端。</p>
+<p>那如果两种方式都用了，口径却不一致会怎么办？首先当然是给开发者赏两耳光，然后有兴趣的可以做做实验看看不同的浏览器会有什么不同的兼容策略。</p>
+<h3 id="用户提交内容">用户提交内容</h3><p>上面有说表单提交也有个编码的问题，其实包括Ajax请求等，只要是客户端向服务端发送内容，都一样，但通过上面的例子我想你已经明白了，这完全是镜像的，这次浏览器扮演着信息的生产者的角色，本质是完全一样的。</p>
+<h2 id="消费">消费</h2><p>给你一本书，你怎么知道它是中文版还是英文版？“我靠，它用英文写的就是英文版，用中文写的就是中文版啊。”</p>
+<p>人类的大脑简直聪明得要命了，这种问题根本不需要动脑子，计算机就要笨多了。其实并不是计算机笨，而是这个问题在计算机的领域里面太难了。比如上一篇文章说到GB2312是兼容ASCII的，那么如果收到的内容前几个字节是<code>3C 68 74 6D 6C 3E</code>也就是<code>&lt;html&gt;</code>的ASCII编码，也许臆想它是ASCII的，于是后面出现的双字节字符可能就会遭殃了。UTF-8有一个很不错的性质是它比较容易识别，但是也有错误率和效率问题。<del>所以这些你猜来我猜去的不靠谱的倒霉事情就只让它出现在男女情爱当中吧不要来污染我们纯净的计算机世界了好吗。</del></p>
+<p>上面一节当中有说到，一个靠谱的信息生产者，会在给你传递信息的时候协商或声明编码。身为一个合格的信息消费者，浏览器可以通过这些声明来选择正确的编码，解读字节流。</p>
+<p>浏览器也是个程序，于是它内部也会有字符串实现，也许它用自带字符串的语言实现的，也许它用自己实现的字符串（如C/C++），不管怎样，有了明确的编码，浏览器都能够将所获得的字节流转换成自己所使用的内部编码。</p>
+<p>事已至此，似乎只要生产者靠谱，消费者要注意的问题就非常少了。在服务端我们小心翼翼地处理那么多环节的编码问题，到了浏览器好像已经完事儿了。不管这之前有再多波折，浏览器内部各种对字符的处理再多，基本上都不会有编码的问题了，简直太没劲了，于是这里稍微发散思维一下。</p>
+<p>接下来浏览器就需要把字符显示出来，我们考虑浏览器通过操作系统给它提供的API。API要么规定编码要么协商/声明编码对吧，如果是前者，浏览器需要把自己内部用的编码转换成API所预期的编码，然后调用API——在这个场景里面，浏览器又从信息的消费者变成生产者了对吧，而这次操作系统是消费者。</p>
+<p>然后我们假设操作系统将会用某种字体渲染这段字符，字体文件内部一般都对每个字符进行编号，现代的字体一般都会用Unicode，没错，我们又回到了字符集的概念。操作系统将字符编码还原到字符集当中的字符编号（显然对于变长字节编码这个过程要一些运算），在字体文件内通过编号查到这个字符，一个设计良好的字体可能对同一个字符会设计了多个<strong>字形</strong>（Glyph），比如Regular体一个、粗体一个、斜体一个，甚至还有更多更多，比如组合字符、一些特殊规则下的变形字符，不展开讨论。</p>
+<p>这些渲染规格都是在API里指定好的，然后就用对应的字形来进行渲染。渲染字形这事儿还不是一个简单的事情，字体分点阵的、矢量的（甚至图片的？），不同的渲染引擎，例如Windows上的GDI、DirectWrite、第三方的GDI++、MacType，还有OSX的渲染引擎，Linux不同的桌面系统的渲染引擎，在最终把字形绘制成像素点的算法上有细节区别。</p>
+<p>上面说的还只是渲染单个字符的时候的问题，在此之前还要做文字的排版啊什么的，哪怕看起来很小一件事情也够人钻大半辈子了。我的天，人类为了在计算机上展示文字到底下了多少功夫？</p>
+<p>好的好的，刚才似乎发散的太多了，就此打住，总之就浏览器而言对于一个HTML页面的消费差不多是可以理解了。</p>
+<h2 id="阶段性小结">阶段性小结</h2><p>把乱码的问题从一个信息的生产者和消费者两个角度来看，中间所经历的哪些环节涉及到编码，哪些环节涉及到编码的协商与声明，就明确多了。上面的例子其实很容易就可以举一反三。</p>
+<p>于是一些常见的诸如“PHPMyAdmin里看是正常的，页面上是乱码”或者“页面上是正常的，PHPMyAdmin里看着是乱码”这种问题可能会是哪些个环节闯的祸心里就已经有谱了。对于各种接口，比如与MySQL通讯，比如与后端之间的接口，如何协商/声明编码，什么时候需要转换编码，心里面也有谱了。</p>
+<h2 id="预报">预报</h2><p>呵呵呵呵，这次的内容虽然没那么理论，但是还是太简单了嘛，看到乱码就查编码呗你当我是傻X呢。</p>
+<p>这时候也有观众吐槽：“那么各种程序当中用的编码比如URL Encode、Base64又是些啥玩意啊老湿？”</p>
+<p>也有好奇心过盛的观众要问：“问号和方块是怎么回事？屯屯屯烫烫烫锟斤拷又是些什么鬼呢老湿？”</p>
+<p>对于上面的问题我只想说四个字：<del>请联系我</del>请看终篇：<a href="/2015/03/07/something-about-encoding-extra/">《编码歪传——番外篇》</a></p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>继续上一篇。</p>
+<p>身为一名Web开发者，这一篇将介绍一下在Web应用当中常会出现编码问题的地方。文中经常会乱用“字符集”和“编码”，不过看明白了第一篇的话相信你不会混淆概念，而且我个人觉得这两个概念很多时候混淆也无妨……</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[编码歪传——基础篇]]></title>
+    <link href="http://jimliu.net/2015/03/06/something-about-encoding-basic/"/>
+    <id>http://jimliu.net/2015/03/06/something-about-encoding-basic/</id>
+    <published>2015-03-06T12:23:12.000Z</published>
+    <updated>2015-03-26T11:21:23.000Z</updated>
+    <content type="html"><![CDATA[<p>子曰：乱码是一种思念，而思念是一种病。相信很多Web人常常纠结于乱码当中，可能是展现、可能是表单提交、可能是数据库、可能是接口、可能是抓取……反正任何一个涉及到输入或者输出字符的地方都有可能被你碰到过乱码。</p>
+<p>为了解释和解决乱码问题，并且明确一些常见的误区，我打算写这样一个系列，介绍一些字符编码相关的东西，目前规划了3篇。</p>
+<p>基本上内容会比较偏科普性质，希望大神们轻拍，因为我相信这些将会是非常重要的基础知识，如果你能完整的读下去，肯定会在你以后遇到乱码的时候帮助到你的思考方式，快速找到原因。</p>
+<a id="more"></a>
+<h2 id="字符">字符</h2><p>我们的语言基本上都围绕着<strong>字符</strong>，就是<strong>character</strong>，常简称<strong>char</strong>，很多时候字符会是文本的最小组成单位（注意只是“很多时候”，因为世界是奇妙的）。</p>
+<p>不是一定要文字才叫字符，一些注音字符、数学符号、某些文字里的修饰符号、特殊符号、表格符号、甚至Emoji等等，其实都是字符。</p>
+<h2 id="字符集">字符集</h2><p>字符要成套才有用，比如“英文字母”就是一个字符集，当然这么说听起来对计算机毫无意义。</p>
+<p>一般我们所说的<strong>字符集</strong>（Character Set）就是一个规范，它收录若干字符，并且给这些字符逐一分配了一个<strong>编号</strong>当作索引（为了不过早引入<strong>编码</strong>的概念造成混淆，这里我称其为“编号”）。</p>
+<h3 id="ASCII">ASCII</h3><p>ASCII是当今计算机世界最经典的字符集，它收录了英文字母和若干标点，还有一些专门供计算机使用（不是给人看）的控制字符。</p>
+<h3 id="GB系列">GB系列</h3><p><strong>GB2312</strong>是一个常见的中文字符集，其中“GB”就是“国标”（咱们国家很多不同行业的标准代号都是这样命名的）。它收录了大概几千个汉字，以及几百个西文字符。</p>
+<p><strong>GBK</strong>是微软最早在Win95里实现的对GB2312进行的扩展，追加了很多繁体字和西文字符，总计收录的字符数大概有20000多个。K就是拼音“扩展”。</p>
+<p><strong>GB18030</strong>是国标对GB2312的升级（当然中间还有其他升级，但大多被淹没在历史潮流里面了），它一下就收录了70000多个字符，最大的升级部分有繁体中文字符、新字、生僻字、少数民族文字、日韩字符等。</p>
+<p>上面三个GB系列的字符集都是为中文设计的，当然也扩充了一些东亚语文的内容（CJK字符，Chinese, Japanese, Korean），因为这些邻居的字符在中国也挺常出现的。</p>
+<h3 id="Big5">Big5</h3><p>又称大五码，是繁体中文地区，例如湾湾、港港、澳澳常用的字符集，大概收录了一万多个字符，其中以繁体中文为主。因为被Windows所接受成为繁中版的默认编码而成为了事实标准。</p>
+<h3 id="UCS">UCS</h3><p>就像中文一样，几乎每种语言都存在一个给自己的语言设计字符集的问题。</p>
+<p>ISO意识到这个问题之后，设计了一套<strong>通用字符集UCS</strong>（Universal Character Set），目的是用一套字符集表示全世界（甚至外星人！？）的所有字符！</p>
+<p>结果UCS成功了，因为互联网发展的太快了，任何国家的人每天都在互联网上浏览来自全世界的不同语言不同文字的内容，大家当然希望用一套字符集就能收录全世界所有的字符。</p>
+<h2 id="字符编码">字符编码</h2><p>很多人会把<strong>字符集</strong>和<strong>字符编码</strong>的概念搞混，其实不怪，因为这俩东西好多时候都是捆绑定义的。</p>
+<p><strong>字符编码</strong>（Character Encoding）就是按照一定的技术要求（比如以8bit为单位）对字符集中的每一个字符进行编码，以便文本能够在计算机和网络传输上使用。</p>
+<p>简单的说，就是把字符集里面的那个每个字符的编号，给弄成计算机能懂的格式。</p>
+<p>很多字符集在制定的时候，就已经配套了它的编码方案，比如ASCII、GB系列、Big5。对于这种字符集/编码，称呼上虽然模糊，但结合技术语境而言一般也不会有什么误解。</p>
+<h3 id="ASCII-1">ASCII</h3><p>标准ASCII只收录了128个字符，使用7bit可以完美编码。例如英文字母<code>A</code>的ASCII编码就是十六进制<code>0x41</code>，然后1字节剩下的一位就没啥用了，可以用来当奇偶校验。</p>
+<p>后来ASCII被扩展到了8bit，供256个字符，用8bit也就是1字节可以完美编码，并且低7字节完全兼容。</p>
+<p>ASCII是国际标准而扩展ASCII并不是，下文所说到的“兼容ASCII”都是指兼容7bit的标准ASCII。</p>
+<h3 id="GB2312">GB2312</h3><p>GB2312使用1/2字节变长编码，单字节部分是兼容ASCII，其他几千个字符都是用双字节编码。</p>
+<p>GB2312在编码的时候使用了一个“分区”的概念，小时候家里有一本区位码表，就是配合Windows里古老的“区位输入法”用的。</p>
+<h3 id="GBK">GBK</h3><p>GBK的编码方案是GB2312的超集，它完全兼容GB2312，不过把GB2312里面没定义的那些编码空间都用起来了。</p>
+<h3 id="GB18030">GB18030</h3><p>GB18030的编码方案稍微复杂一点，它用的是1/2/4字节变长编码方案。它完全兼容GB2312，基本上兼容GBK。</p>
+<h3 id="Big5-1">Big5</h3><p>Big5使用固定两字节编码，它的首字节避开了ASCII的范围，因此实际在程序实现上面它可以近似兼容ASCII，由于它的低字节包含了一些ASCII字符，这个兼容也是不完美的，具体情况可以看看维基百科，非常有趣。</p>
+<h3 id="Unicode">Unicode</h3><p>Unicode有一个非常高大上的中文名字叫万国码<del>，呵呵，这个名字真是散发着一股农业重金属的气息啊</del>。其实也是个字符集，它和UCS之间有微妙的高度雷同关系，好在两边的组织都意识到了搞分化是不好的，于是互相之间达成了高度的一致。虽然它们的确是两个不同的标准，但很多时候混淆来看也无妨。</p>
+<p>Unicode是定长编码，根据版本不同，它有2字节（对应UCS-2）、4字节（对应UCS-4）的版本。</p>
+<p>因为Unicode是定长的，它实在太简单粗暴了。例如如果用4字节的Unicode来传输英文文本就浪费了3倍的体积，而用2字节的版本也不爽，一来容量较小，二来对于英文文本也还是浪费的。于是在实现上对它进行了一定的优化，称为<strong>Unicode转换格式（Unicode Transformation Format）</strong>也就是我们耳熟能详的<strong>UTF</strong>了。</p>
+<h4 id="UTF-32">UTF-32</h4><p>UTF-32是UCS-4的最朴素的实现方式，就是简单地用定长4字节。</p>
+<p>缺点嘛很明显就是很浪费体积。</p>
+<p>优点也是有的，首先就是把它转换到Unicode最简单，而且对于“第[i]个字符”这种随机访问也很好计算，直接<code>字节数/4</code>就是了对不？</p>
+<p>但因为组合字符（比如越南语，网上用来搞一个超长的流泪图标破坏排版那种）的存在，一个UTF-32码元（4字节）严格上也并非一个文本编辑上的单元，这种情况下对于排版系统而言UTF-32没有太多优势。</p>
+<h4 id="UTF-16">UTF-16</h4><p>UTF-16是使用2/4字节实现的UCS-4变长编码。</p>
+<p>因为大多数时候用到的字符不超过65536个，所以UTF-16在大多数时候1个字符都只占2字节，这样比起UTF-32省了接近一半体积，同时它的解析也不会太麻烦。</p>
+<p>固定长的编码方式对于计算机程序而言有一个非常大的优势就是字符串处理会容易的多，尤其是正则表达式的实现。因此很多现代语言，例如C#/Java的字符串内部实现使用UTF-16，因为它是一种效率和体积比较平衡的编码方式。</p>
+<h4 id="UTF-8">UTF-8</h4><p>UTF-8应该是现在互联网上使用最广泛的统一语言编码实现方式了。</p>
+<p>它是1-4字节变长编码（原本是1-6字节，但是因为后面那些超出了Unicode定义了，后来就改成1-4字节了）。单字节的情况兼容ASCII，在这个由英文主宰的互联网环境里面这是非常好的特性，因为它在很多时候会非常节省体积，而且这种时候完全不需要编码转换。</p>
+<p>但它的缺点也相当明显，将UTF-8转换到Unicode的算法会更加复杂，效率降低。</p>
+<p>对于中文环境而言UTF-8也比较吃亏，因为使用UTF-8编码大多数中文字符需要3字节，这就比GB系列和UTF-16浪费空间。</p>
+<p>UTF-8并未编码0x10FFFF以上的部分，所以严格的说它只是UCS-4的子集。好在缺失的那部分本身就不受UCS/Unicode的重视，估计实在是太犄角旮旯了。</p>
+<p>我觉得UTF-8最终成为互联网主流很大一定程度是因为它的单字节是兼容ASCII的。</p>
+<h2 id="阶段性小结">阶段性小结</h2><h3 id="字符集-1">字符集</h3><p>收录了很多字符，并且编号，给人看的。</p>
+<h3 id="编码">编码</h3><p>实现一个字符集，将它的编号以一定规则用二进制实现，给计算机看的。</p>
+<h3 id="GB系列-1">GB系列</h3><p>中国的国标字符集/编码，GB2312和GBK已经基本上过时了，如果要良好的支持中日韩文，又逃不开GBK的魔爪（比如历史代码束缚），那可以考虑升级到GB18030，这是国标的最新版，也是最先进的一版。</p>
+<h3 id="UCS/Unicode">UCS/Unicode</h3><p>把全世界上百万个你见过的或者你没见过的字符全部收录进一套字符集，已经被全世界接受成为了国际标准。</p>
+<h3 id="UTF">UTF</h3><p>UCS/Unicode转换格式，就是实用的编码方案，用于计算机实现。</p>
+<h3 id="UTF-16-1">UTF-16</h3><p>UCS/Unicode的一种折衷了处理效率和存储空间的编码实现方案，常被各种现代语言当作字符串内部编码使用。</p>
+<h3 id="UTF-8-1">UTF-8</h3><p>UCS/Unicode的一种倾向于节省空间的编码实现方案，因为对ASCII兼容，对英文文本非常有利，成为了当今互联网的主流（甚至事实标准）。</p>
+<p><strong>如果你的网站没有任何历史包袱，直接上UTF-8别商量！</strong></p>
+<p><strong>如果你的网站有一些历史包袱，商量商量还是上UTF-8吧，包袱的接口上转换一下编码。</strong></p>
+<h2 id="预报">预报</h2><p>呵呵呵呵，虽然文章的标题叫做《编码歪传》，但其实上面的内容一点也不歪嘛。</p>
+<p>有观众看不下去了：“拜托，你讲这些什么乱七八糟的理论知识我没啥兴趣啊，我想知道的其实只是为什么我的网页会乱码啊老湿！”</p>
+<p>对于上面的问题我只想说四个字：<del>请联系我</del>请看下集：<a href="/2015/03/07/something-about-encoding-web/">《编码歪传——Web篇》</a></p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>子曰：乱码是一种思念，而思念是一种病。相信很多Web人常常纠结于乱码当中，可能是展现、可能是表单提交、可能是数据库、可能是接口、可能是抓取……反正任何一个涉及到输入或者输出字符的地方都有可能被你碰到过乱码。</p>
+<p>为了解释和解决乱码问题，并且明确一些常见的误区，我打算写这样一个系列，介绍一些字符编码相关的东西，目前规划了3篇。</p>
+<p>基本上内容会比较偏科普性质，希望大神们轻拍，因为我相信这些将会是非常重要的基础知识，如果你能完整的读下去，肯定会在你以后遇到乱码的时候帮助到你的思考方式，快速找到原因。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[一个伪前端的Go入门——面向对象编程篇]]></title>
+    <link href="http://jimliu.net/2015/02/07/beginning-go-oop/"/>
+    <id>http://jimliu.net/2015/02/07/beginning-go-oop/</id>
+    <published>2015-02-07T09:42:34.000Z</published>
+    <updated>2015-03-26T11:21:23.000Z</updated>
+    <content type="html"><![CDATA[<p>伟大领袖毛主席说，烂尾是不好的。虽然学习Go对我而言多半是玩票性质的，但是既然坑已经挖了就还是先安心填吧，反正快过年了，年前尽量就不要留遗憾了嘛对不对。</p>
+<p>这一篇将主要介绍Go当中的类型系统和面向对象编程实现。</p>
+<a id="more"></a>
+<p>任何面向对象（或近似于面向对象）编程语言，只要理解了它的类型系统，基本上它的面向对象方法论就能闹明白了。</p>
+<h2 id="基础概念">基础概念</h2><p>一个典型的面向对象语言的类型系统通常都会包含以下几个概念：</p>
+<ul>
+<li>基础数据类型：如整数、浮点数、布尔、字符串等</li>
+<li>复杂数据类型：如数组、struct/class、指针等</li>
+<li>“万物之源”类型：如Java/C#里面的<code>Object</code>类型</li>
+</ul>
+<h2 id="类型约束">类型约束</h2><p>以上概念只是对类型本身的分类，而在对类型的约束方面，可体现出一门语言的面向对象方法论。例如：</p>
+<p>C++中没有“万物之源”类型，也没有接口。在函数签名中指定class是它主要的类型约束方式，使用template进行元编程可以当一点duck typing来看（不严谨）。</p>
+<p>C#和Java中的“万物之源”类型是<code>Object</code>，这一点上C#更彻底，因为它的基础数据类型也继承<code>Object</code>而在Java里则不是。C#和Java都有interface，使用class/interface是最常见的类型约束方式。除了在函数签名中约束，C#强大的泛型编程还支持在定义泛型类型的时候约束。</p>
+<p>JavaScript中有一个看起来很像“万物皆为对象”类型的<code>Object</code>，但其实它并不是所有类型的源头，这并不是很严谨。JS反正运行时访问不存在的字段就报错，这带来了不少工程化上的劣势，但是确实也增加了很多编程的灵活性。毕竟动态语言和静态语言的思路还是不一样的。</p>
+<p>由于实际生产中的JS常常会用类似<code>if (typeof obj.method === &#39;function&#39;)</code>来判断一个对象是否包含某个方法/字段，我们可以不严谨地认为JS的类型约束一方面是靠君子协议，一方面是靠“运行时手工duck typing”。</p>
+<h2 id="Go中的结构体">Go中的结构体</h2><p>基础数据类型和复杂数据类型在前作中已经介绍过了，这里就不多唠叨了。</p>
+<p>Go没有class只有struct，不过其struct上也可以定义方法，但看起来很不一样。C++/C#/Java都是在定义一个class的时候就给它定义方法，直观的感受就是成员方法都会在<code>class XXX {}</code>的那一对大括号里面。而Go中struct的成员方法则都是“后来”添加上去的。例如</p>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">// 定义一个<span class="keyword">Person</span>类型</span><br><span class="line">type <span class="keyword">Person</span> struct &#123;</span><br><span class="line">  Name  string</span><br><span class="line">  Age int</span><br><span class="line">&#125;</span><br><span class="line">// 为<span class="keyword">Person</span>类型添加一个成员方法introduce</span><br><span class="line">func (this <span class="keyword">Person</span>) Introduce() &#123;</span><br><span class="line">  fmt.Println(<span class="string">"My name is"</span>, this.Name, <span class="string">"and I'm"</span>, this.Age);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的代码就是给现有类型添加成员方法的办法，参数里虽然叫<code>this</code>但其实只是图这个名字比较熟悉而已，并不是固定的。</p>
+<h2 id="继承">继承</h2><p>Go里没有继承，它用了一种称为“匿名组合”的方式来满足对继承的需要，大概可以理解为<code>Mixin</code>吧。例如</p>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">// 定义一个Coder类型，让它“继承”<span class="keyword">Person</span></span><br><span class="line">type Coder struct &#123;</span><br><span class="line">  <span class="keyword">Person</span></span><br><span class="line">  APM float32</span><br><span class="line">&#125;</span><br><span class="line">// 为Coder类型添加成员方法coding</span><br><span class="line">func (this Coder) Coding() &#123;</span><br><span class="line">  if this.APM &lt; 100 &#123;</span><br><span class="line">    fmt.Println(this.<span class="keyword">Person</span>.Name, <span class="string">"is coding slowly"</span>);</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    fmt.Println(this.<span class="keyword">Person</span>.Name, <span class="string">"is coding fast"</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">jim := Coder&#123;<span class="keyword">Person</span>&#123;<span class="string">"Jim Liu"</span>, 18&#125;, 300&#125;;</span><br><span class="line">jim.Introduce();</span><br><span class="line">jim.Coding();</span><br></pre></td></tr></table></figure>
+<p>这样就让<code>Coder</code>“继承”了<code>Person</code>。</p>
+<h2 id="接口">接口</h2><p>在C#和Java中定义接口，可以用来进行进行类型约束，接口实现表达的是<code>can-do</code>语义，比类型继承的<code>is-a</code>语义更加灵活。</p>
+<p>Go里也使用接口<code>interface</code>来约束类型，不过比C#和Java里的要灵活一些。</p>
+<h3 id="定义接口">定义接口</h3><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="typedef"><span class="keyword">type</span> <span class="type">IGreetable</span> interface <span class="container">&#123;</span><br><span class="line">  <span class="type">Greeting</span>(<span class="title">name</span> <span class="title">string</span>)</span><br><span class="line">&#125;</span></span></span><br></pre></td></tr></table></figure>
+<p>很简单就是写上函数签名。接口可以组合，就像对<code>struct</code>进行匿名组合一样，对<code>interface</code>也可以进行匿名组合。</p>
+<h3 id="实现接口">实现接口</h3><p>C#/Java中一个类型要实现一个接口，需要在声明类型的时候连带声明它实现了哪些接口，然后挨个实现接口所声明的方法，否则编译器会无情拒绝。</p>
+<p>上面说到由于Go的成员方法是在<code>struct</code>定义之后才添加上去的，那么一个<code>struct</code>怎么才算实现一个接口呢？Go用了一种我个人称它叫“编译时duck typing”的约束，就是说一个<code>struct</code>只要它拥有的成员函数满足一个<code>interface</code>的定义，那它就可以满足该接口的约束，例如：</p>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">func (this <span class="keyword">Person</span>) Greeting(name string) &#123;</span><br><span class="line">  fmt.Println(<span class="string">"Hello"</span>, name);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这样就让<code>Person</code>实现了<code>IGreetable</code>接口，可以<code>var gre IGreetable = Coder{Person{&quot;Jim Liu&quot;, 18}, 300};</code>了。</p>
+<p>Go中的“万物之源”类型就是空接口<code>interface{}</code>，这个……在网上基本对它都是贬义，因为它就像C/C++里面的<code>void*</code>一样泛滥。</p>
+<h2 id="泛型">泛型</h2><p>为什么<code>interface{}</code>会泛滥？因为Go没有泛型。我了个去，作为一门现代静态语言竟然没有泛型？没有泛型的情况下，<code>interface{}</code>就很容易满天飞。</p>
+<p>与此同时，安全的类型转换也是有必要的，在C#中做安全类型转换可以这么做：</p>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ICodable coder = <span class="keyword">person</span> as ICodable;</span><br><span class="line">if (coder != null) &#123;</span><br><span class="line">  coder.Coding();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Go搞了一个叫“接口查询”的东西，跟上面比较像</p>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">func tryCoding(<span class="keyword">person</span> IGreetable) &#123;</span><br><span class="line">  if coder, ok := <span class="keyword">person</span>.(ICodable); ok &#123;</span><br><span class="line">    coder.Coding();</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    fmt.Println(<span class="string">"Oops, not a coder."</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面代码里那个<code>person.(ICodable)</code>就是一个“接口查询”，这个嘛我觉得倒是挺恶心的。</p>
+<h2 id="小结">小结</h2><p>Go虽然没有常见的class、继承、虚函数等概念，但是通过匿名组合大概实现了继承和虚函数的效果。</p>
+<p>Go的接口是先定义后实现的，这样一旦定义了一个新接口，只要它的签名和某些已有类型能match上，那么旧类型也可以当新接口实例来用，比较灵活。</p>
+<p>Go没有泛型，少了一种现代静态语言的元编程和类型约束的利器，真是啧啧啧，这个实在不应该，不知道以后打不打算引入。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>伟大领袖毛主席说，烂尾是不好的。虽然学习Go对我而言多半是玩票性质的，但是既然坑已经挖了就还是先安心填吧，反正快过年了，年前尽量就不要留遗憾了嘛对不对。</p>
+<p>这一篇将主要介绍Go当中的类型系统和面向对象编程实现。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[浅谈Angular与React]]></title>
+    <link href="http://jimliu.net/2015/02/05/angular-vs-react-in-shallow/"/>
+    <id>http://jimliu.net/2015/02/05/angular-vs-react-in-shallow/</id>
+    <published>2015-02-04T16:23:12.000Z</published>
+    <updated>2015-03-26T11:21:23.000Z</updated>
+    <content type="html"><![CDATA[<p>用Angular写了一个管理系统，用React只写了几百行玩具代码。</p>
+<p>因此是浅谈，真的很浅，完全可以说是对手感的评价。</p>
+<a id="more"></a>
+<h2 id="UI描述">UI描述</h2><h3 id="Angular">Angular</h3><p>Angular基本是做到了声明式UI，<code>ng-if</code>、<code>ng-repeat</code>这类的“流程控制”语法虽然看起来土鳖，但活儿好。至少对于UI的展现逻辑，基本上不再需要去它的controller里<code>if</code>或者<code>for</code>了。</p>
+<h3 id="React">React</h3><p>React说它的JSX是声明式的UI，这不扯吗，用了就知道，这东西只是比编程生成UI容易那么一丁丁点，仅仅是一丁丁点。</p>
+<p>要循环生成一个列表，还得先把它生成到一个数组里，再把数组塞进JSX，真是闹心。例如：</p>
+<figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> CardList = React.createClass(&#123;</span><br><span class="line">  render: <span class="function"><span class="keyword">function</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> button;</span><br><span class="line">    <span class="keyword">if</span> (loggedIn) &#123;</span><br><span class="line">      button = &lt;AddCardButton /&gt;;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      button = &lt;LoginButton /&gt;;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">var</span> cards = <span class="keyword">this</span>.props.data.map(<span class="function"><span class="keyword">function</span><span class="params">(item)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> (</span><br><span class="line">        &lt;Card data=&#123;item&#125; /&gt;</span><br><span class="line">      );</span><br><span class="line">    &#125;);</span><br><span class="line">    <span class="keyword">return</span> (</span><br><span class="line">      &lt;div className=<span class="string">"card-list"</span>&gt;</span><br><span class="line">        &lt;ul&gt;</span><br><span class="line">          &#123;cards&#125;</span><br><span class="line">        &lt;/ul&gt;</span><br><span class="line">        &lt;div className=<span class="string">"footer"</span>&gt;</span><br><span class="line">          &#123;button&#125;</span><br><span class="line">        &lt;/div&gt;</span><br><span class="line">      &lt;/div&gt;</span><br><span class="line">    );</span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>不要怀疑哦，上面演示的条件与循环的实现基本上就是官方示例里面给的方式。恶心吗？恶心就对了。</p>
+<h2 id="UI构建">UI构建</h2><h3 id="Angular-1">Angular</h3><p>Angular的UI构建基本上还是按照“模板”的思路，是基于文本的，稍微方便一点代码分离啊、build啊什么的。管理文本资源对于前端来说是很熟悉的事情。</p>
+<h3 id="React-1">React</h3><p>React当中没有模板，它万物皆组件。JSX是编程语言，React的“模板”是基于DOM的，于是所有UI都是程序片段，视图与逻辑的分离的界线变得非常模糊。</p>
+<p>用JSX几乎是构建React组件的唯一办法，因为不用JSX的话，手写那些<code>React.createElement</code>无疑是反人类的，而且更跟“声明式UI”没有半毛钱的关系了。</p>
+<p>当然理解React的UI是程序片段这一点后，也就有办法来做视图和逻辑的拆分了——把视图当做JS模块来管理，可以部分借鉴现在各种JS模块化的思路。不过技术实现上差强人意。因为我没专注研究，就不丢人现眼了。</p>
+<h2 id="数据驱动UI">数据驱动UI</h2><p>两者都实现了由model去驱动view，本世代的前端框架，包括不限于Ember、Polymer、Vue、Avalon都是这个思路，可以说以jQuery为代表的围绕DOM操作构建UI的时代已经过去了。</p>
+<h3 id="Angular-2">Angular</h3><p>Angular用脏检查驱动视图更新，如果理解了<code>$digest</code>循环，就基本上了解了什么时候视图会被更新，如果要整合自己已有的组件，可以脱离<code>$digest</code>循环尽情玩耍，完事以后一个<code>$apply</code>把控制权交回去。被诟病的就是性能问题了。</p>
+<h3 id="React-2">React</h3><p>React使用虚拟DOM，可谓天马行空。</p>
+<p>React开发者认为“组件就是一个个状态机”（原文：React thinks of UIs as simple state machines），所以它是通过<code>setState</code>来驱动的。于是事实上你会发现还是需要手工去<code>setState</code>更新状态。当然对于控制狂来说这是好的，首先是UI的更新时机变得很明确；其次React认为这样可以让UI变得“Predictable”，可以通过编写任意<code>state</code>来精确地控制UI，提高UI的可测性。</p>
+<p>但虚拟DOM和传统DOM之间几乎是不兼容的，如果要整合一些自己已有的组件，而这些组件——不管是为了实现方便还是为了性能——有魔改DOM，比如modal把元素摘到body上去方便定位；比如slide每次只保留两个元素其他一律干掉。那么会打破虚拟DOM与传统DOM之间的关联关系，React会无情罢工。</p>
+<blockquote>
+<p>Unable to find element. This probably means the DOM was unexpectedly mutated (e.g., by the browser), usually due to forgetting a &lt;tbody&gt; when using tables, nesting tags like &lt;form&gt;, &lt;p&gt;, or &lt;a&gt;, or using non-SVG elements in an &lt;svg&gt; parent. Try inspecting the child nodes of the element with React ID</p>
+</blockquote>
+<h2 id="基础设施">基础设施</h2><h3 id="Angular-3">Angular</h3><p>Angular提供了大量的基础设施，如大量的内建<code>directive</code>、依赖注入等，明确了<code>controller</code>、<code>service</code>等概念，这样就给出了一个基本稳定的应用开发的路数。不论这种大量输出价值观是否好坏，至少在使用Angular开发该怎么构建应用程序的问题分歧是比较少的。</p>
+<h3 id="React-3">React</h3><p>React几乎不提供任何基础设施，我并不理解这一点是因为他们不输出价值观还是完成度不够。React的官方文档目录里面“TIPS”栏目几乎与“GUIDES”栏目一样多，让我觉得有点尴尬。相比Angular的大而全，React比较专注于以一种“万物皆组件”的方式构建一个干净的UI，而并不是构建一个完整的应用程序（那是Flux里的内容）。</p>
+<h2 id="周边设施">周边设施</h2><h3 id="Angular-4">Angular</h3><p>Angular的插件很丰富，ui-router几乎是市面上最强的SPA路由组件；ng-resource把数组魔改成Promise也是有点儿意思。如上文所说，理解了<code>$digest</code>循环后要整合现有的UI组件并不难。</p>
+<h3 id="React-4">React</h3><p>React的插件相对要少一些，本次React Conf上有演示的一个router组件我没体会过，不评价。如上文所说，因为虚拟DOM与传统DOM之间微妙的关系，整合现有UI组件会比较容易踩坑。</p>
+<h2 id="结论">结论</h2><p>如果Angular是一个家务活干得好的小媳妇儿，那么React就是一个磨人的小妖精。</p>
+<p>虽然很多人都觉得Angular主张太强，但其实除了“数据驱动UI”的观念需要稍微突破一下，两者相比之下Angular并没有那么多概念冲击，反而React要舍弃不少东西。</p>
+<p>经我观察其实Facebook也只在个人主页的侧边栏使用了React，然后据说Instagram是整个用React的，因为我不玩这个就没试。</p>
+<p>用React构建应用程序会存在方法论的分歧，当然既然React很专注解决UI组件的问题，那么我们可以用它配合一些之前对于View做的不好的框架，嗯你一定知道我说的就是backbone。</p>
+<p>Angular受大家诟病性能的问题比较突出，移动端肯定没戏了，React据说性能很好，这个我没有去评估。</p>
+<p>结论之结论：Angular是一个循序渐进的MVVM框架，之所以说循序渐进，是因为这些概念在其他语言和平台上面都已经得到过验证了，希望Angular 2.0能继续保留这些中庸而好用的哲学。React是一个狼群中的异类，JSX的存在让我觉得他们团队有JS偏执，虚拟DOM的存在让我觉得这个东西并不是Web开发，使用React开发项目也许需要做好面对“Culture Shock”的准备。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>用Angular写了一个管理系统，用React只写了几百行玩具代码。</p>
+<p>因此是浅谈，真的很浅，完全可以说是对手感的评价。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[ES6 generator函数与co再一瞥]]></title>
+    <link href="http://jimliu.net/2015/01/18/more-about-es6-generator-function/"/>
+    <id>http://jimliu.net/2015/01/18/more-about-es6-generator-function/</id>
+    <published>2015-01-18T10:31:35.000Z</published>
+    <updated>2015-03-26T11:21:23.000Z</updated>
+    <content type="html"><![CDATA[<p>离上文<a href="/2014/11/28/a-brief-look-at-es6-generator-function/">《ES6 generator函数与co一瞥》</a>已经过去了两个月，真是惭愧，赶紧补完。</p>
+<p>本文将会介绍ES6中的<code>generator/yield</code>的异常处理，以及分析并实现一个简单的、只支持Promise的<a href="https://github.com/tj/co" target="_blank" rel="external">co</a>，嗯我们这里山寨的叫做<code>cool</code>。</p>
+<a id="more"></a>
+<h2 id="异常处理">异常处理</h2><p>这里我们分两种情况来看，一种是在<code>generator function</code>当中发生的异常，一种是在迭代中发生的异常。</p>
+<h3 id="在generator_function中发生的异常">在generator function中发生的异常</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span>* <span class="title">boring</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">yield</span> <span class="string">'one'</span>;</span><br><span class="line">  <span class="keyword">throw</span> <span class="string">'oops'</span>;</span><br><span class="line">  <span class="keyword">yield</span> <span class="string">'two'</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> gen = boring();</span><br><span class="line"><span class="keyword">var</span> iter = gen.next();</span><br><span class="line"><span class="keyword">while</span> (!iter.done) &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(iter.value, iter.done);</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    iter = gen.next();</span><br><span class="line">  &#125; <span class="keyword">catch</span> (ex) &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">'exception happend while iterating:'</span>, ex);</span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的代码只会输出<br><figure class="highlight fsharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">one <span class="keyword">false</span></span><br><span class="line"><span class="keyword">exception</span> happend <span class="keyword">while</span> iterating: oops</span><br></pre></td></tr></table></figure></p>
+<p>因为在继续第二个<code>next()</code>的时候，发生了异常，这个异常导致迭代终止了。</p>
+<h3 id="在迭代中发生的异常">在迭代中发生的异常</h3><p>通过<code>gen.throw()</code>可以把异常抛到<code>generator function</code>里面去，它会作为“整个<code>yield</code>表达式的异常”，然后迭代将会继续。<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span>* <span class="title">boring</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="keyword">yield</span> <span class="string">'one'</span>;</span><br><span class="line">  &#125; <span class="keyword">catch</span> (ex) &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">'exception caught inside:'</span>, ex);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">yield</span> <span class="string">'two'</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> gen = boring();</span><br><span class="line"><span class="keyword">var</span> iter = gen.next();</span><br><span class="line"><span class="keyword">while</span> (!iter.done) &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(iter.value, iter.done);</span><br><span class="line">  <span class="keyword">if</span> (iter.value === <span class="string">'one'</span>) &#123;</span><br><span class="line">    iter = gen.throw(<span class="string">'shut up'</span>); <span class="comment">// 强行异常，无情无义无理取闹</span></span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    iter = gen.next();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>将会输出<br><figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">one false</span><br><span class="line">exception caught <span class="keyword">inside</span>: shut up</span><br><span class="line">two false</span><br></pre></td></tr></table></figure></p>
+<p>当然，如果<code>generator function</code>内部没有捕获这个异常，最终它还是会被抛到外界来，回到上文的情况1。</p>
+<h3 id="用于将异步的错误处理同步化">用于将异步的错误处理同步化</h3><p>结合上面两个特性，我们可以将<code>yield</code>表达式当中的异步操作中的错误处理进行“同步化”，我们知道异步操作最恶心的地方就是错误处理，例如thunk风格的错误处理<br><figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">fs.readFile(path, <span class="function"><span class="keyword">function</span><span class="params">(err, data)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (!err) &#123;</span><br><span class="line">    <span class="comment">// 正常</span></span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// 异常</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></p>
+<p>或者Promise风格的错误处理<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$.getJSON(url).then(<span class="function"><span class="keyword">function</span>(<span class="params">data</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 正常</span></span><br><span class="line">&#125;, <span class="function"><span class="keyword">function</span>(<span class="params">err</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 异常</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></p>
+<p>很容易把程序逻辑扯得支离破碎。而同步的错误处理就容易得多，可以直接用JS的结构化异常处理<code>try/catch/finally</code>。<br>于是我们可以扩展上一篇文章当中的<code>async</code>函数（本文将改名叫<code>cool</code>），让它对于<code>yield</code>表达式中的异步操作也可以进行错误处理，并且将错误通过<code>gen.throw</code>抛回<code>generator function</code>内，从而内部就可以使用<code>try/catch</code>来处理异常了。</p>
+<h2 id="动手实现一个co">动手实现一个co</h2><p>为了简化代码，我们先去掉对<code>yield</code>一个thunk的支持，只留下对于<code>Promise</code>和<code>generator</code>的支持，并且最终也把这组“同步化”之后的异步操作返回为一个Promise。</p>
+<h3 id="核心">核心</h3><p>回顾一下前作当中的<code>async</code>函数，它已经做到了</p>
+<ul>
+<li><code>yield</code>一个thunk函数</li>
+<li><code>yield</code>一个普通值</li>
+<li>完成迭代</li>
+</ul>
+<p>这次我们先把thunk函数换成Promise的风格，然后还差的是</p>
+<ul>
+<li>通过<code>gen.throw()</code>将Promise的错误抛到<code>generator function</code>内</li>
+<li>让<code>cool</code>返回一个Promise</li>
+<li>对于<code>generator function</code>没能处理的异常，将其转化成Promise风格的错误处理<figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">cool</span><span class="params">(gen)</span></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> Promise(<span class="function"><span class="keyword">function</span><span class="params">(resolve, reject)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> iter = gen();</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">onResolve</span><span class="params">(data)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">var</span> it = iter.next(data); <span class="comment">// 进行一步迭代</span></span><br><span class="line">        step(it);</span><br><span class="line">      &#125; <span class="keyword">catch</span> (ex) &#123;</span><br><span class="line">        reject(ex); <span class="comment">// 捕获到generator function内的异常，终止迭代</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">onReject</span><span class="params">(err)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">var</span> it = iter.<span class="keyword">throw</span>(err);</span><br><span class="line">        <span class="comment">// 将yield表达式中的异步操作的错误抛进generator function，并继续迭代</span></span><br><span class="line">        step(it);</span><br><span class="line">      &#125; <span class="keyword">catch</span> (ex) &#123;</span><br><span class="line">        reject(ex); <span class="comment">// generator function没有妥善处理异常，终止迭代</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">step</span><span class="params">(it)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">if</span> (it.done) &#123;</span><br><span class="line">        <span class="comment">// 迭代已完成</span></span><br><span class="line">        resolve(it.value);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">var</span> value = it.value;</span><br><span class="line">      <span class="keyword">if</span> (<span class="keyword">typeof</span> value.then === <span class="string">'function'</span>) &#123;</span><br><span class="line">        <span class="comment">// 收到的是一个Promise</span></span><br><span class="line">        value.then(onResolve, onReject);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 收到的是一个值</span></span><br><span class="line">        onResolve(value);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    onResolve(); <span class="comment">// 开始迭代</span></span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>上面的代码和co@4.0的核心代码几乎如出一辙，当然少了很多各种异步API格式的兼容，但是实际上<code>generator/yield</code>真的就是这么简单，很难写出什么花样来。</p>
+<p>现在我们的<code>cool</code>函数已经可以支持<code>try/catch</code>和<code>yield Promise</code>的用法了</p>
+<h3 id="试试看">试试看</h3><p>先写一个名为<code>sleepRandom</code>的辅助函数<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">sleepRandom</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span>(<span class="params">resolve</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> ms = <span class="built_in">Math</span>.floor(<span class="built_in">Math</span>.random() * <span class="number">500</span>);</span><br><span class="line">    setTimeout(resolve.bind(<span class="keyword">this</span>, ms), ms); <span class="comment">// Promise的返回值就是sleep的毫秒数</span></span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="顺序执行">顺序执行</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> boringJob = cool(<span class="function"><span class="keyword">function</span>*(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="keyword">yield</span> <span class="string">'yield sync value'</span>);</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">var</span> i=<span class="number">0</span>; i&lt;<span class="number">5</span>; ++i) &#123;</span><br><span class="line">    <span class="keyword">var</span> ms = <span class="keyword">yield</span> sleepRandom();</span><br><span class="line">    <span class="built_in">console</span>.log(i, ms);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="string">'success'</span>;</span><br><span class="line">&#125;);</span><br><span class="line">boringJob.then(<span class="function"><span class="keyword">function</span>(<span class="params">data</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'finished:'</span>, data);</span><br><span class="line">&#125;, <span class="function"><span class="keyword">function</span>(<span class="params">err</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'failed:'</span>, err);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>输出<br><figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">yield</span> sync <span class="keyword">value</span></span><br><span class="line"><span class="number">0</span> <span class="number">47</span></span><br><span class="line"><span class="number">1</span> <span class="number">343</span></span><br><span class="line"><span class="number">2</span> <span class="number">40</span></span><br><span class="line"><span class="number">3</span> <span class="number">339</span></span><br><span class="line"><span class="number">4</span> <span class="number">423</span></span><br><span class="line">finished: success</span><br></pre></td></tr></table></figure></p>
+<p>这个例子中，<code>sleepRandom</code>本来是一个异步的操作，但是被我们的“语法糖”搞成同步的了，JS也能sleep了，你满足了吧……</p>
+<h4 id="未处理异常">未处理异常</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">bad</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span>(<span class="params">resolve, reject</span>) </span>&#123;</span><br><span class="line">    setTimeout(reject.bind(<span class="keyword">this</span>, <span class="string">'breaking bad'</span>), <span class="number">200</span>);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> weakJob = cool(<span class="function"><span class="keyword">function</span>*(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="keyword">yield</span> <span class="string">'yield sync value'</span>);</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="keyword">yield</span> bad()); <span class="comment">// bad()被reject后，其错误将会作为`yield bad()`语句的异常抛出</span></span><br><span class="line">  <span class="built_in">console</span>.log(<span class="keyword">yield</span> sleepRandom());</span><br><span class="line">  <span class="keyword">return</span> <span class="string">'success'</span>;</span><br><span class="line">&#125;);</span><br><span class="line">weakJob.then(<span class="function"><span class="keyword">function</span>(<span class="params">data</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'finished:'</span>, data);</span><br><span class="line">&#125;, <span class="function"><span class="keyword">function</span>(<span class="params">err</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'failed:'</span>, err);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>输出<br><figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">yield </span>sync value</span><br><span class="line"><span class="label">failed</span>: <span class="keyword">breaking </span><span class="keyword">bad</span></span><br></pre></td></tr></table></figure></p>
+<p>因为<code>yield bad()</code>的异常没被处理，它就被抛出来了，一来造成迭代终止，二来造成了<code>weakJob</code>被<code>reject</code>。</p>
+<h4 id="用try/catch/fanally处理异步任务的异常">用try/catch/fanally处理异步任务的异常</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> robustJob = cool(<span class="function"><span class="keyword">function</span>*(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="keyword">yield</span> <span class="string">'yield sync value'</span>);</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="keyword">yield</span> bad());</span><br><span class="line">  &#125; <span class="keyword">catch</span> (ex) &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">'caught exception:'</span>, ex); <span class="comment">// 异常被处理了，不会造成迭代终止</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="keyword">yield</span> sleepRandom());</span><br><span class="line">  <span class="keyword">return</span> <span class="string">'success'</span>;</span><br><span class="line">&#125;);</span><br><span class="line">robustJob.then(<span class="function"><span class="keyword">function</span>(<span class="params">data</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'finished:'</span>, data);</span><br><span class="line">&#125;, <span class="function"><span class="keyword">function</span>(<span class="params">err</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'failed:'</span>, err);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>输出<br><figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">yield </span>sync value</span><br><span class="line"><span class="label">caught</span> exception: <span class="keyword">breaking </span><span class="keyword">bad</span><br><span class="line"></span><span class="number">487</span></span><br><span class="line"><span class="label">finished</span>: success</span><br></pre></td></tr></table></figure></p>
+<p>这个例子中，虽然<code>bad</code>是一个异步操作，但是因为我们的<code>cool</code>函数把<code>Promise</code>的错误处理格式转换成了<code>try/catch</code>，所以可以用编写同步代码的方式来处理异常了，编程体验好多了。</p>
+<h3 id="补充">补充</h3><p>然后我们再实现一个<code>yield</code>另一个<code>generator</code>的兼容，这个就很简单了。</p>
+<p>首先对<code>cool</code>的传入参数进行一下重构，使其可以兼容<code>generator</code>和<code>generator function</code>两种输入<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">cool</span>(<span class="params">gen</span>)</span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span>(<span class="params">resolve, reject</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> iter = <span class="keyword">typeof</span> gen === <span class="string">'function'</span> ? gen() : gen;</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">onResolve</span>(<span class="params">data</span>) </span>&#123;</span><br><span class="line">...</span><br></pre></td></tr></table></figure></p>
+<p>然后对<code>yield</code>内容是<code>generator</code>的情况也做一下兼容<br><figure class="highlight ceylon"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"><span class="keyword">if</span> (typeof <span class="keyword">value</span>.<span class="keyword">then</span> === <span class="string">'function'</span>) &#123;</span><br><span class="line">  <span class="comment">// 收到的是一个Promise</span></span><br><span class="line">  <span class="keyword">value</span>.<span class="keyword">then</span>(onResolve, onReject);</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (typeof <span class="keyword">value</span>.next === <span class="string">'function'</span> &amp;&amp; typeof <span class="keyword">value</span>.<span class="keyword">throw</span> === <span class="string">'function'</span>) &#123;</span><br><span class="line">  <span class="comment">// 收到的是一个Generator，将其用cool包装为一个Promise然后继续</span></span><br><span class="line">  cool(<span class="keyword">value</span>).<span class="keyword">then</span>(onResolve, onReject);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  <span class="comment">// 收到的是一个值</span></span><br><span class="line">  onResolve(<span class="keyword">value</span>);</span><br><span class="line">&#125;</span><br><span class="line">...</span><br></pre></td></tr></table></figure></p>
+<p>于是构建了一个还算凑合够用的“同步编程、异步执行”的体系<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span>* <span class="title">boring</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">var</span> i=<span class="number">0</span>; i&lt;<span class="number">5</span>; ++i) &#123;</span><br><span class="line">    <span class="keyword">var</span> ms = <span class="keyword">yield</span> sleepRandom();</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">'boring'</span>, ms);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="string">'boring end'</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> boringJob = cool(<span class="function"><span class="keyword">function</span>*(<span class="params"></span>)</span>&#123;</span><br><span class="line">  <span class="keyword">var</span> boringResult = <span class="keyword">yield</span> boring(); <span class="comment">// 一个generator function里可以yield另一个generator</span></span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'boring result:'</span>, boringResult);</span><br><span class="line">  <span class="keyword">return</span> <span class="string">'success'</span>;</span><br><span class="line">&#125;);</span><br><span class="line">boringJob.then(<span class="function"><span class="keyword">function</span>(<span class="params">data</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'finished:'</span>, data);</span><br><span class="line">&#125;, <span class="function"><span class="keyword">function</span>(<span class="params">err</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'failed:'</span>, err);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></p>
+<p>上面的例子可以看做我们把来自系统或其他库的基于callback也好，Promise也好，反正是异步操作，先封装成<code>Promise</code>，然后在我们的应用程序代码里，使用<code>cool</code>，或者<code>co</code>来实现“同步代码”，当然事实上这些代码执行的时候都还是异步的，我们只是实现了一个同步的语义。</p>
+<h2 id="问题">问题</h2><h3 id="并行任务">并行任务</h3><p>JS是单线程的，因此但就JS本身而言很难说真正的“并行任务”，但是runtime是多线程的，因此我们可以充分利用这一点，比如同时开多个Ajax请求，同时开多个<code>fs.readFile</code>等等。</p>
+<p>这本身不是难事，难的是当遇到类似“当a, b, c三个请求都完成时，渲染界面”这种需要控制异步流程的地方，使用<code>async.js</code>这类的工具可以帮助我们做这种操作，使用<code>Promise.all</code>也可以实现这样的语义。事到如今，JS社区对于用<code>async.js</code>、<code>then.js</code>还是<code>Promise</code>，甚至是ES6的Promise还是重新实现的Promise，还讨论的喋喋不休，乐此不疲，足见异步语义对于程序员的负担是很大的。</p>
+<p>在co中，<code>yield</code>一个数组的时候，它会把这个数组中的每一项都当做<code>Promise</code>，然后用<code>Promise.all</code>来让他们并发地执行。而如果<code>yield</code>的是一个Plain Object，它会遍历这个对象所有key，将其进行“Promise化”。听起来比较复杂，不过其实也就一二十行代码的事情，有兴趣的同学自己去看看co的代码就OK了。</p>
+<p>这样的话在使用co的时候，如果<code>yield</code>一个数组或者一个Plain Object，它会对数组或者对象里的各项并发地执行，当它们全部都完成的时候一次性完成<code>yield</code>，依然可以用同步的语义实现并发，例如<br><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">var results = <span class="keyword">yield</span> [<span class="variable">$.</span>ajax(url1), <span class="variable">$.</span>ajax(url2), <span class="variable">$.</span>ajax(url3)];</span><br><span class="line"><span class="regexp">//</span> 全部完成后，<span class="keyword">yield</span>才会完成，返回值是三个ajax的结果所组成的数组</span><br></pre></td></tr></table></figure></p>
+<h3 id="调用栈">调用栈</h3><p>前阵子有爆料co在某些情况下会出现Maximum call stack size exceeded的情况（<a href="https://gist.github.com/zensh/797feb9ae72eac901021" target="_blank" rel="external">例子</a>），其实非常符合预期并且好理解，这是因为用同步语义写的循环<code>yield</code>代码将会被变换成函数调用，一不小心就会造成非常长的Call Stack。解决的办法也比较容易，那就是<strong>不要yield同步函数</strong>。</p>
+<p>在我们这个例子里没这个问题，因为我们用的是ES6的Promise，它是严格异步的。而co支持yield一个thunk，thunk虽然是callback语义，但是没有任何担保它是异步的，也就是说thunk有“同步callback”和“异步callback”之分，这就是I神所谓<a href="http://blog.izs.me/post/59142742143/designing-apis-for-asynchrony" target="_blank" rel="external">“Release Zalgo”</a>的问题，有兴趣可以继续探讨下。</p>
+<h3 id="支持程度">支持程度</h3><p>JS最让人恶心的地方就是有了新特性你不知道敢不敢用，因为不知道<code>generator/yield</code>支持程度怎么样。</p>
+<ul>
+<li>在node.js &gt;= 0.11的版本中通过<code>--harmony</code>或<code>--harmony-generator</code>参数可以开启支持。</li>
+<li>在io.js &gt;= 1.0中已经相当于默认开启了这个支持。</li>
+<li>在Chrome较高版本中通过<code>chrome:flags</code>中的“启用实验性 JavaScript”可以开启支持。</li>
+<li>通过<a href="https://github.com/facebook/regenerator" target="_blank" rel="external">regenerator</a>可以将<code>generator/yield</code>代码编译成ES5代码，用的时候需要一个大约500行源码的runtime。</li>
+</ul>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>离上文<a href="/2014/11/28/a-brief-look-at-es6-generator-function/">《ES6 generator函数与co一瞥》</a>已经过去了两个月，真是惭愧，赶紧补完。</p>
+<p>本文将会介绍ES6中的<code>generator/yield</code>的异常处理，以及分析并实现一个简单的、只支持Promise的<a href="https://github.com/tj/co">co</a>，嗯我们这里山寨的叫做<code>cool</code>。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[一个伪前端的Go入门]]></title>
+    <link href="http://jimliu.net/2015/01/17/beginning-go/"/>
+    <id>http://jimliu.net/2015/01/17/beginning-go/</id>
+    <published>2015-01-17T15:42:34.000Z</published>
+    <updated>2015-03-26T11:21:23.000Z</updated>
+    <content type="html"><![CDATA[<p>最近因为突发奇想对并发编程不知道哪就来了兴趣，然后想来Go是现在非常炙手可热的一门并发编程语言，而Erlang虽然有其迷人之处，但是这么纯正的函数式语言要学起来实在是曲线也有点陡。</p>
+<p><img src="/uploads/2015/go.gif" alt="吉祥物"><br>这货是Go的吉祥物，强行卖萌，是个……鼹鼠吗？</p>
+<p>OK不扯了，打算边学边写一点文章介绍下Go的入门，那么这一篇就是入门中的入门了，可能会显得有点无聊。</p>
+<a id="more"></a>
+<h2 id="Hello_World">Hello World</h2><p>安装：官网提供了常用系统的安装包，无需再自己编译，安装完了需要配一下<code>GOPATH</code>环境变量<br><figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"><span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">  fmt.<span class="type">Println</span>(<span class="string">"Hello, Go!"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>上面这段程序主要包含的内容是：</p>
+<ul>
+<li>可执行程序至少需要一个叫<code>main</code>的<code>package</code></li>
+<li><code>main</code>包中包含一个签名为无参数无返回值的<code>main</code>函数作为入口函数</li>
+</ul>
+<p>运行：<code>go run hello.go</code><br>编译：<code>go build -o hello hello.go</code><br>开发工具：我使用的是SublimeText配合GoSublime插件，官方自带了gofmt程序用来格式化源代码，于是代码风格的争论可以减少了，GoSublime会在保存文件的时候自动调用gofmt。</p>
+<h2 id="数据类型">数据类型</h2><h3 id="基础数据类型">基础数据类型</h3><ul>
+<li>布尔：bool</li>
+<li>整数：int, uint, int16, int32, int64等等</li>
+<li>浮点数：float32, float64</li>
+<li>复数：complex64, complex128</li>
+<li>字符串：string</li>
+</ul>
+<p>其中字符串操作主要有<br><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"Jim"</span> + <span class="string">"Liu"</span> <span class="comment">// 连接</span></span><br><span class="line"><span class="function"><span class="title">len</span><span class="params">(s)</span></span>        <span class="comment">// 长度</span></span><br><span class="line">s[<span class="number">1</span>]          <span class="comment">// 取字符</span></span><br></pre></td></tr></table></figure></p>
+<p><code>int</code>和<code>int32</code>是两种类型，需要做类型转换的。<del>然后有的文档说<code>int</code>是平台无关的，有的文档说是平台相关的，傻傻分不清楚，</del>现在好了，新版的Go里面<code>int</code>长度是平台相关的。根据不同场景选择具体长度的类型是种好习惯，平常偷懒直接用<code>int</code>也无妨。</p>
+<p>浮点数用<code>==</code>比较也是不安全的。</p>
+<h3 id="复杂数据类型">复杂数据类型</h3><p>常用的复杂数据类型有</p>
+<ul>
+<li>指针</li>
+<li>数组和slice</li>
+<li>map</li>
+<li>struct和interface</li>
+<li>channel</li>
+<li>枚举</li>
+</ul>
+<h4 id="数组和slice">数组和slice</h4><p>Go里面的数组是值类型，赋值、传参的时候会copy，这个和PHP比较像但是和C#、JS不大一样。如果想传引用可以通过指针，不过Go推荐在这种时候用slice。</p>
+<p>Go里的数组比较像C里的数组，<code>[5]int</code>跟<code>[10]int</code>是两种不同的类型。数组是不可变长的，但可以通过slice来提高具体使用时候的灵活性。</p>
+<p>slice和数组看起来很像<br><figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> arr1 [<span class="number">5</span>]<span class="keyword">int</span>  <span class="comment">// 这货是个数组</span></span><br><span class="line"><span class="keyword">var</span> slice1 []<span class="keyword">int</span> <span class="comment">// 这货是个slice</span></span><br></pre></td></tr></table></figure></p>
+<p>slice用起来和Python里的数组有点像，可以把它理解为数组的一个view，而真正存放元素的是数组。那么slice是引用还是值呢？我把它当引用看，因为对它的下标赋值，会改到它指向的数组上面，传参、赋值的时候也是如此，表现和C#、JS里的基本一致。</p>
+<p>一个数组上可以建立多个slice，用<br><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">arr</span><span class="attr_selector">[:]</span></span><br><span class="line"><span class="tag">arr</span><span class="attr_selector">[2:4]</span></span><br><span class="line"><span class="tag">arr</span><span class="attr_selector">[:5]</span></span><br><span class="line"><span class="tag">arr</span><span class="attr_selector">[5:]</span></span><br></pre></td></tr></table></figure></p>
+<p>这样的语法可以方便地基于数组或者slice来生成slice，下界包含，上界不含。</p>
+<p>如果懒得通过数组建立slice，可以直接用<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">make</span>([]<span class="typename">int</span>, <span class="built_in">len</span>)</span><br><span class="line">[]<span class="typename">int</span>&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>&#125; <span class="comment">// 显式初始化内容</span></span><br></pre></td></tr></table></figure></p>
+<p>的方式来生成一个slice。</p>
+<p>用<code>append(slice, 1, 2, 3)</code>或者<code>append(slice1, slice2...)</code>的方式向slice里添加元素。注意两点：1.<code>append</code>是返回新值的，而不是直接修改参数。2.可以任意多个元素作为参数，或一个slice加上<code>...</code>作为不定长参数。</p>
+<p>slice和C++里的<code>vector&lt;T&gt;</code>类似，它具有<code>len(slice)</code>和<code>cap(slice)</code>两个操作，前者是元素个数，后者是容量，容量用满以后再加入新元素就会（被）扩容。</p>
+<h4 id="map">map</h4><p>用惯了JavaScript的<code>{}</code>，不难发现现在随便写个程序对于字典的依赖有多大。Go很良心，把<code>map</code>做成内置类型了。而且比JS更好的是它的key不像JS那样仅限字符串或者数字。<strong>map也是引用类型</strong>。<br><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">kv := <span class="function"><span class="title">make</span><span class="params">(map[string]int)</span></span> <span class="comment">// 初始化一个key为string，value为int的map</span></span><br><span class="line">kv[<span class="string">"foo"</span>] = <span class="number">100</span>            <span class="comment">// 元素赋值</span></span><br><span class="line">val, ok := kv[<span class="string">"foo"</span>]       <span class="comment">// 查找</span></span><br><span class="line"><span class="function"><span class="title">delete</span><span class="params">(kv, <span class="string">"foo"</span>)</span></span>          <span class="comment">// 删除</span></span><br></pre></td></tr></table></figure></p>
+<p>查找的那个比较特殊，它利用了Go中的多返回值特性，如果查到了那么<code>ok</code>就是<code>true</code>，否则就是<code>false</code>。</p>
+<p>值得一提的是，通过某些资料指出，Go的map是树查找结构，而不是hash，也就是说它的时间复杂度是<code>O(logn)</code>的，不是<code>O(1)</code>的。在数量小的时候也许性能会比较好，因为常数比hash表好，而数量大的时候访问时间会有增长。再结合hash碰撞、内存等各方面综合考虑，有优有劣，不展开讨论。</p>
+<p>事实上也的确只要求key的类型实现了等与不等的操作，不需要实现hash操作。</p>
+<h4 id="struct">struct</h4><p>Go没有<code>class</code>，但是有<code>struct</code>。<br><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="typedef"><span class="keyword">type</span> <span class="type">Klass</span> struct <span class="container">&#123;</span><br><span class="line">  <span class="type">Name</span>  <span class="title">string</span></span><br><span class="line">  <span class="type">Value</span> <span class="title">int</span></span><br><span class="line">&#125;</span></span></span><br></pre></td></tr></table></figure></p>
+<p>这个语法跟C里的<code>typedef</code>很像，定义了个结构体。Go里面没有<code>private</code>，<code>public</code>这样的访问修饰符，首字母大写的字段是public的，首字母小写的就是private的，只能在这个<code>struct</code>所在的<code>package</code>内能访问到。</p>
+<p>初始化一个struct的方法有多种，比较常用的有<br><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">k1 :</span>= Klass&#123;<span class="string">"Jim"</span>, <span class="number">999</span>&#125;  <span class="comment">// 带值初始化，按定义顺序传值</span></span><br><span class="line"><span class="string">k2 :</span>= Klass&#123;<span class="string">Name:</span> <span class="string">"liu"</span>&#125; <span class="comment">// 命名传参，其余参数会被赋值为对应类型的“零值”</span></span><br></pre></td></tr></table></figure></p>
+<h4 id="枚举">枚举</h4><p>Go里没有严格意义上的枚举，相比C是一个不足，更不用比C#那种强类型枚举了。定义一个枚举大概是这么个样<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Direction <span class="typename">int</span></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">  DirSouth Direction = <span class="constant">iota</span></span><br><span class="line">  DirNorth <span class="comment">// 后续的可以省略类型以及iota</span></span><br><span class="line">  DirEast</span><br><span class="line">  DirWest</span><br><span class="line">)</span><br></pre></td></tr></table></figure></p>
+<p><code>iota</code>是一个编译时常量，每出现一次就会自动<code>+1</code>，并且会在每个<code>const</code>声明的时候重置为0</p>
+<p>可以看出这样的山寨枚举会缺少一些编译时检查，于是用一个type define来让它变成“强类型”的。而<code>iota</code>是<code>int</code>型的，可以和我们定义的类型做隐式转换，还算比较方便。</p>
+<h2 id="变量">变量</h2><p>声明变量时需要指定类型<br><figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> v1 <span class="keyword">int</span></span><br><span class="line"><span class="keyword">var</span> s1 <span class="keyword">string</span></span><br><span class="line"><span class="keyword">var</span> arr1 [<span class="number">10</span>]<span class="keyword">int</span></span><br><span class="line"><span class="keyword">var</span> slice1 []<span class="keyword">int</span></span><br></pre></td></tr></table></figure></p>
+<p>所以你看出来了，上面都是只声明，不赋初值的方式，要赋初值很简单，后面跟个赋值语句就行了。</p>
+<p>当然也可以利用一下类型<del>推倒</del>推导<br><figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable"><span class="keyword">var</span> s1</span> = <span class="string">"hello"</span></span><br><span class="line">s2 := <span class="string">"world"</span></span><br></pre></td></tr></table></figure></p>
+<p>上面这两种写法没声明类型，是靠类型推导来完成的，很方便，尤其是最后一种，是非常常用的写法。</p>
+<h2 id="流程控制">流程控制</h2><h3 id="条件">条件</h3><h4 id="if">if</h4><figure class="highlight mel"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="keyword">condition</span> &#123;</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> another_condition &#123;</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>几个要点</p>
+<ul>
+<li>条件语句不加括号</li>
+<li>左花括号<code>{</code>不换行（<img src="/uploads/public/bye.gif" alt="">代码风格之争）</li>
+<li>即使只有一句话也必须加花括号（<img src="/uploads/public/bye.gif" alt="">代码规范之争）</li>
+</ul>
+<p><code>if</code>的条件之前还可以放一个短的声明语句，放个临时的条件变量简直不要太方便<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="function"><span class="keyword">val</span>, <span class="title">ok</span> :</span>= kmap[<span class="string">"foo"</span>]; ok &#123;</span><br><span class="line">  fmt.<span class="type">Println</span>(<span class="function"><span class="keyword">val</span>)</span><br><span class="line"></span>&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  fmt.<span class="type">Println</span>(<span class="string">"not found"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="switch">switch</h4><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">val</span> :</span>= <span class="number">1</span></span><br><span class="line">switch <span class="function"><span class="keyword">val</span> &#123;</span></span><br><span class="line"><span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line"><span class="keyword">case</span> <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>:</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">  fallthrough</span><br><span class="line"><span class="keyword">default</span>:</span><br><span class="line">  <span class="comment">//</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>要点：case后面的值可以是多个；默认不fallthrough，可以通过<code>fallthrough</code>语句来显式达成。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">val</span> :</span>= <span class="number">1</span></span><br><span class="line">switch &#123;</span><br><span class="line"><span class="keyword">case</span> <span class="function"><span class="keyword">val</span> <span class="title">==</span> 0:</span></span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line"><span class="keyword">case</span> <span class="number">0</span> &lt; <span class="function"><span class="keyword">val</span> <span class="title">&amp;&amp;</span> <span class="title">val</span> <span class="title">&lt;</span> 100:</span></span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">  fallthrough</span><br><span class="line"><span class="keyword">default</span>:</span><br><span class="line">  <span class="comment">//</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>要点：switch后面不跟变量的时候，case后面可以是完整的表达式，很多时候这种写法可以取代<code>if/else</code>。</p>
+<h3 id="循环">循环</h3><p>Go里面只有<code>for</code>循环一种循环，但是它有几个变种。</p>
+<p>最基础的<br><figure class="highlight matlab"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> <span class="built_in">i</span> := <span class="number">0</span>; <span class="built_in">i</span> &lt; <span class="number">10</span>; <span class="built_in">i</span>++ <span class="cell">&#123;</span><br><span class="line">  // ...</span><br><span class="line">&#125;</span></span><br></pre></td></tr></table></figure></p>
+<p>当起始语句和累加语句不写时，那两个分号也可以省了，这个就相当于<code>while</code>了<br><figure class="highlight axapta"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">sum</span> := <span class="number">2</span></span><br><span class="line"><span class="keyword">for</span> <span class="keyword">sum</span> &lt; <span class="number">1000</span> &#123;</span><br><span class="line">  <span class="keyword">sum</span> += <span class="keyword">sum</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>还有“for-ever”<br><figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> &#123;</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>for</code>循环可以通过<code>break</code>打断，<code>continue</code>跳过。</p>
+<p><code>for</code>循环可以配合<code>range</code>来更方便地遍历数组、slice、KV、channel等，例如<br><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">for</span> <span class="tag">k</span>, <span class="rule"><span class="attribute">v </span>:<span class="value">= range kv &#123;</span><br><span class="line">  fmt.<span class="function">Println</span>(k, <span class="string">":"</span>, v)</span><br><span class="line">&#125;</span></span></span><br></pre></td></tr></table></figure></p>
+<h2 id="函数">函数</h2><h3 id="基础概念">基础概念</h3><ul>
+<li>函数是一等公民</li>
+<li>函数是强类型的</li>
+<li>函数可以有多返回值，可以使用named返回值</li>
+<li>函数也有闭包</li>
+</ul>
+<h4 id="简单函数，A+B_Problem">简单函数，A+B Problem</h4><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">func <span class="title">add</span><span class="params">(a, b <span class="keyword">int</span>)</span> <span class="keyword">int</span> </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> a + b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="多返回值">多返回值</h4><figure class="highlight nimrod"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">func divide(a, b <span class="type">int</span>) (<span class="literal">result</span> <span class="type">int</span>, err <span class="type">string</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> b == <span class="number">0</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>, <span class="string">"divided by zero"</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> a / b, <span class="string">""</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果具名返回值都已经被赋值了，那么可以直接<code>return</code>就能返回多个值</p>
+<h4 id="不定参数">不定参数</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">func</span> printEverything(message <span class="typename">string</span>, args ...<span class="typename">string</span>) &#123;</span><br><span class="line">  fmt.Println(message)</span><br><span class="line">  <span class="keyword">for</span> i, v := <span class="keyword">range</span> args &#123;</span><br><span class="line">    fmt.Println(i, v)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">printEverything(<span class="string">"hello"</span>, <span class="string">"one"</span>, <span class="string">"two"</span>, <span class="string">"three"</span>)</span><br></pre></td></tr></table></figure>
+<p>这里本质上<code>args</code>是一个<code>[]string</code>的slice。</p>
+<h4 id="函数变量_&amp;&amp;_匿名函数">函数变量 &amp;&amp; 匿名函数</h4><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="rule"><span class="attribute">sayHello </span>:<span class="value">= <span class="function">func</span>(name string) &#123;</span><br><span class="line">  fmt.<span class="function">Println</span>(<span class="string">"hello"</span>, name)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function">sayHello</span>(<span class="string">"jim"</span>)</span></span></span><br></pre></td></tr></table></figure>
+<p><code>sayHello</code>是一个函数变量，它的值是一个匿名函数，和JS里差不多，区别就是Go里的函数变量是强类型的。</p>
+<h4 id="闭包">闭包</h4><p>这个就不演示了，和JS里的闭包差不多。</p>
+<h2 id="下期预告">下期预告</h2><p>这一篇介绍的东西都太基础，比较无聊，接下来的内容应该会稍微有意思点，希望不要“有生之年”。</p>
+<p>下一篇应该会包含如下内容</p>
+<ul>
+<li>关于struct的更多：Go里的“面向对象”和interface</li>
+<li>channel和goroutine简单应用</li>
+</ul>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>最近因为突发奇想对并发编程不知道哪就来了兴趣，然后想来Go是现在非常炙手可热的一门并发编程语言，而Erlang虽然有其迷人之处，但是这么纯正的函数式语言要学起来实在是曲线也有点陡。</p>
+<p><img src="/uploads/2015/go.gif" alt="吉祥物"><br>这货是Go的吉祥物，强行卖萌，是个……鼹鼠吗？</p>
+<p>OK不扯了，打算边学边写一点文章介绍下Go的入门，那么这一篇就是入门中的入门了，可能会显得有点无聊。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[ES6 generator函数与co一瞥]]></title>
+    <link href="http://jimliu.net/2014/11/28/a-brief-look-at-es6-generator-function/"/>
+    <id>http://jimliu.net/2014/11/28/a-brief-look-at-es6-generator-function/</id>
+    <published>2014-11-28T11:23:12.000Z</published>
+    <updated>2015-03-26T11:21:23.000Z</updated>
+    <content type="html"><![CDATA[<p>最近开始学（其实就是玩）ES6里的<code>generator/yield</code>，以及传说中的<a href="https://github.com/tj/co" target="_blank" rel="external">co</a>。</p>
+<a id="more"></a>
+<p>首先，我不会Python，所以这是第一次接触<code>generator/yield</code>这种非阻塞编程方式。其次，我虽然知道也很喜欢C#中的<code>async/await</code>，虽然了解一点coroutine/goroutine，但是都没用这两种方式写过正经代码，所以应该说不会受它们影响太多。</p>
+<p>话不多说先来看一看<code>generator</code>函数。</p>
+<p>JS里的<code>generator</code>函数是一种特殊类型的函数，通过<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span>* <span class="title">gen</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>来声明一个<code>generator</code>函数，它和普通函数不一样，虽然在<code>generator</code>函数里也可以<code>return</code>，但是实际上<code>generator</code>函数的返回值是一个<strong>迭代器</strong>，所以<code>generator</code>函数是一个<strong>生成迭代器</strong>的函数，相信这就是<code>generator function</code>名字的由来吧。<br>这里举一个最简单的例子<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span>* <span class="title">simpleGen</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="string">'hehe'</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> iter = simpleGen();</span><br></pre></td></tr></table></figure></p>
+<p><code>iter</code>就是一个<strong>迭代器</strong>，我们可以通过next()所返回的“迭代指针”来迭代，比如：<br><figure class="highlight openscad"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">var it = iter.next<span class="params">()</span>;</span><br><span class="line">console.<span class="built_in">log</span><span class="params">(it.value)</span>; <span class="comment">// 'hehe'</span></span><br><span class="line">console.<span class="built_in">log</span><span class="params">(it.done)</span>;  <span class="comment">// true</span></span><br></pre></td></tr></table></figure></p>
+<p>好嘛，因为上面的<code>simpleGen</code>里面直接<code>return</code>了，所以所谓迭代其实只是看了个最终结果。<br>那么问题来了，怎么才能让它被迭代起来呢！！<br>这时候就要配合<code>yield</code>使用了，<code>yield</code>的意思就是“让步”，在它跟C#里面的<code>yield return</code>差不多。外部调用一次调用<code>next</code>，内部进行一步迭代。每一次<code>yield</code>就是所谓的一步，这时迭代器将会暂停工作，并保留所有现场。而代码执行的机会会被让给外部，直到再次<code>next</code>，迭代将会继续。<br><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">function* gen2()&#123;</span><br><span class="line">  <span class="keyword">yield</span> <span class="number">1</span>;</span><br><span class="line">  <span class="keyword">yield</span> <span class="number">2</span>;</span><br><span class="line">  <span class="keyword">return</span> <span class="string">'hehe'</span>;</span><br><span class="line">&#125;</span><br><span class="line">var iter = gen2();</span><br><span class="line">iter.<span class="keyword">next</span>(); <span class="regexp">//</span> &#123; <span class="symbol">value:</span> <span class="number">1</span>, <span class="symbol">done:</span> <span class="keyword">false</span> &#125;</span><br><span class="line">iter.<span class="keyword">next</span>(); <span class="regexp">//</span> &#123; <span class="symbol">value:</span> <span class="number">2</span>, <span class="symbol">done:</span> <span class="keyword">false</span> &#125;</span><br><span class="line">iter.<span class="keyword">next</span>(); <span class="regexp">//</span> &#123; <span class="symbol">value:</span> <span class="string">'hehe'</span>, <span class="symbol">done:</span> <span class="keyword">true</span> &#125;</span><br></pre></td></tr></table></figure></p>
+<p>这个迭代器的概念很像STL里的迭代器，有木有？但是，这时候你会说这特么手工<code>next</code>也能叫迭代？好的，ES6提供了<code>for of</code>语法<br><figure class="highlight livescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">var</span> <span class="literal">it</span> <span class="keyword">of</span> gen2())&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="literal">it</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>上面的代码会输出1和2，但是不会输出’hehe’，我不知道是设计如此还是暂时没实现……而且资料上显示的是<code>for (let xx of xxx)</code>才对啊导演。<br>算了不管了，继续。<code>yield</code>字面意思就是“让步”，可以把执代码执行“让”给<code>yield</code>表达式来执行，而不是像写异步回调那样接着往下执行。呵呵呵呵，真是好人啊。<code>yield *</code>后接一个迭代器就可以把执行的机会让给这个迭代器，比如<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span>* <span class="title">gen1</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">  <span class="keyword">yield</span> <span class="string">'1-1'</span>;</span><br><span class="line">  <span class="keyword">yield</span> <span class="string">'1-2'</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">function</span>* <span class="title">gen2</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">  <span class="keyword">yield</span> <span class="string">'2-1'</span>;</span><br><span class="line">  <span class="keyword">yield</span>* gen1();</span><br><span class="line">  <span class="keyword">yield</span> <span class="string">'2-2'</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">var</span> it <span class="keyword">of</span> gen2())&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(it);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>执行结果就是<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">2-1</span><br><span class="line">1-1</span><br><span class="line">1-2</span><br><span class="line">2-2</span><br></pre></td></tr></table></figure></p>
+<p>那么问题来了，不是说这货能用来控制流程，简化异步代码的编写吗？</p>
+<blockquote>
+<p>答案就是<code>next</code>可以接收一个参数，它会作为这一次迭代的<code>yield</code>表达式在<code>generator function</code>当中的返回值。</p>
+<p>因为直到迭代器被再次调用<code>next</code>为止，<code>generator function</code>都是处于“让步”状态，所以这段时时间内其实可以做任何操作，<strong>不论是同步的还是异步的</strong>。</p>
+<p>所以如果我们发现<code>yield</code>表达式的返回值是一个异步操作，比如<code>thunk</code>、<code>Promise</code>、<code>迭代器</code>、<code>generator function</code>，那就意味着<strong>这个操作还没有真正执行完</strong>！</p>
+<p>那么问题就简单了，<strong><code>yield</code>不知道它是异步的，但是我们知道啊</strong>，甚至我们可以“万物皆异步”，我们可以让<strong>异步操作结束后再调用<code>next</code></strong>，从而实现<del>化腐朽为神奇</del>变异步为同步。</p>
+</blockquote>
+<figure class="highlight openscad"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">randomDelay</span><span class="params">()</span>&#123;</span></span><br><span class="line">  var time = Math.random<span class="params">()</span> <span class="built_in">*</span> <span class="number">500</span>;</span><br><span class="line">  return <span class="function"><span class="keyword">function</span><span class="params">(callback)</span>&#123;</span></span><br><span class="line">    setTimeout<span class="params">(callback.bind<span class="params">(this, time)</span>, time)</span>;</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">function</span>* <span class="title">genSlowly</span><span class="params">()</span>&#123;</span></span><br><span class="line">  <span class="keyword">for</span> <span class="params">(var i=<span class="number">0</span>; i&lt;<span class="number">10</span>; ++i)</span>&#123;</span><br><span class="line">    console.<span class="built_in">log</span><span class="params">(i)</span>;</span><br><span class="line">    console.<span class="built_in">log</span><span class="params">(yield randomDelay<span class="params">()</span>)</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">async<span class="params">(genSlowly)</span>;</span><br></pre></td></tr></table></figure>
+<p>通过上面的代码我们希望实现打印一个数，调用一个异步操作<code>randomDelay()</code>，它的作用是随机延迟一段时间（你可以把它YY成一个ajax请求），然后通过回调函数的方式返回这个延迟毫秒数，在外层的<code>genSlowly()</code>函数能够拿到这个返回值，并且打印。<br>于是大概是这么个意思……<br><figure class="highlight openscad"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">async</span><span class="params">(gen)</span>&#123;</span></span><br><span class="line">  var iter = gen<span class="params">()</span>;</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">nextStep</span><span class="params">(it)</span>&#123;</span></span><br><span class="line">    <span class="keyword">if</span> <span class="params">(it.done)</span> return; <span class="comment">// 迭代已完成</span></span><br><span class="line">    <span class="keyword">if</span> <span class="params">(typeof it.value === 'function')</span>&#123;</span><br><span class="line">      <span class="comment">// 收到的是一个thunk函数，需要等它完成的时候再继续迭代</span></span><br><span class="line">      it.value<span class="params">(function<span class="params">(ret)</span>&#123;</span><br><span class="line">        nextStep<span class="params">(iter.next<span class="params">(ret)</span>)</span>; // 把thunk的回调参数传入next，作为yield表达式的返回值</span><br><span class="line">      &#125;)</span>;</span><br><span class="line">    &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">      <span class="comment">// 收到的是一个值，进行下一步迭代</span></span><br><span class="line">      nextStep<span class="params">(iter.next<span class="params">(it.value)</span>)</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  nextStep<span class="params">(iter.next<span class="params">()</span>)</span>; <span class="comment">// 开始迭代</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>呵呵呵呵，成功了，虽然看起来很弱的样子。</p>
+<p>通过对一个<code>generator</code>函数进行“处理”，我们可以改变它本身“迭代器生成器”的作用，用来做流程控制，这听起来真是相当蛋疼啊。不知道是谁发明的，但真是个很有创意的想法。</p>
+<p>这时候<a href="https://github.com/tj/co" target="_blank" rel="external">co</a>就不难理解了，它可以将一个<code>generator</code>函数处理成一个异步操作。<strong>这样你可以在<code>generator</code>函数里面使用<code>yield</code>来实现“顺序调用，异步执行”的效果，</strong>。在co的4.0版本里它完全采用了<code>Promise</code>，它会将最终返回值作为参数传递到<code>promise</code>的<code>then</code>当中。</p>
+<p>例子：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">someThingSlow</span>(<span class="params">callback</span>)</span>&#123;</span><br><span class="line">  setTimeout(callback, <span class="number">500</span>);</span><br><span class="line">&#125;</span><br><span class="line">co(<span class="function"><span class="keyword">function</span>* <span class="title">fibonacciGenerator</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">  <span class="keyword">var</span> p1 = <span class="number">0</span>, p2 = <span class="number">1</span>;</span><br><span class="line">  <span class="keyword">while</span> (<span class="literal">true</span>)&#123;</span><br><span class="line">    <span class="keyword">var</span> cur = p1 + p2;</span><br><span class="line">    <span class="built_in">console</span>.log(cur);</span><br><span class="line">    p1 = p2;</span><br><span class="line">    p2 = cur;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">yield</span> someThingSlow;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br><span class="line"><span class="comment">// 每隔一秒打印斐波那契数列，无限</span></span><br></pre></td></tr></table></figure></p>
+<p>再来个例子，JS程序员梦寐以求的<code>sleep</code><br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">sleep</span>(<span class="params">ms</span>)</span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span>(<span class="params">callback</span>)</span>&#123;</span><br><span class="line">    setTimeout(callback, ms);</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;</span><br><span class="line">co(<span class="function"><span class="keyword">function</span>* (<span class="params"></span>)</span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'1'</span>);</span><br><span class="line">  <span class="keyword">yield</span> sleep(<span class="number">1000</span>);</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'2'</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></p>
+<p>呵呵呵呵，就是这么无聊……</p>
+<p>但是！co之所以这么火并不是没有原因的，当然不是仅仅实现sleep这么无聊的事情，而是它活生生的借着<code>generator/yield</code>实现了很类似<code>async/await</code>的效果！这一点真是让我<del>三观尽毁</del>刮目相看。</p>
+<p>至于具体怎么用，受篇幅限制，还是等下一篇文章再详细说明吧。嗯，我相信你已经感觉到这是又一个《有生之年》系列了（逃</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>最近开始学（其实就是玩）ES6里的<code>generator/yield</code>，以及传说中的<a href="https://github.com/tj/co">co</a>。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[关于李娜退役的一点感受]]></title>
+    <link href="http://jimliu.net/2014/09/19/something-about-lina-s-quit/"/>
+    <id>http://jimliu.net/2014/09/19/something-about-lina-s-quit/</id>
+    <published>2014-09-19T11:34:31.000Z</published>
+    <updated>2015-03-26T11:21:23.000Z</updated>
+    <content type="html"><![CDATA[<p>过了这么久，李娜终于还是打破沉默，正式宣布了退役。这也让我想起小时候的一点点微不足道的事情。<br><a id="more"></a></p>
+<p>我小时候很爱打乒乓球，大概五年级的时候，每天下午放学我就会去和一群中学生混在一起打球，打到天黑了就回家吃饭。<br>到初一的时候，有一个很好的机会，学校将会选拔一些学生代表学校参加县里面的选拔，成功的话将会和小时候教过我打球的“偶像”哥哥们一起代表县里面去地区参加比赛。</p>
+<p>经过了简单的“海选”，我记得有十来个男生、4个女生被学校选中，我们在一间空教室里摆上了球桌，买了几框球，每天放学就自己“训练”起来——加引号是因为我们没有教练指导，只有体育老师会督促我们练习和跑步。一段时间后，一些同学没有坚持下来，没再来“训练”，最后大概有6个男生、2个女生，还在坚持每天放学来打球，打到天黑——因为普通教室的灯光不足以提供打球。</p>
+<p>快到了正式选拔的时候，我已经是初中组的4个男生当中表现比较好的了。入围的话，就有机会去县里面，获得更好的训练条件，以及更专业的老师的指导。哪怕最后不能代表县队出赛，也将会是一个很好的机会。</p>
+<p>很可惜在选拔前一周左右的时候，我的右手食指在体育课上打篮球的时候受伤了，当时整个手指肿得很严重，筷子都拿不稳，所幸的是没有伤着骨头。我成天盼着它快点好吧快点好吧，可是看着食指上缠着的膏药，又看看作业本上用中指夹着笔写出来的蹩脚的字，我眼泪几次几欲流出来。</p>
+<p>然而伤病是无情的，队内选拔赛的时候，我手上还缠着膏药，食指还是肿得像拇指那么粗。其实，说是“选拔”，但名额是弹性的，也就是说，其实我们大家都完全有机会去县里。我是队里唯一一个初一的男生，也就是最小的一个，大家都挺照顾我，甚至一位同学直接说要退出，把名额让给我。</p>
+<p>现在想一想，原来我现在可笑的倔脾气，早在那时候就已经埋下种子了。我没有接受同学的好意，甚至也没有看完比赛，在中间一个休息时刻就无声的走了。</p>
+<p>从那以后，我很少再打乒乓球，即使打起来也不会像当年那么认真——甚至于到后来几乎没有认真的发过几次球，而只是陪体育课上的队友不断地枯燥地练习推挡，给他指导一些动作和步法的细节，亦或者用左手陪前女友或者@licstar娱乐一下。</p>
+<p>即使是我这么三脚猫的选手，伤病也是这么无情。运动员最怕的就是受伤，一旦受伤，连训练都没法保持，更别说比赛了。而且受伤期间无法训练那种感情上其实是很折磨的。也许不是我当年矫情，而是那时候那个12岁的小孩真的没法承受这么残酷的事实吧。</p>
+<p>因为年纪大了或者自己不想打了而退役的运动员相比之下是比较幸运的，而因为伤病而退役的运动员则是很痛苦的，不论是身体上还是感情上，他们需要承担的东西实在太多。</p>
+<p>对于困难的事情，坚持下去很难，而其中有些事，放弃也许比坚持还难。</p>
+<hr>
+<p>当我讲完这个故事之后，我突然觉得似乎我应该重新开始打乒乓球。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>过了这么久，李娜终于还是打破沉默，正式宣布了退役。这也让我想起小时候的一点点微不足道的事情。<br>]]>
+    
+    </summary>
+    
+      <category term="生活" scheme="http://jimliu.net/tags/%E7%94%9F%E6%B4%BB/"/>
+    
+      <category term="站着说话不腰疼" scheme="http://jimliu.net/tags/%E7%AB%99%E7%9D%80%E8%AF%B4%E8%AF%9D%E4%B8%8D%E8%85%B0%E7%96%BC/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[Jim Plays <Summer>]]></title>
+    <link href="http://jimliu.net/2014/07/05/summer/"/>
+    <id>http://jimliu.net/2014/07/05/summer/</id>
+    <published>2014-07-05T12:36:20.000Z</published>
+    <updated>2015-03-26T11:21:23.000Z</updated>
+    <content type="html"><![CDATA[<p>虽然不喜欢夏天，不过也是这个季节的主题曲吧，还是要欢快地弹的！<br>节奏好不稳，造成有的地方巨难听……<br>有点脑残了，用了广角镜，相机角度非常憋屈。另外视频声音好像有点小，另外优酷上好像有点音画不同步！</p>
+<p><strong>视频+手机观看：</strong><a href="http://v.youku.com/v_show/id_XNzM2MTk4OTg0.html" target="_blank" rel="external">优酷</a><br><strong>MP3+高清下载：</strong><a href="http://pan.baidu.com/s/1qW2mBsK" target="_blank" rel="external">百度网盘</a></p>
+<embed src="http://player.youku.com/player.php/sid/XNzM2MTk4OTg0/v.swf" allowfullscreen="true" quality="high" width="480" height="400" align="middle" allowscriptaccess="always" type="application/x-shockwave-flash">
+
+<p><strong>设备&amp;&amp;软件：</strong><br>键盘：Casio PX135<br>音源：The Grand 2<br>摄像：SONY NEX-6, Sigma 19/2.8<br>编辑：SONY Vegas</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>虽然不喜欢夏天，不过也是这个季节的主题曲吧，还是要欢快地弹的！<br>节奏好不稳，造成有的地方巨难听……<br>有点脑残了，用了广角镜，相机角度非常憋屈。另外视频声音好像有点小，另外优酷上好像有点音画不同步！</p>
+<p><strong>视频+手机观看：</strong>]]>
+    </summary>
+    
+      <category term="音乐" scheme="http://jimliu.net/tags/%E9%9F%B3%E4%B9%90/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[一个eval引发的血案]]></title>
+    <link href="http://jimliu.net/2014/06/25/an-eval-cataclysm/"/>
+    <id>http://jimliu.net/2014/06/25/an-eval-cataclysm/</id>
+    <published>2014-06-25T03:23:12.000Z</published>
+    <updated>2015-03-26T11:21:23.000Z</updated>
+    <content type="html"><![CDATA[<p>昨天碰到一个线上问题，一个页面在一般的情况下加载执行，它的交互功能是正常的，但使用异步方式加载它的内容进来塞页面里，交互功能就丢掉了。</p>
+<a id="more"></a>
+<p>同步加载的情况就不说了，先介绍下异步的加载情况。</p>
+<p>以异步方式请求同一个页面，带上特殊参数的时候，服务端会依据一些页面中埋的注释当做定界符，把页面拆成小块小块的，比如头部一块，胸部一块（←_←听起来怪怪的），<del>腿部</del>页脚一块。变成“半结构化数据”，其中每一块都是HTML片段，我们出问题的那一段就管叫<code>body</code>吧。</p>
+<p>由于<code>body</code>里夹杂了一些JavaScript，又由于一些复杂的历史原因<sup>1</sup>，在异步拿到这些半结构化数据之后，需要将<code>body</code>里的<code>&lt;script&gt;</code>提取出来妥善处理之后依次执行。</p>
+<p>在大多数情况下这个程序虽然看起来很trick，但是好赖运行得不错。可昨天突然遇到一个BUG，就是某个页面里的<code>body</code>在异步加载的方式下，交互功能就没了。首先可以用脚趾头确定这肯定是JS执行的问题，然后看了下这个页面的<code>body</code>内容，发现它里面有三段<code>&lt;script&gt;</code>，单步执行进去看，在异步的情况下都匹配出来了，也都执行了，但交互没生效。而将其中某一段摘出来扔控制台里再执行一遍，交互就回来了。</p>
+<p>仔细观察这段问题代码，它定义了一个<strong>全局函数</strong><sup>2</sup>，定义就定义吧，这么多页面也没能一个个code review，且行且珍惜。</p>
+<hr>
+<p>以上就是故事背景了（比尼玛正文还长）。那为什么全局函数在这里就失效了呢？究其原因是因为<code>eval</code>。</p>
+<p>在上面提到的那个加载器里面，会将匹配出来的<code>&lt;script&gt;</code>用<code>eval</code>方式执行的，<strong><code>eval</code>是局部作用域、局部作用域、作用域、域</strong>——为了凸显本文的核心问题，我将这句话的混响调长了一点点。而且这还不是问题的全部，更不可思议的是这也有<strong>浏览器兼容性问题</strong><sup>3</sup>，具体内容太复杂了，我就不搬运了，大家搜一下就行。</p>
+<p>书接上回，在那个交互里，点击的时候会调用它之前定义的那个全局函数，如果正确执行的话那就刚刚好。而现在<code>eval</code>了之后，那个全局函数自然没被定义到全局上面，就挂了。神奇的是这段代码<del>很良心</del>的加了<code>try/catch</code>，于是也没看到控制台里有报错。</p>
+<p>事已至此，只要倒霉加载器改用<strong>“全局eval”</strong>就能解决这个问题了（喂喂不是应该让做那个页面的人重构代码吗？），具体的方式我也不搬了，大家自己搜吧。</p>
+<hr>
+<h3 id="附注">附注</h3><ol>
+<li>f*cking historical reasons</li>
+<li>f*cking global function</li>
+<li>f*cking browser compatibility problems</li>
+</ol>
+<h3 id="参考文献">参考文献</h3><ol>
+<li><a href="http://blog.csdn.net/cuixiping/article/details/4823119" target="_blank" rel="external">让eval()全局作用域执行的方法深入研究(javascript)</a></li>
+<li><a href="http://www.cnblogs.com/rubylouvre/archive/2010/04/09/1708419.html" target="_blank" rel="external">globalEval函数</a></li>
+</ol>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>昨天碰到一个线上问题，一个页面在一般的情况下加载执行，它的交互功能是正常的，但使用异步方式加载它的内容进来塞页面里，交互功能就丢掉了。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[LRU缓存置换算法]]></title>
+    <link href="http://jimliu.net/2014/05/13/lru-cache/"/>
+    <id>http://jimliu.net/2014/05/13/lru-cache/</id>
+    <published>2014-05-13T11:23:12.000Z</published>
+    <updated>2015-03-26T11:21:23.000Z</updated>
+    <content type="html"><![CDATA[<p><strong>这篇文章是科普性质的，外加推销一下中文注释……</strong></p>
+<p>LRU(Least Recently Used, 近期最少使用)算法是缓存置换算法当中的经典案例——这个中文翻译听起来相当莫名其妙，所以我们还是叫LRU吧。虽然我们现在常常都用了更高阶的缓存服务，但如果要在一些语言（比如JS）当中自己实现一个简单的K-V的缓存类的时候，不放试试写一个LRU，因为它的算法思路真的相当简单，但实现起来又是非常有趣。</p>
+<a id="more"></a>
+<h3 id="为什么需要置换算法">为什么需要置换算法</h3><p>实现一个K-V cache的类，我们需要什么API？精简下来，我认为说到底就3个吧：<br><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">get</span><span class="params">(key)</span></span></span><br><span class="line"><span class="function"><span class="title">set</span><span class="params">(key, value)</span></span></span><br><span class="line"><span class="function"><span class="title">del</span><span class="params">(key)</span></span></span><br></pre></td></tr></table></figure></p>
+<p>这看起来就是一个字典而已，和LRU没什么关系。问题就在于缓存的空间是有限的，要么是硬件受限，要么是我们不想给这么多内存。所以当空间满的时候，再添加新的缓存，需要置换出去旧的。置换哪个出去就是门学问了。</p>
+<p>最容易的比如FIFO，先进先出，其他还有很多，这里不详细介绍了，可以去翻翻计算机组成原理看看。</p>
+<h3 id="LRU置换算法介绍">LRU置换算法介绍</h3><p>其实思路很简单，就是“把最近没用过的一个置换出去”。<br>实现上，可以描述为一个双端的列表，表头是最近用过的，而表尾是最近没用过的。<br><figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">set</span>时，如果缓存在列表里，把它摘出来放在表头上，否则直接放在表头上。</span><br><span class="line"><span class="keyword">get</span>时，把它摘出来放在表头上。</span><br><span class="line">del时，把它摘出来释放掉，如果它是表尾，那么维护一下新的表尾。</span><br><span class="line">置换时，换出表尾释放掉。</span><br></pre></td></tr></table></figure></p>
+<p>很明显用一个双端队列可以比较容易地实现上述算法，主要的问题是：用双链表构造的双端队列，因为不能随机访问，在按key查找时，需要<code>O(n)</code>的时间查找。（根据局部性原理，从队头查找会更容易快速找到目标，这是一个优化点。）</p>
+<h3 id="JS实现">JS实现</h3><p>isaacs大神（npm以及node.js的主要作者）的<a href="https://github.com/isaacs/node-lru-cache" target="_blank" rel="external">node-lru-cache</a>里用的是hash表加上队头和队尾两个索引来替代双链表。这样可以获得分摊<code>O(1)</code>时间的查找，构造比较巧妙。</p>
+<p>我把它的源代码加了中文注释，还算比较详细吧，有兴趣的童鞋可以去看看。<a href="https://github.com/LiuJi-Jim/node-lru-cache" target="_blank" rel="external">github</a></p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p><strong>这篇文章是科普性质的，外加推销一下中文注释……</strong></p>
+<p>LRU(Least Recently Used, 近期最少使用)算法是缓存置换算法当中的经典案例——这个中文翻译听起来相当莫名其妙，所以我们还是叫LRU吧。虽然我们现在常常都用了更高阶的缓存服务，但如果要在一些语言（比如JS）当中自己实现一个简单的K-V的缓存类的时候，不放试试写一个LRU，因为它的算法思路真的相当简单，但实现起来又是非常有趣。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA["北上广大迁徙"前端开发心得]]></title>
+    <link href="http://jimliu.net/2014/05/06/bsgdqx/"/>
+    <id>http://jimliu.net/2014/05/06/bsgdqx/</id>
+    <published>2014-05-06T15:23:12.000Z</published>
+    <updated>2015-03-26T11:21:23.000Z</updated>
+    <content type="html"><![CDATA[<p>前阵子和好基友<a href="http://weibo.com/licstar" target="_blank" rel="external">@licstar</a>一起做了一个<del>很蛋疼</del>很好玩的数据可视化小品，叫做<a href="http://bsgdqx.sinaapp.com/" target="_blank" rel="external">北上广大迁徙</a>。使用了<a href="http://wuxian.baidu.com/map/" target="_blank" rel="external">百度地图</a>手机App的热力图数据，做成了动态的，并对其中的热点进行解读，来了解大城市中人群每天一个循环的“迁徙”。</p>
+<p>整个开发用了几个小时的时间吧，我负责前端，他负责数据部分以及提供算法，这篇文章简单介绍一下其中前端部分在开发中的一些小心得。</p>
+<a id="more"></a>
+<h2 id="灰度图">灰度图</h2><p>实际上看到的热力图是彩色的，但为什么标题是灰度图？这个说来话长。</p>
+<p>虽然最终是图片，但其实一开始我们就并没有打算用图片，因为采集到的数据只有整点的，每天从0点到24点，只有25张图，做个GIF就好了，基本比较难看出什么门道来。所以需要把动画效果做出来，就要进行<strong>插值</strong>。也就是需要传输<strong>原始数据</strong>。</p>
+<p>地图的大小不完全一样，大概是600*600的点阵，每个时间节点有36万个点，以每个1字节计，不压缩需要<strong>360KB</strong>，25张也接近10MB了。这种二进制存储要在WEB里传输并用JS处理，就得先经过BASE64，会损失33%的体积，大概<strong>13~15MB</strong>，即使用之前在我俩的<a href="https://github.com/liuji-jim/bad-apple" target="_blank" rel="external">Bad Apple</a>山寨的一种“BASE91”，也会超过10MB，所以是必须压缩的。</p>
+<p>于是我想到了结合二者的办法，<strong>把数据编码成图片</strong>。前端先使用canvas的<code>drawImage</code>把图片画到canvas上，再用<code>getImageData</code>获取字节数组，这样可以反解出每个像素使用颜色所表示的数值。<br>用图片还完美解决了压缩问题，在Bad Apple里我们用了自己实现的LZW，效果其实也不错<del>而且听起来更酷</del>（那时候为什么没想到用这个办法来着），不过这次没那么大动干戈，JPG无疑是不二选择。</p>
+<p>编码其实再简单不过了，热力图中从蓝到红的各种颜色其实是对一个归一化值的映射，并不是真正的彩色。那么存的时候只需要存一个数值就够了，为了尽可能照顾压缩，直接存成了灰度图，最后灰度图每个小时是<strong>30~40KB</strong>，一天不到<strong>1MB</strong>，事实上如果再把画质调低一点会更小（估计500~600KB没压力），而且也不怎么看得出来。</p>
+<p>因为JPG会产生伪色，所以前端取颜色的时候把rgb做了平均——图简单的话直接rgb随便取一个也行，差不了多少，可以省一个除法——但是这个取值只用每幅图做一次，所以不重要，懒得优化。然后对数据重新进行一次归一化（直接插值的话我觉得可以不做归一化，而是插值完了再归一化）。</p>
+<h2 id="动画">动画</h2><p>动画是通过<code>requestAnimationFrame</code>做的，这里面用了3个时间概念。<br><strong>当时是半夜写的，思路很晕，所以这么乱七八糟的计时不看也罢。</strong></p>
+<p><code>秒表时间</code>：基本的计时，用秒表当前掐出来的时间，是后面的基础<br><code>播放时间</code>：用来表示动画播放了多久，用它除<code>每一个小时所对应的秒表时间</code>就可以知道应该播放哪一帧<br><code>挂钟时间</code>：表示“真实”时间，这个真实是指最终映射到的24H里的时间，而并不是计时概念上的真实，用于显示以及触发<code>故事板</code></p>
+<p>每一帧先用<code>秒表时间</code>减去<code>开始时间</code>，再加上次<code>暂停时间</code>，获得当前的<code>播放时间</code>，用它和所定义的播放时间与挂钟时间的比例进行简单运算（比如播放4秒对应现实1小时），可以算出当前应该播放哪一帧，插值的<code>delta</code>值，同时也得到了<code>挂钟时间</code>。</p>
+<p>在暂停的时候更新<code>暂停时间</code>为当前的<code>播放时间</code>；在开始的时候更新<code>开始时间</code>为当前的<code>秒表时间</code>。</p>
+<p>如果要实现进度条，可以在拖拽的时候先暂停，拖拽过程中更新<code>暂停时间</code>，撒手了重新播放就行了。</p>
+<p>但不得不吐槽<code>requestAnimationFrame</code>，我估计它实现的初衷是做60FPS，但是事实上我发现它触发率很不稳定，常常在17ms左右，也就是根本达不到60FPS。<br>这也就算了，也许我只需要老老实实地按照它触发频率，配合计时器做动画就够了。但问题是我每一帧的计算量可能比较大，现在我觉得60FPS下CPU占用太高了，想实现更低的帧率，用它就根本没精度可言了。所以后来我在另一个程序里，考虑用<code>setInterval 0</code>配合高精度计时来做到像20, 25这样的帧率控制。</p>
+<h2 id="插值">插值</h2><p>为了模拟非整点的状态变化，用了最简单的线性插值（LERP），每次通过两帧来插值：<br><figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">var color = val1 <span class="keyword">*</span> (1 - delta) + val2 <span class="keyword">*</span> delta;</span><br></pre></td></tr></table></figure></p>
+<p>值得一提的是里面的颜色值并不是原始值，因为热力图里的值事实上是阶梯状的，对插值不友好，所以licstar先自己YY了一个转换规则把他们都转换成线性分布的，插值完了再转回来。<br>本来以为插值会比较影响性能，但实际上发现因为LERP实在太简单，影响很小。</p>
+<p>对插值结果进行一下归一化，可以通过查表或者简单if的方式变换到最终要画的颜色。</p>
+<p>画的时候因为是逐像素的，所以还是用<code>getImageData</code>和<code>putImageData</code>（简直是神器……）绘图非常简单，因为canvas是透明的，所以只要把地图垫在底下，canvas直接画就行了。</p>
+<p>这个插值极其山寨，因为它只能表示每一个点自己的变化状态，所以看起来就像是“躁动”而不是“迁徙”。由于数据源的归一化效果很奇怪，上海和广州的结果插值之后会有很明显的很奇怪的呼吸效果，整个地图会忽明忽暗的，这里就不吐槽数据源了，因为其实也算来之不易……</p>
+<h2 id="故事板">故事板</h2><p>后来纠结的licstar发现这么看动画好像看不出来什么，于是加了一个在旁边显示一些注解的功能，我称其为故事板。</p>
+<p>每个Story都是一个div这类的东西，用绝对定位，事先设计好，指定一个开始时间、结束时间（形如9.5表示9:30）。</p>
+<p>开始播放前遍历所有这一类div，对他们的开始时间和结束时间分别给个数组并且排序，在播放过程中，两个数组各有一个只增不减的游标，跟着时间走，对应的div显示或隐藏就行了，简单粗暴……大概是这么个样<br><figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> (<span class="type">list</span>.index &lt; <span class="type">list</span>.<span class="property">length</span> &amp;&amp; <span class="type">list</span>[<span class="type">list</span>.index].<span class="property">time</span> &lt;= currentTime)&#123;</span><br><span class="line">  <span class="type">list</span>[<span class="type">list</span>.index].dom.fadeIn(<span class="number">200</span>);</span><br><span class="line">  <span class="type">list</span>.index++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="黑科技">黑科技</h2><p><strong>快速取整</strong></p>
+<p>一般会用<code>Math.floor</code>来向下取整，之前在网上有看到用<code>~~(x)</code>就能快速取整，计算密集的时候真的比<code>Math.floor</code>快不少！这程序里面需要做除法结果取整的地方挺多的，所以到处都充斥着这个办法。</p>
+<p><del>吐槽下，帮官微带了1000转发呢……抽奖有礼品，这个都不单独给来个礼品神马的 T_T</del></p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>前阵子和好基友<a href="http://weibo.com/licstar">@licstar</a>一起做了一个<del>很蛋疼</del>很好玩的数据可视化小品，叫做<a href="http://bsgdqx.sinaapp.com/">北上广大迁徙</a>。使用了<a href="http://wuxian.baidu.com/map/">百度地图</a>手机App的热力图数据，做成了动态的，并对其中的热点进行解读，来了解大城市中人群每天一个循环的“迁徙”。</p>
+<p>整个开发用了几个小时的时间吧，我负责前端，他负责数据部分以及提供算法，这篇文章简单介绍一下其中前端部分在开发中的一些小心得。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[JavaScript中定时器的精度]]></title>
+    <link href="http://jimliu.net/2014/04/26/js-timing-precision/"/>
+    <id>http://jimliu.net/2014/04/26/js-timing-precision/</id>
+    <published>2014-04-26T15:23:12.000Z</published>
+    <updated>2015-03-26T11:21:23.000Z</updated>
+    <content type="html"><![CDATA[<p>之前写了<a href="/2014/03/16/hrt-in-js/">一篇文章</a>介绍JS中的高精度计时，那么，与高精度相对的，低精度又是什么呢？或者说我们常接触到的精度是在什么水平？</p>
+<p>这篇文章主要探讨一下JS里常用的定时器，看看它们能达到什么精度。由于结论我也不知道，所以基本上这篇文章算边做实验边写的吧，有问题希望各位看官能帮忙指出。文中的实验覆盖范围很小，而且方法也极度不严谨，大家先且一看吧，也许有时间我会再重新做实验。</p>
+<a id="more"></a>
+<h2 id="正传">正传</h2><h3 id="setTimeout">setTimeout</h3><p>曾几何时，有前辈教诲我们，JS里<code>setTimeout</code>是不精确的，因为它所做的事情只是把任务添加到事件队列当中。如果在这个任务执行之前有别的任务执行的比较慢（比如死循环、大规模DOM操作、fs.同步IO等），那么后面的任务就会被推迟执行了。</p>
+<p>与此同时，<code>setTimeout(func, 0)</code>是我们常见的一种奇怪的技巧，它可以让任务推迟执行，而又不推迟很多。说直观一点，通过这种技巧可以模拟一个低优先级的任务，比如我们在操作DOM的同时又希望<code>window.scrollTo(0, 0)</code>，也许我们就会把后者放在<code>setTimeout 0</code>当中。在没有研究清楚event loop前，这也许是心理安慰，但因地制宜地用这个技巧常常会发生一些老中医般的意想不到的神奇效果。</p>
+<p>我们先看看在没有任何其他繁忙任务时，<code>setTimeout 0</code>能达到多少精度。</p>
+<figure class="highlight lisp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">var start = hrt<span class="list">()</span><span class="comment">;</span></span><br><span class="line">setTimeout<span class="list">(<span class="keyword">function</span><span class="list">()</span>&#123;</span><br><span class="line">  var now = hrt<span class="list">()</span><span class="comment">;</span></span><br><span class="line">  console.log<span class="list">(<span class="keyword">now</span> - start)</span><span class="comment">;</span></span><br><span class="line">&#125;, <span class="number">0</span>)</span><span class="comment">;</span></span><br></pre></td></tr></table></figure>
+<p>配合使用上回的高精度计时函数使用，在OSX Chrome34中，我这大概是9~10ms，而在node.js里则可以达到1.2~2.6ms的样子。然后我们慢慢增大延迟值，试着探索一下setTimeout有多少精度吧。<br>粗略实验下，发现在Chrome中，setTimeout的时间下限基本上就是9~10ms，当延迟在10多20这个水平时候，也能达到，但波动相当大。延迟到30以上，基本上实际时间比设置值只会多到1~2ms的样子；而在node中，即使设置很小的延迟，也能达到，但实际时间也会比设置值多个1~2ms。</p>
+<p>模拟一下setTimeout被推迟的情况<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> start = hrt();</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">var</span> i=<span class="number">0</span>; i&lt;<span class="number">1e8</span>; ++i) ;</span><br><span class="line">setTimeout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">  <span class="keyword">var</span> now = hrt();</span><br><span class="line">  <span class="built_in">console</span>.log(now - start);</span><br><span class="line">&#125;, <span class="number">0</span>);</span><br></pre></td></tr></table></figure></p>
+<p>明显就看到时间变长多了，所以必须谨记<code>setTimeout</code>并不靠谱。</p>
+<h3 id="setInterval">setInterval</h3><p>这是用来做周期触发的回调用的，首先我们也丧心病狂的试试<code>setInterval 0</code>吧。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> start = hrt(), last = start;</span><br><span class="line"><span class="keyword">var</span> id = setInterval(<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">  <span class="keyword">var</span> now = hrt();</span><br><span class="line">  <span class="built_in">console</span>.log(now - last);</span><br><span class="line">  last = now;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (now - start &gt; <span class="number">2000</span>) clearInterval(id);</span><br><span class="line">&#125;, <span class="number">0</span>);</span><br></pre></td></tr></table></figure>
+<p>在Chrome里平均稳定在4.6ms左右一次，当时间设置到6ms以上时，基本上能达到，但实际触发时间比设置要大1ms左右。node这边依然要好一些，几乎能达到任何设置的时间，但也会有大概1ms的延迟。毫无疑问<code>setInterval</code>也是会被负荷重的任务推迟，就不演示了。</p>
+<h3 id="setImmediate">setImmediate</h3><p>这是node.js才有的函数，我这里它大概有不到1ms的延迟。在朴灵的《深入浅出node.js》一书中对这个函数有比较详尽的解释，这里我就不赘述了。</p>
+<p>不得不说的是——setImmediate也会被同步的代码阻塞——yes, this is JavaScript。</p>
+<h3 id="小结">小结</h3><p>到这里，常用的setXXX系列手工产生异步的办法都看了一遍。不得不承认node与浏览器在这些核心函数上优化都是相当到位的。但是其他浏览器，包括windows上，尤其是某些老旧的IE，我对它们表示不乐观，还好我现在的工作很少和这些东西打交道，改天有时间我应该会再用手机做一次测试，以求更贴近我的工作环境。</p>
+<h2 id="番外篇">番外篇</h2><h3 id="requestAnimationFrame">requestAnimationFrame</h3><p>这个东西，我觉得基本上把它当做一个<code>setTimeout 0</code>来看待就行了，现在比较推崇用它来做动画，我们也看看它的精度吧。</p>
+<figure class="highlight openscad"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">var start = hrt<span class="params">()</span>, last = start;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">loop</span><span class="params">()</span>&#123;</span></span><br><span class="line">  var now = hrt<span class="params">()</span>;</span><br><span class="line">  console.<span class="built_in">log</span><span class="params">(now - last)</span>;</span><br><span class="line">  last = now;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> <span class="params">(now - start &lt; <span class="number">2000</span>)</span> requestAnimationFrame<span class="params">(loop)</span>;</span><br><span class="line">&#125;</span><br><span class="line">loop<span class="params">()</span>;</span><br></pre></td></tr></table></figure>
+<p>我本来满心期望它有很稳定的触发间隔，但我失望了，从15ms多到17ms都有，不是很稳定。但据说它给浏览器带来的符合是更小的，所以会有更好的性能？这个15~17ms很有讲究，因为这刚好就是60FPS，似乎我还真没见过什么浏览器是超过60FPS的。</p>
+<h3 id="setZeroTimeout">setZeroTimeout</h3><p>这是一个很有趣的黑科技(<a href="https://github.com/shahyar/setZeroTimeout-js" target="_blank" rel="external">github</a>)，它通过<code>postMessage</code>来为浏览器模拟<code>setImmediate</code>，（在可能的时候）避免使用<code>setTimeout 0</code>，试了一下，用它的确是能做到0~1ms的触发时间，简直厉害……</p>
+<p>值得一提的是，我们有时候会用<code>setTimeout</code>嵌套来达到与<code>setInterval</code>类似的效果，嵌套使用<code>setTimeout 0</code>还可以（我刚试了下，反复<code>setTimeout 0</code>能达到和<code>setInterval 0</code>一样的4~5ms精度），嵌套<code>setZeroTimeout</code>因为触发太频繁，不出一秒浏览器就直接卡死了……</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>之前写了<a href="/2014/03/16/hrt-in-js/">一篇文章</a>介绍JS中的高精度计时，那么，与高精度相对的，低精度又是什么呢？或者说我们常接触到的精度是在什么水平？</p>
+<p>这篇文章主要探讨一下JS里常用的定时器，看看它们能达到什么精度。由于结论我也不知道，所以基本上这篇文章算边做实验边写的吧，有问题希望各位看官能帮忙指出。文中的实验覆盖范围很小，而且方法也极度不严谨，大家先且一看吧，也许有时间我会再重新做实验。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[聊聊我在用的一些付费会员]]></title>
+    <link href="http://jimliu.net/2014/04/24/talk-about-membership/"/>
+    <id>http://jimliu.net/2014/04/24/talk-about-membership/</id>
+    <published>2014-04-24T01:41:08.000Z</published>
+    <updated>2015-03-26T11:21:23.000Z</updated>
+    <content type="html"><![CDATA[<p><strong><del>哈哈哈哈哈哈炫富帖来了！</del></strong></p>
+<p>身为互联网行业的一员，虽然我做的是纯纯纯免费的用户产品，但是为了攒点人品，防止未来有一天失业了，我还是会尝试各种付费会员，心理上就当给互联网行业做贡献了吧……</p>
+<a id="more"></a>
+<h2 id="爱奇艺">爱奇艺</h2><p><del>也不知道我当初哪根神经断了</del>买了半年的爱奇艺会员，没记错的话好像是10元一个月吧，应该是2011年下半年的时候。</p>
+<p>除了去广告和较少的会员资源（以当时看来），由于爱奇艺是一个非UGC视频网站，我其实不是很常看了……所以这钱基本上是白花了。</p>
+<p>在我厂某年年会上，爱奇艺1年会员是“普天同庆”奖，但是……不是100%中奖率的，而且我都没中！<del>我觉得其实是我为此伤心了才没续费的</del></p>
+<p>时间过去比较长了，就不评价了。</p>
+<h2 id="优酷">优酷</h2><p>优酷真心黑，现在广告经常45秒。身为一个YouT*be爱好者我表示资本主义国家的人们可以只看几秒钟广告就选择跳过真是很不错……</p>
+<p>以前我记得优酷会员好像也是10块还是15一个月来着，现在已经涨价到20了。刚看了一下年付是169块，微信支付立减20，也就是149。相当于不到15一个月。</p>
+<p>会员的功能，首先是跳过广告，首先帮助我节约了很多时间去等广告，其次帮助我节约了很多时间去琢磨各种去广告插件，<del>Time is money, my friend</del>。没有广告取而代之的是一个会员封面，上面有一个土掉渣的土豪金皇冠，以及“已为您跳过广告”的此地无银三百两文案。优酷告诉我已累计节省20.45万秒，你特么还好意思说！！！！</p>
+<p>其次是会员对于有1080P的资源是可以开1080P的，那么，哪些资源是有1080P的呢？正版资源方面，我发现这几个月来开始普及了。UGC资源方面好像有点奇怪，我自己上个月上传的1080P的视频结果最高只给了“超清”，但是有的视频又却有1080P，也或者是一些媒体合作的会有？这个真不知道了。</p>
+<p>然后是有一部分会员专属的影视资源，以及收费资源点播半价。因为我通常会比较懒得去下载电影或者电视剧，在线看的时候还是挺多的。尤其是一些刚从院线上下来一段时间，开始在视频网站上出现的电影。优酷通常会收费点播5元，会员就是2.5，基本就是白菜价，我大概总计在这上头花了二三十块吧。</p>
+<p>最近优酷出了一个新功能是可以帮会员提升家里的宽带速度，我理解就是优酷出钱找电信网通开带宽吧，我有在网上看到别人说的确能开通，不过我的这个宽带它说不支持……</p>
+<p><strong>优酷：推荐程度5星</strong></p>
+<h2 id="迅雷">迅雷</h2><p>迅雷的产品太多了……我都数不过来，而且它的会员体系极其混乱，会员、VIP、影视会员、白金会员、我反正没研究清楚过。</p>
+<p>刚看了一下，我这个叫“白金用户”，原价15一个月，年付是149，和上面说的优酷年付微信支付是一样的。</p>
+<p>会员特权？说实话我没怎么用（捂脸）首先是迅雷下载，可以用一个会员专属客户端，完全没有广告的，运行速度跟占用资源方面比普通版的客户端的确好很多，图标还是那只鸟，不过升级到了可耻的土豪金。</p>
+<p>然后就是有离线下载和高速通道的容量，具体是多少我也没怎么注意。</p>
+<p>很多人也许比较关心迅雷会员下载速度到底快不快，这个其实真的没法回答，因为下载这事情，受影响因素太多了：你的网速，资源提供方的网速，如果是P2P资源又受种子、下载数的影响……乱七八糟一大堆问题，最重要的还有人品问题，心诚则灵。</p>
+<p>由于现在我不常下东西，迅雷会员基本上是给别人在用（不能同时登录，会被挤掉），所以事实上我觉得它没啥用了。离线下载是个好概念，但是百度云网盘支持离线下载效果也不错，秒杀成功率还行吧。</p>
+<p>另外迅雷会员在各种产品之间貌似是有一定互通性的，比如我这个白金用户就可以直接用迅雷网游加速器专业版，但是不能用它的高级会员功能。大概意思也许是会员是通用的，但是各个产品有独立的VIP，氛围上是这意思吧……</p>
+<p>迅雷白金会员经常会有秒杀优惠，或者买一些别的东东捆绑赠送，如果遇到这种，搞一个倒也挺划算的。</p>
+<p><strong>迅雷：推荐程度2星</strong></p>
+<h2 id="虾米音乐">虾米音乐</h2><p><del>虾米音乐是全国最成功盗版音乐资源网站</del>这其实是实话，因为它就是从做盗版资源开始的，而且到现在它正版化程度也很受质疑。但因为它的盗版特性以及UGC特性，使得它的资源完整性比QQ音乐和百度音乐要来的好多了（至少在我眼里是这样）。QQ音乐和百度音乐都是正版+搜索的套路，正版受制于与唱片公司签约，覆盖面非常有限（但可以拿到一些火热资源，比如QQ音乐有《我是歌手》第二季的第一手MP3）；搜索的质量和完整性太差。</p>
+<p>开始的时候虾米正因为有很多热情的歌迷去维护歌手和专辑信息，很快建立了非常全的资源库，而且能够覆盖日本（包含ACG世界）和欧美（包含不少独立音乐人）的诸多在国内甚至没有发行的音乐资源，这太吸引人了。随后虾米的精选集功能我觉得做的非常成功，在国内这几大在线音乐服务当中是独一无二的。</p>
+<p>虾米比较让我吐槽的地方在于它的手机客户端质量相对于QQ音乐和百度音乐这两个大厂做的要低不少。早些时候虾米音乐甚至<del>因为版权原因</del>iOS版本无法在AppStore上架，后来有了阿里后爸以后，终于媳妇熬成婆，上了AppStore<del>（听起来怪怪的）</del>←_←，但其实那时候的客户端功能少得可怜（iOS版连锁屏界面显示歌名的接口都没实现）。有了阿里后爸以后也许得到了人力财力和技术上的支持，iOS版客户端不久有了一次大升级，终于接近赶上第一梯队了。在此之后我换手机了，开始进入Android客户端的地狱。在忍受了几个月听歌时自动崩溃后（有时几十分钟，有时几分钟，有时几秒钟），虾米的程序猿gg们终于修好了。然后在某个版本中又加入了一个极其脑残的锁屏界面，为什么说极其脑残呢？首先它反应慢，经常都要系统自带的锁屏出来以后闪一下它才会出现（我的手机已经够好了真的），最重要的是，它不能禁用！！<del>也许是在微博上被我骂过了吧</del>后来给这个功能加了开关，关！满意了。总的说来虾米的手机客户端这块，我估计他们就两三个开发在做吧……还在追赶QQ音乐和百度音乐的节奏。</p>
+<p>扯远了，话说回来，即使被客户端虐了这么多次、这么久，我还是在虾米、QQ、百度三者中选择了虾米，甚至我厂的百度音乐我都没买，就是因为资源取胜……</p>
+<p>虾米的VIP是15一个月，年付120，相当于10块一个月。</p>
+<p>福利首先是在线听的时候可以选择高音质，以我这种地铁听歌党明显是听不出来差别的了。</p>
+<p>然后是它会赠送下载MP3，普通会员下载MP3可以用它的红包或者充值，年付会员每年可以下载1500首MP3，这数量在我看来还是挺多的，相当于100张专辑吧。<del>虽然我到现在也就用了2首的配额……</del>虾米下载的MP3通常都是320kbps，一般我这种木耳就可以把它当无损的听了，虽然我也无所谓有损无损。通常下载都会有完整的ID3信息和封面，从质量上讲，是令人满意的。</p>
+<p>介绍中还有一个说法是“手机下载无容量上限”，手机客户端离线缓存歌并不是最高音质的（VIP我也不确定是不是），这个和上面说的那个“下载MP3”不是一个概念。</p>
+<p>虾米有一点点社交概念，在发评论的时候，会员的名字旁边会有一个土掉渣的土豪金VIP标识。</p>
+<p><strong>虾米音乐：推荐程度3星</strong>（音乐爱好者推荐程度4星）</p>
+<h2 id="微博">微博</h2><p>我脑子被门挤了我才买了微博会员，更脑残的是我不知道怎么就给开了每个月自动扣款，一个月扣我9块钱，我现在不知道到哪去关了！！！妈蛋！！！</p>
+<p>微博会员能干啥？其实我没大搞明白，因为它完全没影响我怎么刷微薄。</p>
+<p>在我的名字旁边会有一个土的掉渣的金色皇冠，喂喂能不能再出个付费服务每个月10块钱去掉这个皇冠啊？</p>
+<p>对了好像不是会员的话每个分组只能加200个人，我的“百度”分组就已经加满了，但是我给建了一个“百度2”，不过会员好像就能每个组加400个人吧，我也不记得了。</p>
+<p>真的不想多说了，谁能告诉我怎么去把那个每月自动续费给关了？我请你吃冰棍！</p>
+<p><strong>微博会员：推荐程度0星</strong></p>
+<h2 id="QQ">QQ</h2><p>中国互联网界最古老的会员体系之一，身为14年Q龄的铁杆用户，我却没买……为什么没买？也许是因为我的QQ号用的很久了，想在它身上保留2000年那个中国互联网刚开始走进家庭的感觉，想怀念一点当年网吧里有很多人别的啥不干，只在那聊QQ的场景吧。</p>
+<p>不过也许QQ会员是对我比较有吸引力的，因为可以多端同步聊天记录（非会员会有几天时间的限制），貌似还能多端同步表情。身为表情党这种功应该是很不错的。</p>
+<h2 id="总结">总结</h2><p>发现每个月要多花好几十块……手已剁，现在用脚趾头打字的！</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p><strong><del>哈哈哈哈哈哈炫富帖来了！</del></strong></p>
+<p>身为互联网行业的一员，虽然我做的是纯纯纯免费的用户产品，但是为了攒点人品，防止未来有一天失业了，我还是会尝试各种付费会员，心理上就当给互联网行业做贡献了吧……</p>]]>
+    
+    </summary>
+    
+      <category term="生活" scheme="http://jimliu.net/tags/%E7%94%9F%E6%B4%BB/"/>
+    
+      <category term="站着说话不腰疼" scheme="http://jimliu.net/tags/%E7%AB%99%E7%9D%80%E8%AF%B4%E8%AF%9D%E4%B8%8D%E8%85%B0%E7%96%BC/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[JavaScript中的高精度计时]]></title>
+    <link href="http://jimliu.net/2014/03/16/hrt-in-js/"/>
+    <id>http://jimliu.net/2014/03/16/hrt-in-js/</id>
+    <published>2014-03-16T11:23:12.000Z</published>
+    <updated>2015-03-26T11:21:23.000Z</updated>
+    <content type="html"><![CDATA[<p>HRT(High Resolution Timing, 高精度计时)在一些场合有很大的作用，比如游戏开发中，需要精确的计算两帧之间的时间差。</p>
+<p>在JS中常常用<code>(new Date()).getTime()</code>来获取毫秒级的时间戳，虽然是毫秒级，但事实上它的真实精度只能达到大概16ms的级别。例如<br><figure class="highlight openscad"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">while <span class="params">(<span class="literal">true</span>)</span>&#123;</span><br><span class="line">  console.<span class="built_in">log</span><span class="params">(<span class="params">(new Date<span class="params">()</span>)</span>.getTime<span class="params">()</span>)</span>; <span class="comment">// 这样死循环浏览器会跪的，责任自负</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>会发现它事实上大概16ms才跳一次，也许是17ms、又或者15ms吧，反正实际精度是有限的——什么？你跟我说是1ms？我告诉你那是因为新的系统或者浏览器使用了更高精度——但这不影响这篇文章的内容……</p>
+<p>这对于日常应用来说完全够用了，但是对于游戏这样的场合，高精度计时就有它不可取代的意义了。</p>
+<a id="more"></a>
+<h3 id="故事从这里开始">故事从这里开始</h3><p>上面的获得毫秒级时间戳的方式之所以精度有限，是因为它的实现方式，以及它“绝对时间”的定义。<br>以Windows为例，这一类时间戳所使用的系统调用，比如<code>GetSystemTime()</code><a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ms724390.aspx" target="_blank" rel="external">MSDN</a>、<code>GetTickCount()</code><a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ms724408.aspx" target="_blank" rel="external">MSDN</a>，其函数的取值并不是实时的，而是通过硬件的<strong>时钟中断</strong>被动刷新的，这里的刷新间隔“正好”就是上面那个16ms。以<code>GetSystemTime()</code>为例，它返回的是<code>SYSTEMTIME</code>结构体，<strong>这用来进行时间日期处理的，因为时间日期处理通常根本不需要也不应该用那么高的精度（甚至很多时候只需要秒级别的精度）</strong>，所以<code>(new Date()).getTime()</code>通过它们实现的确是可以胜任的。</p>
+<h3 id="现在我们明白了，靠这个时间戳是不能实现高精度计时的。">现在我们明白了，靠这个时间戳是不能实现高精度计时的。</h3><p>在Windows上，常常有两种高精度计时的方式：<br>第一种是<code>timeGetTime()</code><a href="http://msdn.microsoft.com/en-us/library/ms713418.aspx" target="_blank" rel="external">MSDN</a>，它能返回系统启动到现在所经过的毫秒数，精度是1ms，因为它是32位的，所以大概49.71天会溢出清零。<br>第二种<code>QueryPerformanceCounter()</code>配合<code>QueryPerformanceFrequency()</code><a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ms644904.aspx" target="_blank" rel="external">MSDN</a>实现，能够实现微秒级别的计时精度，对于大多数场合而言都够了。<br>当然还有更先进的方法，是通过CPU中的硬件计数器，和CPU每个时钟周期的时间，计算出更精确的时间（通常是纳秒级别的），对精度要求极高的场合这是最精确的选择了。</p>
+<p>通常在使用固定位数的情况下，精度越高意味着计时的范围越小，这就不罗嗦了。</p>
+<h3 id="回到JavaScript中来">回到JavaScript中来</h3><p>上面那些乱七八糟系统调用其实更咱们都没什么太大关系，我们能干什么完全看运行环境乐意给什么。<br>在<strong>webkit</strong>中提供了<code>performance.now()</code><a href="http://updates.html5rocks.com/2012/08/When-milliseconds-are-not-enough-performance-now" target="_blank" rel="external">参考文献</a>来获取一个毫秒级的浮点数时间戳，我没查到资料它的有效精度是多少，不过既然给了个浮点数那就这么用着吧，我们就当它是微秒级的了！<br>在<strong>node.js</strong>中，有<code>process.hrtime()</code><a href="http://nodejs.org/api/process.html#process_process_hrtime" target="_blank" rel="external">DOC</a>，返回的是一个数组<code>[seconds, nanoseconds]</code>，看起来它具有纳秒级别的精度？且信了吧。</p>
+<h3 id="综合一下，我写了下面的代码">综合一下，我写了下面的代码</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">exports.time = (<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> <span class="built_in">window</span> !== <span class="string">'undefined'</span>)&#123;</span><br><span class="line">    <span class="comment">// 浏览器</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">typeof</span> <span class="built_in">window</span>.performance !== <span class="string">'undefined'</span> &amp;&amp; <span class="keyword">typeof</span> performance.now !== <span class="string">'undefined'</span>)&#123;</span><br><span class="line">      <span class="comment">// support hrt</span></span><br><span class="line">      <span class="keyword">return</span> <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">        <span class="keyword">return</span> performance.now();</span><br><span class="line">      &#125;;</span><br><span class="line">    &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">      <span class="comment">// oh no..</span></span><br><span class="line">      <span class="keyword">return</span> <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (<span class="keyword">new</span> <span class="built_in">Date</span>()).getTime();</span><br><span class="line">      &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">    <span class="comment">// node.js</span></span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">      <span class="keyword">var</span> diff = process.hrtime();</span><br><span class="line">      <span class="keyword">return</span> (diff[<span class="number">0</span>] * <span class="number">1e9</span> + diff[<span class="number">1</span>]) / <span class="number">1e6</span>; <span class="comment">// nano second -&gt; ms</span></span><br><span class="line">    &#125;;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;)();</span><br></pre></td></tr></table></figure>
+<p>有了上面的代码<a href="https://gist.github.com/LiuJi-Jim/9596920" target="_blank" rel="external">(gist)</a>，我们就能写一个秒表神马的，在做性能测试的时候就用得上了。</p>
+<p>最后还是要唠叨一句，<strong>HRT是用来计算时间差的，不是用来计算现实中时间（挂钟时间）的</strong>。</p>
+<p>下一篇文章中，将会对JS中的时间精度进行进一步的讨论，对象自然就是<code>setTimeout/setInterval</code>了！</p>
+<h3 id="参考文献">参考文献</h3><ol>
+<li><a href="http://www.cppblog.com/sunraiing9/archive/2006/12/14/16415.html" target="_blank" rel="external">http://www.cppblog.com/sunraiing9/archive/2006/12/14/16415.html</a></li>
+<li><a href="http://blog.csdn.net/hax/article/details/1449403" target="_blank" rel="external">http://blog.csdn.net/hax/article/details/1449403</a></li>
+<li><a href="http://blog.csdn.net/aimingoo/article/details/1451556" target="_blank" rel="external">http://blog.csdn.net/aimingoo/article/details/1451556</a></li>
+</ol>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>HRT(High Resolution Timing, 高精度计时)在一些场合有很大的作用，比如游戏开发中，需要精确的计算两帧之间的时间差。</p>
+<p>在JS中常常用<code>(new Date()).getTime()</code>来获取毫秒级的时间戳，虽然是毫秒级，但事实上它的真实精度只能达到大概16ms的级别。例如<br><figure class="highlight openscad"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">while <span class="params">(<span class="literal">true</span>)</span>&#123;</span><br><span class="line">  console.<span class="built_in">log</span><span class="params">(<span class="params">(new Date<span class="params">()</span>)</span>.getTime<span class="params">()</span>)</span>; <span class="comment">// 这样死循环浏览器会跪的，责任自负</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>会发现它事实上大概16ms才跳一次，也许是17ms、又或者15ms吧，反正实际精度是有限的——什么？你跟我说是1ms？我告诉你那是因为新的系统或者浏览器使用了更高精度——但这不影响这篇文章的内容……</p>
+<p>这对于日常应用来说完全够用了，但是对于游戏这样的场合，高精度计时就有它不可取代的意义了。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[Jim Plays <Eyes On Me>]]></title>
+    <link href="http://jimliu.net/2014/03/16/eyes-on-me/"/>
+    <id>http://jimliu.net/2014/03/16/eyes-on-me/</id>
+    <published>2014-03-16T07:36:20.000Z</published>
+    <updated>2015-03-26T11:21:23.000Z</updated>
+    <content type="html"><![CDATA[<p>听了10年的歌，能够自己弹出来，虽然节奏和力度各种不稳，但是还是很高兴。<br>中间有一个明显的换踏板失误，是录了MIDI后期修的。</p>
+<p><strong>视频+手机观看：</strong><a href="http://v.youku.com/v_show/id_XNjg1OTMyMzQw.html" target="_blank" rel="external">优酷</a><br><strong>MP3+高清下载：</strong><a href="http://pan.baidu.com/share/link?shareid=3502137796&amp;uk=1359475634" target="_blank" rel="external">百度网盘</a></p>
+<embed src="http://player.youku.com/player.php/sid/XNjg1OTMyMzQw/v.swf" allowfullscreen="true" quality="high" width="480" height="400" align="middle" allowscriptaccess="always" type="application/x-shockwave-flash">
+
+<p><strong>设备&amp;&amp;软件：</strong><br>键盘：Casio PX135<br>音源：The Grand 2<br>摄像：SONY NEX-6 E50/1.8<br>编辑：SONY Vegas</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>听了10年的歌，能够自己弹出来，虽然节奏和力度各种不稳，但是还是很高兴。<br>中间有一个明显的换踏板失误，是录了MIDI后期修的。</p>
+<p><strong>视频+手机观看：</strong><a href="http://v.youku.com/v_show/id_]]>
+    </summary>
+    
+      <category term="音乐" scheme="http://jimliu.net/tags/%E9%9F%B3%E4%B9%90/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[“正则大挑战”心得]]></title>
+    <link href="http://jimliu.net/2014/01/04/regex-golf/"/>
+    <id>http://jimliu.net/2014/01/04/regex-golf/</id>
+    <published>2014-01-04T12:23:12.000Z</published>
+    <updated>2015-03-26T11:21:23.000Z</updated>
+    <content type="html"><![CDATA[<p>就是<strong><a href="http://regex.alf.nu/" target="_blank" rel="external">它</a></strong>！！！这是昨天在微博上看到的“只要把这16个题做完，你就可以精通正则。”啧啧啧，好奇心驱使我点开了……</p>
+<p>然后……真是太好玩了，这是一个正则表达式的游戏，其中有的题目简直丧心病狂，可以说是我做过最难的编程puzzle之一了。</p>
+<p>这篇博客将会分享一下<strong>我的解答</strong>，后来<a href="http://weibo.com/wileam" target="_blank" rel="external">@小雪-Joanna</a>给我发了一个<a href="https://gist.github.com/jonathanmorley/8058871" target="_blank" rel="external">牛人答案（标准答案？）</a>里面我看得懂的也分析一下。</p>
+<a id="more"></a>
+<h2 id="1-Plain_String">1.Plain String</h2><blockquote>
+<p>Type a regex in the box. You get ten points per correct match. Hit Enter to go to the next ‘level’.</p>
+</blockquote>
+<p>送分题，毫无疑问，答案是<code>foo</code>，<strong>207</strong>分。</p>
+<h2 id="2-Anchors">2.Anchors</h2><blockquote>
+<p>You are deducted one point per character you use, and ten if you match something you shouldn’t.</p>
+</blockquote>
+<p>考察对<strong>边界</strong>的应用。最开始我给出的是<code>ick$</code>，后来发现是<code>ck$</code>，最后丧心病狂的发现是<code>k$</code>，得分分别是206, 207, <strong>208</strong>。</p>
+<h2 id="3-Ranges">3.Ranges</h2><blockquote>
+<p>The test vectors were generated by grepping /usr/dict/words. Can you tell?</p>
+</blockquote>
+<p>考察对<strong>范围</strong>的应用，同时结合<strong>边界</strong>和<strong>量词</strong>。我的答案是<code>^[a-f]+$</code>，当然<code>^[a-f]*$</code>也是可以的，并且得分一样，都是<strong>202</strong>。</p>
+<h2 id="4-Backrefs">4.Backrefs</h2><blockquote>
+<p>This doesn’t really work as a tutorial. Not really clear what you’re supposed to do here.</p>
+</blockquote>
+<p>从题面上看，是考察对于<strong>反向引用</strong>的使用。我给的答案是<code>(.{3,}).*\1</code>，得分是<strong>199</strong>，找了很久没有发现优化空间，直到我看了牛人解答之后，竟然给出了<code>(...).*\1</code>，我真蠢。</p>
+<h2 id="阶段性小结">阶段性小结</h2><p>毫无疑问前4关是比较简单的，其中前3关都是正则中会用到的基本用法，第4关只要是比较熟练的同学也肯定是会的，能否拿高分差别在于够不够省。</p>
+<h2 id="5-Abba">5.Abba</h2><blockquote>
+<p>Let’s pretend this one is not a rehash of the last one.</p>
+</blockquote>
+<p>说实话这个题目相当具有迷惑性，也挺有难度，微博上看的确有不少同学卡在这题上了。</p>
+<p>观察题面，要求<strong>不匹配</strong>字符串内含形如<code>abba</code>组合的串，首先可以简单地使用反向引用构造出<code>(.)(.)\2\1</code>。</p>
+<p>有了它后，怎么做到<strong>不匹配</strong>呢？这里要用到<strong>负向前瞻</strong>，负向前瞻是<strong>零宽断言</strong>的一种，JavaScript中的负向前瞻形如<code>(?!exp)</code>，匹配后面不是exp的串。</p>
+<p>OK，下面一步步构造，首先用<code>(?!(.)(.)\2\1)</code>试试，发现左边的都匹配上了，右边的……也匹配上了- -|。然后用一个很损的办法，<code>^(?!(.)(.)\2\1)</code>，右边干掉了2个。</p>
+<p>这时候其实回想一下题目，我们要排除的是形如<code>****abba****</code>的串，那么在刚才的基础上加上<code>^(?!.*(.)(.)\2\1.*)</code>，对了！191分。</p>
+<p>再仔细想一下，对abba再后面的串其实没必要再限制了，优化到<code>^(?!.*(.)(.)\2\1)</code>，<strong>193</strong>分。</p>
+<p>JavaScript的正则只支持<strong>前瞻</strong>(Look Ahead)而不支持<strong>后瞻</strong>(Look Behind)，也就是说我们只能“用右边的东西限制当前位置”。</p>
+<h2 id="6-A_man,_a_plan">6.A man, a plan</h2><blockquote>
+<p>You’re allowed to cheat a little, since this one is technically impossible.</p>
+</blockquote>
+<p>对称串嗯哼？有了前面的经验这题不会很难的，我构造了半天，中间也经过几次升级，结果用了<code>(.)(.).?\2\1.?$</code>，得分是<strong>175</strong>。</p>
+<p>牛X答案给的是<code>^(.)[^p].*\1$</code>，我只想说这东西相当牛X，而且很符合题目描述<em>cheat a little</em>，它能拿到177分。</p>
+<h2 id="7-Prime">7.Prime</h2><blockquote>
+<p>The length is not part of the string. I should probably have chosen a different color.</p>
+</blockquote>
+<p>非常非常好玩的一道题，要不是我曾经看过<a href="http://www.matrix67.com/blog/archives/475" target="_blank" rel="external">M67的一篇博客</a>知道正则有<strong>判断素数</strong>这种神奇的用法，这道题简直无从下手。</p>
+<p>首先用<code>^x?$|^(xx+?)\1+$</code>判断长度是合数，因为没有长为0或1的，所以直接精简到<code>^(xx+?)\1+$</code>，nice！错误答案全部匹配，正确答案全部不匹配。</p>
+<p>有了上面的经验，剩下的不会有什么难度了，<code>^(?!(xx+?)\1+$)</code>，<strong>285</strong>分到手。而牛人答案<code>^(?!(..+)\1+$)</code>中却没有对中间的<code>xx+?</code>启用非贪婪，达到286分，这个因为我不怎么看得懂这个素数匹配的原理，所以我也不再妄加评判了……</p>
+<h2 id="8-Four">8.Four</h2><blockquote>
+<p>You can get an extra point by ignoring the name of this level.</p>
+</blockquote>
+<p>观察题面，它要匹配的其实是形如<code>*a*a*a*a</code>或者是<code>a*a*a*a*</code>，按照这个思路，可以构造出<code>.(.)(?:.\1){3,}|(.).(?:\2.){3,}</code>，这样已经可以拿到179分了。</p>
+<p>其实进一步观察，不难发现其实形态1中的开头和形态2中的结尾是并不重要的，所以我们想要的其实只是<code>a*a*a</code>而已，那么<code>(.)(.\1){3}</code>就可以完美解决了，并且能够得到<strong>199</strong>分。</p>
+<h2 id="阶段性小结-1">阶段性小结</h2><p>5~8题开始有点没节操了，但至少还是在技术技巧的范围内的，第7题天马行空，报酬也丰厚。</p>
+<p>事实上我从9题开始就胡诌了。</p>
+<h2 id="9-Order">9.Order</h2><blockquote>
+<p>Cheat.</p>
+</blockquote>
+<p>描述一点也不含蓄，看题面，发现需要匹配的是<strong>非降序</strong>的串。</p>
+<p>然后我实在是不会了，我本来天真的以为<code>(.)[\1-z]</code>中的范围表达式是可以利用反向引用的，结果当然是不行。于是我随便写了个<code>^a[b-z]+$</code>，惨淡地得了<strong>41</strong>分。</p>
+<p>然后看了牛人解答我哭了，<code>^.{5}[^e]?$</code>，果然是cheat，当然也不得不佩服这观察力，199分。</p>
+<h2 id="10-Triples">10.Triples</h2><blockquote>
+<p>Multiples of 7 are left as an exercise for the reader.</p>
+</blockquote>
+<p>题面很简单，就是<strong>能被3整除</strong>。搜索了一下，有能构造<strong>匹配能被3整除的2进制数</strong>的办法，但是这里是10进制。于是胡诌继续，<code>00</code>就这么搞上去，也能<strong>118</strong>分你敢信？</p>
+<p>答案是<code>00($|3|6|9|12|15)|4.2|.1.+4|55|.17</code>，满分达到了596分。我觉着这货跟数学没啥关系，就是靠观察力硬凑……</p>
+<h2 id="11-Glob">11.Glob</h2><p>题面非常有意思，要构造一个<code>xxx matches yyy</code>这种，也就是matches的前面充当正则的时候能匹配后面的串。</p>
+<p>当然如果往这个方向想，那就肯定做不出来的（好残酷），当我看到答案的时候，我吓尿了：<code>ai|c$|^p|[bcnrw][bnopr]</code>这要有多强大的观察力才能做出来。</p>
+<p>我的答案<code>\*</code>，<strong>58</strong>分惨淡收场。</p>
+<h2 id="12-Balance">12.Balance</h2><blockquote>
+<p>This one is also impossible, but there’s a finite number of test cases.</p>
+</blockquote>
+<p>描述都说impossible，当场吓尿。你猜我给的是什么？说出来吓死你：<code>^$</code>，得分<strong>8</strong>也吓死你……</p>
+<p><a href="http://weibo.com/11978569" target="_blank" rel="external">@Thomas</a>凭借<code>&lt;&lt;&lt;&lt;</code>得到了146分，我佩服他想象力！</p>
+<p>牛人答案是<code>^(&lt;(&lt;(&lt;(..)*&gt;)*&gt;)*&gt;)*$</code>得分288，<strong>但这依然并不是完美答案</strong>。</p>
+<p>括号配对对于正则是一个非常大的难题，因为<a href="http://zh.wikipedia.org/wiki/%E6%AD%A3%E5%88%99%E6%96%87%E6%B3%95" target="_blank" rel="external">正则文法</a>的定义先天就不是递归的。我们现在用的加强的正则表达式，尽管加入了反向引用、计数、前瞻后瞻等高级功能，但我理解它的数学定义并没有超过这个范畴，而是在实现引擎层面上新增的功能。</p>
+<p>但其实正则来处理括号配对不是不可能的，C#标准库的正则是支持<a href="http://msdn.microsoft.com/zh-cn/library/bs2twtah.aspx#balancing_group_definition" target="_blank" rel="external">平衡组</a>的，我也没有实际用过，就不深入聊这个了。</p>
+<h2 id="阶段性小结-2">阶段性小结</h2><p>9~12题是相当丧心病狂，不“作弊”基本没法正常做了。而且后面的题目作者好像已经完全懒得写描述了。</p>
+<h2 id="13-Powers">13.Powers</h2><p>从题目名字看，就是<strong>幂</strong>（我不是要说杨幂）。</p>
+<p>付出了把键盘敲烂的代价，我丧心病狂地写出了<code>^((((((((((x)\10?)\9?)\8?)\7?)\6?)\5?)\4?)\3?)\2?)\1?$</code>，虽然是完美匹配，但估计是因为表达式太长，只得了<strong>56</strong>分。</p>
+<p>牛人答案是<code>^(?!(.(..)+)\1*$)</code>，这个很有意思，我们来解读一下。</p>
+<p>首先我只看到了正确答案是<strong>长度为2的整数次幂的串</strong>，而没有观察错误答案，这不得不说是一个重大失误！</p>
+<p>错误答案中比较短的几个，长度是3,5,7,11,13的串，可以表示为<code>2n+1</code>，那么可以先构造出<code>^(.(xx)+)$</code>，发现还匹配了401和1025。</p>
+<p>那么，长度为28,48,160,600的呢？把他们做因数分解，发现28=7*2*2, 48=3*2*2*2*2, 160=5*2*2*2*2*2, 600=75*2*2*2，也就是说他们都是<code>(2n+1)*pow(2, m)</code>的形态。于是在上面的基础上构造出来<code>^(.(xx)+)\1*$</code>，能够成功匹配所有错误答案了！</p>
+<p>结合第7题中的狗血方法，稍作修改就得到<code>^(?!(.(..)+)\1*$)</code>这个答案，其实也不过才93分而已嘛……当然不看答案的话我也真心找不到这规律。</p>
+<h2 id="14-Long_Count">14.Long Count</h2><p>我会告诉你我直接把左边的那串数字拿来用了吗？<strong>191</strong>分。</p>
+<p>答案是<code>^((.+)0 \2+1 ?)*$</code>仔细看看应该能明白，还是凭借细心的观察，这样可以拿到253分。</p>
+<h2 id="15-Long_Count_v2">15.Long Count v2</h2><p>我会告诉你我<del>又</del>直接把左边的那串数字拿来用了吗？<strong>191</strong>分。</p>
+<p>答案<del>又</del>是<code>^((.+)0 \2+1 ?)*$</code>，这样<del>又</del>可以拿到253分。我根本没观察跟14题有啥区别，所以不评论了。</p>
+<h2 id="16-Alphabetical">16.Alphabetical</h2><p>毫无头绪的一题，<code>aerate</code>骗到<strong>33</strong>分，好累，感觉不会再爱了。</p>
+<p>答案是<code>.r.{32}r|a.{10}te|n.n..</code>，317分，我的建议是不要试图解读它。</p>
+<h2 id="难忘今宵">难忘今宵</h2><p>我的总分是<strong>2364</strong>分，相比于能刷上3000分的大神们，结合文章开头的话“只要把这16个题做完，你就可以精通正则。”我现在只能说</p>
+<blockquote>
+<p>我根本不会正则啊！！！</p>
+</blockquote>
+<p>如果你看到了这里，说明你也刚刚经历了一场惨痛的折磨，对此我深表同情。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>就是<strong><a href="http://regex.alf.nu/">它</a></strong>！！！这是昨天在微博上看到的“只要把这16个题做完，你就可以精通正则。”啧啧啧，好奇心驱使我点开了……</p>
+<p>然后……真是太好玩了，这是一个正则表达式的游戏，其中有的题目简直丧心病狂，可以说是我做过最难的编程puzzle之一了。</p>
+<p>这篇博客将会分享一下<strong>我的解答</strong>，后来<a href="http://weibo.com/wileam">@小雪-Joanna</a>给我发了一个<a href="https://gist.github.com/jonathanmorley/8058871">牛人答案（标准答案？）</a>里面我看得懂的也分析一下。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[在BAE上使用hexo搭建博客]]></title>
+    <link href="http://jimliu.net/2013/11/20/use-hexo-on-bae/"/>
+    <id>http://jimliu.net/2013/11/20/use-hexo-on-bae/</id>
+    <published>2013-11-20T11:23:12.000Z</published>
+    <updated>2015-03-26T11:21:23.000Z</updated>
+    <content type="html"><![CDATA[<p>在<a href="/2013/09/08/%E4%BD%BF%E7%94%A8hexo%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2/">之前的文章</a>中，我介绍了如何使用<a href="http://zespia.tw/hexo/" target="_blank" rel="external">hexo</a>来编辑博客内容，以及它自带的发布到<a href="http://pages.github.com/" target="_blank" rel="external">GitHub-Pages</a>的功能。</p>
+<p>但是我最后并没有把它部署到GitHub-Pages上，原因主要有：</p>
+<ol>
+<li>在国内的访问速度比较一般；</li>
+<li>提交代码后，要等好几分钟才能看到效果；</li>
+<li>一个网站只能绑定一个域名。</li>
+</ol>
+<p>作为熊掌社的一名码农，我自然想到了把博客部署到<a href="http://developer.baidu.com/bae" target="_blank" rel="external">BAE</a>上面去。</p>
+<a id="more"></a>
+<p>相比之下有如下优点：</p>
+<ol>
+<li>BAE/SAE这些国内的PaaS在国内访问速度非常快；</li>
+<li>提交即部署，基本上实时；</li>
+<li>BAE一个应用可以绑5个域名（SAE没研究过）。</li>
+</ol>
+<p>方法与发布到GitHub-Pages非常类似。</p>
+<p>首先需要在BAE上申请一个应用，得到SVN后，直接把整个hexo博客目录都放SVN上，这个时候，我们依然可以在本地用<code>hexo server</code>来看效果。然后改改好了以后，<code>hexo generate</code>生成<code>public</code>目录，这个时候同样把整个hexo博客的目录提交上去。这里我的观点就是既然是用了版本控制软件，那么源代码我肯定也是要管理的，所以会整个目录地提交。</p>
+<p>这时候重点来了，我们需要把<code>public</code>目录作为静态目录来使用，最方便快捷的方法是使用<code>url-rewrite</code>，BAE已经提供了这个功能。</p>
+<p>在BAE的程序配置里，加入一个规则，规则类型为<code>url</code>，将<code>(.*)</code>给rewrite到<code>/public/$1</code>，对应的<code>app.conf</code>代码大概如下，用BAE的网页界面配置也一样。<br><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- <span class="string">url :</span> (.*)</span><br><span class="line">  <span class="string">script :</span> <span class="regexp">/public/</span>$<span class="number">1</span></span><br></pre></td></tr></table></figure></p>
+<p>生效以后，任何访问的路径都会被映射到<code>/public</code>下，例如<code>http://your-domain/index.html</code>就会实际上映射到<code>/public/index.html</code>，于是直接访问应用程序域名就能访问<code>/public</code>里的静态文件了。</p>
+<p>这样，一个SVN就可以即保存文章的源代码，又可以做到commit即发布，是不是感觉方便程度也不输word press了呢？</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>在<a href="/2013/09/08/%E4%BD%BF%E7%94%A8hexo%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2/">之前的文章</a>中，我介绍了如何使用<a href="http://zespia.tw/hexo/">hexo</a>来编辑博客内容，以及它自带的发布到<a href="http://pages.github.com/">GitHub-Pages</a>的功能。</p>
+<p>但是我最后并没有把它部署到GitHub-Pages上，原因主要有：</p>
+<ol>
+<li>在国内的访问速度比较一般；</li>
+<li>提交代码后，要等好几分钟才能看到效果；</li>
+<li>一个网站只能绑定一个域名。</li>
+</ol>
+<p>作为熊掌社的一名码农，我自然想到了把博客部署到<a href="http://developer.baidu.com/bae">BAE</a>上面去。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+</feed>
