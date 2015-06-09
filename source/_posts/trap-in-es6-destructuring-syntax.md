@@ -1,5 +1,5 @@
 title: 一个关于JavaScript解构（destructuring）语法的……呃，陷阱？
-date: 2015-06-10 18:31:35
+date: 2015-06-09 18:31:35
 tags:
 - 编程
 ---
