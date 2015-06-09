@@ -6,7 +6,7 @@ tags:
 没有摘要，直接看文可好？
 <!-- more -->
 
-```
+```JavaScript
 function arr() {
   return [1, 2];
 }
@@ -24,7 +24,7 @@ var {foo: fu} = obj();
 
 那么看看下面的例子（来源[@SYSU_Joyee的微博](http://weibo.com/2930876843/Ckzs5kD76)）
 
-```
+```JavaScript
 var foo = ['a', [{ foo: 'bar' }, 1, 2, 3, 4, 5]];
 var [a, [{ foo: fu }, , ...tail], missing, def = 'default value'] = foo;
 ```
@@ -50,7 +50,7 @@ so far，看起来还是比较简单的。
 
 以下例子来自[Belleve Invis的博客](http://typeof.net/2014/m/dont-invent-a-language-when-idle.html)
 
-```
+```JavaScript
 var a = {};
 var b = a;
 [a.x, a.y, a.x] = [1, (a = {}), 3];
@@ -60,7 +60,7 @@ var b = a;
 
 按照人类知觉的理解，上面的代码应该等价于：
 
-```
+```JavaScript
 a.x = 1;
 a.y = (a = {});
 a.x = 3;
@@ -70,7 +70,7 @@ a.x = 3;
 
 然而实际结果却是
 
-```
+```JavaScript
 a = { x: 3, y: Object } // 其中y就是a
 b = {}
 ```
@@ -87,7 +87,7 @@ b = {}
 
 于是乎上面的代码正确的等价应该是：
 
-```
+```JavaScript
 var a = {};
 var b = a;
 var _tmp = [1, (a = {}), 3];
@@ -104,7 +104,7 @@ a.x = _tmp[2];
 
 我们把上面两段代码分别扔进[babel](https://babeljs.io)里可以得到如下的transpile结果：
 
-```
+```JavaScript
 function _toArray(arr) { return Array.isArray(arr) ? arr : Array.from(arr); }
 
 var foo = ['a', [{ foo: 'bar' }, 1, 2, 3, 4, 5]];
@@ -134,7 +134,7 @@ _ref;
 
 到了这里，我们应该可以安心的玩解构了，对于一些场景它会显得非常非常的有用，例如：
 
-```
+```JavaScript
 [a, b] = [b, a]; // swap
 
 function hsl2rgb(h, s, l) {
