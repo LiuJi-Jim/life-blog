@@ -97,7 +97,7 @@
 <p>以下例子来自<a href="http://typeof.net/2014/m/dont-invent-a-language-when-idle.html" target="_blank" rel="external">Belleve Invis的博客</a></p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> a = &#123;&#125;;</span><br><span class="line"><span class="keyword">var</span> b = a;</span><br><span class="line">[a.x, a.y, a.x] = [<span class="number">1</span>, (a = &#123;&#125;), <span class="number">3</span>];</span><br></pre></td></tr></table></figure>
 <p>注意第三行的赋值语句右边也有一个赋值语句，那么执行顺序是怎样？</p>
-<p>按照人类知觉的理解，上面的代码应该等价于：</p>
+<p>按照人类直觉的理解，上面的代码应该等价于：</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">a.x = <span class="number">1</span>;</span><br><span class="line">a.y = (a = &#123;&#125;);</span><br><span class="line">a.x = <span class="number">3</span>;</span><br></pre></td></tr></table></figure>
 <p>于是最终结果是<code>a = { x: 3 }, b = { x: 1, y: { x: 3 } }</code></p>
 <p>然而实际结果却是</p>
