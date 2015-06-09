@@ -5,7 +5,7 @@
   <subtitle><![CDATA[Again, Jim Liu's Blog]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://jimliu.net//"/>
-  <updated>2015-06-09T10:12:14.000Z</updated>
+  <updated>2015-06-09T10:43:05.000Z</updated>
   <id>http://jimliu.net//</id>
   
   <author>
@@ -17,10 +17,10 @@
   
   <entry>
     <title><![CDATA[一个关于JavaScript解构（destructuring）语法的……呃，陷阱？]]></title>
-    <link href="http://jimliu.net/2015/06/10/trap-in-es6-destructuring-syntax/"/>
-    <id>http://jimliu.net/2015/06/10/trap-in-es6-destructuring-syntax/</id>
-    <published>2015-06-10T10:31:35.000Z</published>
-    <updated>2015-06-09T10:12:14.000Z</updated>
+    <link href="http://jimliu.net/2015/06/09/trap-in-es6-destructuring-syntax/"/>
+    <id>http://jimliu.net/2015/06/09/trap-in-es6-destructuring-syntax/</id>
+    <published>2015-06-09T10:31:35.000Z</published>
+    <updated>2015-06-09T10:43:05.000Z</updated>
     <content type="html"><![CDATA[<p>没有摘要，直接看文可好？<br><a id="more"></a></p>
 <figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">arr</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> [<span class="number">1</span>, <span class="number">2</span>];</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> [a, b] = arr();</span><br><span class="line"><span class="comment">// a = 1, b = 2;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">obj</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> &#123; foo: <span class="string">'bar'</span> &#125;;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> &#123;foo: fu&#125; = obj();</span><br><span class="line"><span class="comment">// fu = 'bar'</span></span><br></pre></td></tr></table></figure>
 <p>上面是两种最基本的解构语法</p>
