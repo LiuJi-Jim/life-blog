@@ -99,9 +99,9 @@
 <p>注意第三行的赋值语句右边也有一个赋值语句，那么执行顺序是怎样？</p>
 <p>按照人类直觉的理解，上面的代码应该等价于：</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">a.x = <span class="number">1</span>;</span><br><span class="line">a.y = (a = &#123;&#125;);</span><br><span class="line">a.x = <span class="number">3</span>;</span><br></pre></td></tr></table></figure>
-<p>于是最终结果是<code>a = { x: 3 }, b = { x: 1, y: { x: 3 } }</code></p>
+<p>于是最终结果是<code>a = { x: 3 }, b = { x: 1, y: Object }</code>其中的<code>y</code>就是<code>a</code>的引用</p>
 <p>然而实际结果却是</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">a = &#123; x: <span class="number">3</span>, y: <span class="built_in">Object</span> &#125; <span class="comment">// 其中y就是a</span></span><br><span class="line">b = &#123;&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">a = &#123; x: <span class="number">3</span>, y: <span class="built_in">Object</span> &#125; <span class="comment">// 其中的y就是a的引用</span></span><br><span class="line">b = &#123;&#125;</span><br></pre></td></tr></table></figure>
 <p>虽然绝大多数人这辈子也不会写这种shit一样的代码，但还是需要知道为什么会是这样。</p>
 <p>因为es6的草案对解构的策略是：</p>
 <ul>
