@@ -5,7 +5,7 @@
   <subtitle><![CDATA[Again, Jim Liu's Blog]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://jimliu.net//"/>
-  <updated>2015-06-12T07:48:51.000Z</updated>
+  <updated>2015-07-14T05:25:32.000Z</updated>
   <id>http://jimliu.net//</id>
   
   <author>
@@ -14,6 +14,82 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[来吧，造个模板引擎轮子——开篇]]></title>
+    <link href="http://jimliu.net/2015/07/13/make-a-js-tpl-engine/"/>
+    <id>http://jimliu.net/2015/07/13/make-a-js-tpl-engine/</id>
+    <published>2015-07-13T10:31:35.000Z</published>
+    <updated>2015-07-14T05:25:32.000Z</updated>
+    <content type="html"><![CDATA[<p>来吧<del>战个痛</del>，造个模板引擎轮子。</p>
+<p>是的，我又给自己挖了个新坑，这次虽然代码已经写了一两个月了，但是写码之余，意犹未尽。</p>
+<p>我知道在MVVM代表着先进生产力的发展要求，并且也越来越流行的今天，字符串模板已经越来越势微。而且这玩意其实技术含量并不高，是“技巧 &gt; 技术”的类型。不过手痒得很，于是还是造了一个。</p>
+<p>这次挖这个坑就是要为我的模板引擎轮子写一个开发心得<del>流水账</del>，暂时不知道会写多少篇，说不定两三篇，说不定一篇就变有生之年系列……</p>
+<p>内容方面其实很枯燥，因为我不喜欢写一些高大上的设计思路这类的东西<del>都特么边写边删边想的哪有什么设计</del>，对于工作之外的玩意，我就喜欢写了删删了写，说好听点这叫<em>好读书，不求甚解</em>（掩面逃）。</p>
+<p>哦，先丢个<a href="https://github.com/liuji-jim/raze-tpl" target="_blank" rel="external">GitHub</a>，继续做一个不负责任的男人，无测试、无DEMO、无主页的三无项目……为了尝鲜、玩票外加装逼，我用的是TypeScript来写，其实和JS也没啥差别。</p>
+<a id="more"></a>
+<h2 id="目标设定">目标设定</h2><h3 id="语法风格">语法风格</h3><p>说到模板引擎，很多人都会想到PHP当中的Smarty，这也许是前端用得最多的模板引擎了。Smarty代表了一种以“定界符”为核心的模板引擎语法，例如：</p>
+<figure class="highlight handlebars"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="xml"></span><span class="expression">&#123;&#123;<span class="variable"><span class="keyword">if</span></span> $<span class="variable">xxx</span> == '<span class="variable">yyy</span>'&#125;&#125;</span><span class="xml"></span><br><span class="line">    Oh yeah....</span><br><span class="line"></span><span class="expression">&#123;&#123;<span class="end-block">/<span class="keyword">if</span></span>&#125;&#125;</span><span class="xml"></span></span><br></pre></td></tr></table></figure>
+<p>这种语法风格，一直延续至今，广为人们所接受。我觉得这种风格之所以大家很容易接受，一个重要的原因就是它跟ASP/JSP/PHP本身所提供的语言内嵌功能是如此的相似，甚至还有<a href="https://larsjung.de/node-cgi/" target="_blank" rel="external">node-cgi</a>这么好玩的东西！！例如PHP：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="php"><span class="preprocessor">&lt;?</span> <span class="keyword">if</span> (<span class="variable">$xxx</span> == <span class="string">'yyy'</span>) &#123; <span class="preprocessor">?&gt;</span></span></span><br><span class="line">    Oh yeah...</span><br><span class="line"><span class="php"><span class="preprocessor">&lt;?</span> &#125; <span class="preprocessor">?&gt;</span></span></span><br></pre></td></tr></table></figure>
+<p>到了JS这边，众多流行的模板引擎，比如<a href="https://github.com/tj/ejs" target="_blank" rel="external">EJS</a>、<a href="https://github.com/wycats/handlebars.js" target="_blank" rel="external">handlebars</a>、<a href="https://github.com/janl/mustache.js" target="_blank" rel="external">mustuche</a>等，以及国内的（我觉得的）上乘之作<a href="https://github.com/ecomfe/etpl" target="_blank" rel="external">ETPL</a>、<a href="https://github.com/aui/artTemplate" target="_blank" rel="external">artTemplate</a>，都是沿用了定界符的语法风格。</p>
+<p>这本身不是什么问题，用定界符可以很方便的从源代码当中区分出哪些是HTML，哪些是模板逻辑，这想必是极好的。但对于我来说，我却觉得不够“<strong>骚</strong>”，用<a href="https://zh.wikipedia.org/wiki/%E5%93%88%E5%B0%94%E7%9A%84%E7%A7%BB%E5%8A%A8%E5%9F%8E%E5%A0%A1" target="_blank" rel="external">哈尔</a>的话说就是</p>
+<p><img src="/uploads/2015/not-beautiful.jpg" alt=""></p>
+<p>说到骚的话，<a href="https://github.com/jadejs/jade" target="_blank" rel="external">Jade</a>其实是挺骚的一个模板引擎，但是我并不喜欢它。一个是因为我不喜欢用缩进来表示代码层级的语言（一黑一大片），我喜欢大括号！一个是在过去尝试用Jade的过程中，对于内联逻辑表达式实在是太头疼了……比如在Smarty当中：</p>
+<figure class="highlight handlebars"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="xml"></span><span class="expression">&#123;&#123;<span class="variable">foreach</span> <span class="variable">from</span>=$<span class="variable">list</span> <span class="variable">item</span>=<span class="variable">it</span>&#125;&#125;</span><span class="xml"></span><br><span class="line">    <span class="tag">&lt;<span class="title">li</span> <span class="attribute">class</span>=<span class="value">"list-item</span></span></span><span class="expression">&#123;&#123;<span class="variable"><span class="keyword">if</span></span> $<span class="variable">it.active</span>&#125;&#125;</span><span class="xml"><span class="tag"><span class="value"> active</span></span></span><span class="expression">&#123;&#123;<span class="end-block">/<span class="keyword">if</span></span>&#125;&#125;</span><span class="xml"><span class="tag"><span class="value">"</span>&gt;</span></span><span class="expression">&#123;&#123;$<span class="variable">it.name</span>&#125;&#125;</span><span class="xml"><span class="tag">&lt;/<span class="title">li</span>&gt;</span></span><br><span class="line"></span><span class="expression">&#123;&#123;<span class="end-block">/foreach</span>&#125;&#125;</span><span class="xml"></span></span><br></pre></td></tr></table></figure>
+<p>的那段关于类名<code>active</code>的内联逻辑，这种丑到没朋友，但是简单粗暴能够解决问题让我不加班的代码，我竟然没研究出来Jade里怎么实现。虽然事情已经过去两年了，但这还是给我留下了巨大的心理阴影，我深信这一定是我太愚蠢了，Jade一定是可以做到的，但是我心塞了，心累了，没兴趣研究了。</p>
+<p>后来当我回想起大学的时候用微软大法C#和ASP.NET MVC的时候，在发展到某个版本的时候，微软大法推出了一款<a href="https://github.com/aspnet/Razor" target="_blank" rel="external">Razor模板引擎</a>（他们管叫“Render Engine”）<del>当时我好像还不大喜欢它呢，其实只是因为我当时的项目已经到后期了不可能再换模板</del>。它的语法非常的简洁，对于逻辑代码块，它使用</p>
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">@&#123;</span></span><br><span class="line">    <span class="preprocessor">code</span> <span class="keyword">block</span><br><span class="line"></span>&#125;</span><br></pre></td></tr></table></figure>
+<p>的格式，相当于直接内联C#代码，简单粗暴<em>I&#39;m lovin&#39; it</em>啊……而对于变量输出，则更加简单了：</p>
+<figure class="highlight vhdl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Hello! My name <span class="keyword">is</span> &lt;<span class="keyword">strong</span>&gt;@name&lt;/<span class="keyword">strong</span>&gt;. I<span class="attribute">'m</span> @age year<span class="attribute">'s</span> old.</span><br></pre></td></tr></table></figure>
+<p>嗯……骚骚骚，骚不住！</p>
+<h3 id="功能">功能</h3><p>要作为一个能用的模板引擎（我没有点名黑<a href="https://github.com/olado/doT" target="_blank" rel="external">doT</a>，其实我说的是早期的doT，简直除了快以外……），必须有完备的功能。但功能、性能、体积必然是一个难以取舍的平衡。考虑到我的轮子定位偏node.js端，体积可以放最后一位<del>（当然为了证明我偏执狂还装逼我还是会尽量把它写小一点）</del>。功能方面，至少对于我而言，需要以下<strong>必选</strong>功能：</p>
+<ul>
+<li>变量输出</li>
+<li>循环</li>
+<li>条件</li>
+<li>函数定义/调用</li>
+</ul>
+<p>以及以下<strong>可选</strong>功能：</p>
+<ul>
+<li>变量输出filter</li>
+<li>block定义与重写</li>
+<li>模板继承（配合上面这个食用）</li>
+<li>include</li>
+</ul>
+<p>对于前5点来说，其实都是很容易实现的需求。</p>
+<p>其中<strong>函数</strong>这一块，在Smarty当中有一件很让人头疼的事情，那就是它的模板变量作用域。JS的闭包可以方便的在任何函数里访问当前词法上下文里的局部变量，这是非常方便的，而在PHP里则不行。Smarty自己设计了一个较为复杂的变量作用域系统，感觉吧，不是很好用，我反正没怎么闹得很明白。但在我的轮子里面我要让模板函数可以直接像JS一样，使用函数外层作用域当中的变量。</p>
+<p>而对于后面3点，因为涉及到跨模板文件，这在浏览器端实现起来会很难受，比如artTemplate就用<code>#id</code>来搞的，我觉得吧，还是有点鸡肋。</p>
+<p>考虑到我以娱乐为主，同时前面也说了，因为MVVM/React这类的东西存在，纯字符串模板引擎在浏览器端存在感越来越弱，那么这样的需求我就只实现在node.js端了，<code>fs.readFileSync</code>走起啊还犹豫什么……</p>
+<h3 id="基本思路">基本思路</h3><p>模板语言简单地说其实就是一种DSL，模板引擎的作用就是解析、执行DSL。毫无疑问如果使用“解释执行”的办法，这多半是比较慢的。所以能见人的模板引擎一般都用的“编译执行”的办法，比如Smarty，它在第一次执行的时候把模板编译成PHP文件，后续再使用这个模板的时候就省了这一步，直到模板文件时间戳改变。</p>
+<p>早年的JS模板引擎其实是没有编译功能的，因为很多人相信<em>Eval is Evil</em>，但前辈们经过实践出真知，通过<code>new Function</code>或者<code>eval</code>将模板编译成一个JS函数，在模板重复执行的过程中毫无疑问比每次都解析是快太多了，于是JS模板引擎的工作流程就成了：</p>
+<ul>
+<li>解析模板文件，将其构造成一段JS代码（内含大量字符串拼接）</li>
+<li>将上面代码通过<code>new Function</code>或者<code>eval</code>构造成一个render函数</li>
+<li>返回render函数，对其传入data参数即可返回一段渲染后的字符串</li>
+</ul>
+<p>例如EJS的用法</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable"><span class="keyword">var</span> render</span> = ejs.compile(str, options); <span class="comment">// 编译后的render函数</span></span><br><span class="line"><span class="variable"><span class="keyword">var</span> html</span> = render(data); <span class="comment">// 渲染结果</span></span><br></pre></td></tr></table></figure>
+<p><strong>如何解析模板文件</strong>是第一步，对于使用定界符的模板语言，在不考虑bad case的情况下其实非常简单，就是直接通过按定界符进行<code>split</code>就能把模板语言和“自然语言”区分开来，对于模板语言进行进一步解析，对于“自然语言”则直接构造成字符串拼接就完事儿了。</p>
+<p>但对于我的轮子而言，因为它的语法很骚，直接用定界符分割是很不靠谱的事情。所以我选择了使用手写（伪）Parser的办法来解析，解析速度上应该是会慢一些，不过也就几十毫秒的事儿了……几十毫秒在浏览器端会是一个挺严重的事情，可能会掉几帧，但在服务端则可以通过缓存编译结果来让它只在启动时发生一次，影响不大。如果在浏览器端应用会成问题，那么可以采用类似artTemplate的预编译法，不过<em>Done is better than perfect</em>，这些都是后话了。</p>
+<hr>
+<p>下一期节目当中就开始进入正题，写一下如何手写Parser将上述语法和功能需求构建成为目标代码。</p>
+<!--
+    首先是吃自己狗屎系列，我把我的博客原本基于[EJS](https://github.com/tj/ejs)的模板全部改为了使用自己的模板引擎。这个过程有点小煎熬，因为其实Hexo给输出到模板这一层的数据并不纯净，我所用的Light这个主题原本的EJS模板里夹杂了很多JS逻辑（可能这是早期主题的问题，也许较新的Hexo主题已经没这种问题了），不过好赖还是给克服了。
+-->]]></content>
+    <summary type="html">
+    <![CDATA[<p>来吧<del>战个痛</del>，造个模板引擎轮子。</p>
+<p>是的，我又给自己挖了个新坑，这次虽然代码已经写了一两个月了，但是写码之余，意犹未尽。</p>
+<p>我知道在MVVM代表着先进生产力的发展要求，并且也越来越流行的今天，字符串模板已经越来越势微。而且这玩意其实技术含量并不高，是“技巧 &gt; 技术”的类型。不过手痒得很，于是还是造了一个。</p>
+<p>这次挖这个坑就是要为我的模板引擎轮子写一个开发心得<del>流水账</del>，暂时不知道会写多少篇，说不定两三篇，说不定一篇就变有生之年系列……</p>
+<p>内容方面其实很枯燥，因为我不喜欢写一些高大上的设计思路这类的东西<del>都特么边写边删边想的哪有什么设计</del>，对于工作之外的玩意，我就喜欢写了删删了写，说好听点这叫<em>好读书，不求甚解</em>（掩面逃）。</p>
+<p>哦，先丢个<a href="https://github.com/liuji-jim/raze-tpl">GitHub</a>，继续做一个不负责任的男人，无测试、无DEMO、无主页的三无项目……为了尝鲜、玩票外加装逼，我用的是TypeScript来写，其实和JS也没啥差别。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[一个关于JavaScript解构（destructuring）语法的……呃，陷阱？]]></title>
@@ -1030,50 +1106,6 @@
     <![CDATA[<p>就是<strong><a href="http://regex.alf.nu/">它</a></strong>！！！这是昨天在微博上看到的“只要把这16个题做完，你就可以精通正则。”啧啧啧，好奇心驱使我点开了……</p>
 <p>然后……真是太好玩了，这是一个正则表达式的游戏，其中有的题目简直丧心病狂，可以说是我做过最难的编程puzzle之一了。</p>
 <p>这篇博客将会分享一下<strong>我的解答</strong>，后来<a href="http://weibo.com/wileam">@小雪-Joanna</a>给我发了一个<a href="https://gist.github.com/jonathanmorley/8058871">牛人答案（标准答案？）</a>里面我看得懂的也分析一下。</p>]]>
-    
-    </summary>
-    
-      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[在BAE上使用hexo搭建博客]]></title>
-    <link href="http://jimliu.net/2013/11/20/use-hexo-on-bae/"/>
-    <id>http://jimliu.net/2013/11/20/use-hexo-on-bae/</id>
-    <published>2013-11-20T11:23:12.000Z</published>
-    <updated>2015-03-26T11:21:23.000Z</updated>
-    <content type="html"><![CDATA[<p>在<a href="/2013/09/08/%E4%BD%BF%E7%94%A8hexo%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2/">之前的文章</a>中，我介绍了如何使用<a href="http://zespia.tw/hexo/" target="_blank" rel="external">hexo</a>来编辑博客内容，以及它自带的发布到<a href="http://pages.github.com/" target="_blank" rel="external">GitHub-Pages</a>的功能。</p>
-<p>但是我最后并没有把它部署到GitHub-Pages上，原因主要有：</p>
-<ol>
-<li>在国内的访问速度比较一般；</li>
-<li>提交代码后，要等好几分钟才能看到效果；</li>
-<li>一个网站只能绑定一个域名。</li>
-</ol>
-<p>作为熊掌社的一名码农，我自然想到了把博客部署到<a href="http://developer.baidu.com/bae" target="_blank" rel="external">BAE</a>上面去。</p>
-<a id="more"></a>
-<p>相比之下有如下优点：</p>
-<ol>
-<li>BAE/SAE这些国内的PaaS在国内访问速度非常快；</li>
-<li>提交即部署，基本上实时；</li>
-<li>BAE一个应用可以绑5个域名（SAE没研究过）。</li>
-</ol>
-<p>方法与发布到GitHub-Pages非常类似。</p>
-<p>首先需要在BAE上申请一个应用，得到SVN后，直接把整个hexo博客目录都放SVN上，这个时候，我们依然可以在本地用<code>hexo server</code>来看效果。然后改改好了以后，<code>hexo generate</code>生成<code>public</code>目录，这个时候同样把整个hexo博客的目录提交上去。这里我的观点就是既然是用了版本控制软件，那么源代码我肯定也是要管理的，所以会整个目录地提交。</p>
-<p>这时候重点来了，我们需要把<code>public</code>目录作为静态目录来使用，最方便快捷的方法是使用<code>url-rewrite</code>，BAE已经提供了这个功能。</p>
-<p>在BAE的程序配置里，加入一个规则，规则类型为<code>url</code>，将<code>(.*)</code>给rewrite到<code>/public/$1</code>，对应的<code>app.conf</code>代码大概如下，用BAE的网页界面配置也一样。<br><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- <span class="string">url :</span> (.*)</span><br><span class="line">  <span class="string">script :</span> <span class="regexp">/public/</span>$<span class="number">1</span></span><br></pre></td></tr></table></figure></p>
-<p>生效以后，任何访问的路径都会被映射到<code>/public</code>下，例如<code>http://your-domain/index.html</code>就会实际上映射到<code>/public/index.html</code>，于是直接访问应用程序域名就能访问<code>/public</code>里的静态文件了。</p>
-<p>这样，一个SVN就可以即保存文章的源代码，又可以做到commit即发布，是不是感觉方便程度也不输word press了呢？</p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>在<a href="/2013/09/08/%E4%BD%BF%E7%94%A8hexo%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2/">之前的文章</a>中，我介绍了如何使用<a href="http://zespia.tw/hexo/">hexo</a>来编辑博客内容，以及它自带的发布到<a href="http://pages.github.com/">GitHub-Pages</a>的功能。</p>
-<p>但是我最后并没有把它部署到GitHub-Pages上，原因主要有：</p>
-<ol>
-<li>在国内的访问速度比较一般；</li>
-<li>提交代码后，要等好几分钟才能看到效果；</li>
-<li>一个网站只能绑定一个域名。</li>
-</ol>
-<p>作为熊掌社的一名码农，我自然想到了把博客部署到<a href="http://developer.baidu.com/bae">BAE</a>上面去。</p>]]>
     
     </summary>
     
