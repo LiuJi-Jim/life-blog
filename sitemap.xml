@@ -2,6 +2,11 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://jimliu.net/2015/07/27/make-a-js-tpl-engine--code-gen/</loc>
+    <lastmod>2015-07-28T03:08:26.000Z</lastmod>
+  </url>
+  
+  <url>
     <loc>http://jimliu.net/2015/07/22/make-a-js-tpl-engine--parsing/</loc>
     <lastmod>2015-07-23T05:02:14.000Z</lastmod>
   </url>
@@ -28,11 +33,6 @@
   
   <url>
     <loc>http://jimliu.net/2012/09/07/jim-plays/</loc>
-    <lastmod>2015-03-26T11:21:23.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://jimliu.net/2012/10/16/%E4%BC%AAhowto-%E5%A6%82%E4%BD%95%E5%86%99%E7%AE%80%E5%8E%86/</loc>
     <lastmod>2015-03-26T11:21:23.000Z</lastmod>
   </url>
   
@@ -213,6 +213,11 @@
   
   <url>
     <loc>http://jimliu.net/2012/06/04/%E4%BC%AA%E8%BD%AC%E8%BD%BD-gif%E9%80%9F%E5%BA%A6%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/</loc>
+    <lastmod>2015-03-26T11:21:23.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://jimliu.net/2012/10/16/%E4%BC%AAhowto-%E5%A6%82%E4%BD%95%E5%86%99%E7%AE%80%E5%8E%86/</loc>
     <lastmod>2015-03-26T11:21:23.000Z</lastmod>
   </url>
   
