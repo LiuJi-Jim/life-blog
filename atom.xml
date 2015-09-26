@@ -5,7 +5,7 @@
   <subtitle><![CDATA[Again, Jim Liu's Blog]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://jimliu.net//"/>
-  <updated>2015-09-26T03:43:15.000Z</updated>
+  <updated>2015-09-26T04:30:13.000Z</updated>
   <id>http://jimliu.net//</id>
   
   <author>
@@ -17,10 +17,10 @@
   
   <entry>
     <title><![CDATA[JS中的二进制操作简介]]></title>
-    <link href="http://jimliu.net/2015/09/25/a-brief-look-at-binary-ops-in-js/"/>
-    <id>http://jimliu.net/2015/09/25/a-brief-look-at-binary-ops-in-js/</id>
-    <published>2015-09-25T04:31:35.000Z</published>
-    <updated>2015-09-26T03:43:15.000Z</updated>
+    <link href="http://jimliu.net/2015/09/26/a-brief-look-at-binary-ops-in-js/"/>
+    <id>http://jimliu.net/2015/09/26/a-brief-look-at-binary-ops-in-js/</id>
+    <published>2015-09-26T04:31:35.000Z</published>
+    <updated>2015-09-26T04:30:13.000Z</updated>
     <content type="html"><![CDATA[<p>写这篇博客的起源是在<a href="http://div.io" target="_blank" rel="external">div.io</a>上的一篇<a href="http://div.io/topic/766" target="_blank" rel="external">文章《你所不知道的JavaScript数组》by 小胡子哥</a>下的评论中的讨论。</p>
 <p>因为随着XHR2和现代浏览器的普及，在浏览器当中处理二进制不再向过去那样无所适从，随着Canvas/WebGL等新技术逐渐开始进入大众视野，也会用到一些字节数组或者16位、8位整数等东西。在node.js刚刚发布的4.0版本中，Buffer的底层使用了更符合JS标准的Uint8Array来实现，浏览器和node.js再次向相同的目标靠近了一点点，所以对于JS中处理二进制，我就打算写这篇文章作一个入门性质的流水账，方便一些对二进制处理不了解的同学快速入门，虽然在前端领域用到的不多，不过也可以作为茶余饭后的休闲谈资。</p>
 <a id="more"></a>
