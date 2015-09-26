@@ -2,13 +2,18 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://jimliu.net/2015/09/25/a-brief-look-at-binary-ops-in-js/</loc>
+    <lastmod>2015-09-26T03:43:15.000Z</lastmod>
+  </url>
+  
+  <url>
     <loc>http://jimliu.net/2015/08/02/make-a-js-tpl-engine--features/</loc>
     <lastmod>2015-08-03T02:27:22.000Z</lastmod>
   </url>
   
   <url>
     <loc>http://jimliu.net/2015/07/27/make-a-js-tpl-engine--code-gen/</loc>
-    <lastmod>2015-07-28T03:08:26.000Z</lastmod>
+    <lastmod>2015-07-28T03:08:27.000Z</lastmod>
   </url>
   
   <url>
@@ -37,12 +42,7 @@
   </url>
   
   <url>
-    <loc>http://jimliu.net/2012/09/27/javascript%E4%B8%AD%E7%9A%84%E5%BC%82%E6%AD%A5%E6%A2%B3%E7%90%86%EF%BC%883%EF%BC%89-%E4%BD%BF%E7%94%A8wind-js/</loc>
-    <lastmod>2015-03-26T11:21:23.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://jimliu.net/2012/09/25/%E3%80%8A%E9%BB%91%E5%AE%A2%E4%B8%8E%E7%94%BB%E5%AE%B6%E3%80%8B-%E6%96%87%E6%91%98/</loc>
+    <loc>http://jimliu.net/2014/05/13/lru-cache/</loc>
     <lastmod>2015-03-26T11:21:23.000Z</lastmod>
   </url>
   
@@ -112,7 +112,22 @@
   </url>
   
   <url>
-    <loc>http://jimliu.net/2014/05/13/lru-cache/</loc>
+    <loc>http://jimliu.net/2012/07/02/%E6%88%91%E5%9C%A8w3ctech-2012-mobile%E4%B8%93%E9%A2%98%E4%BC%9A%E8%AE%AE%E4%B8%8A%E7%9A%84%E5%88%86%E4%BA%AB/</loc>
+    <lastmod>2015-03-26T11:21:23.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://jimliu.net/2013/09/08/%E4%BD%BF%E7%94%A8hexo%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2/</loc>
+    <lastmod>2015-03-26T11:21:23.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://jimliu.net/2012/06/04/%E4%BC%AA%E8%BD%AC%E8%BD%BD-gif%E9%80%9F%E5%BA%A6%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/</loc>
+    <lastmod>2015-03-26T11:21:23.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://jimliu.net/2012/09/26/%E6%88%91%E8%BF%996%E5%B9%B4%E6%9D%A5%E7%9A%84%E6%88%90%E9%95%BF%E4%B8%8E%E5%80%92%E9%80%80%EF%BC%8C%E6%9A%A8%E3%80%8A%E9%BB%91%E5%AE%A2%E4%B8%8E%E7%94%BB%E5%AE%B6%E3%80%8B%E8%AF%BB%E5%90%8E%E6%84%9F/</loc>
     <lastmod>2015-03-26T11:21:23.000Z</lastmod>
   </url>
   
@@ -127,7 +142,7 @@
   </url>
   
   <url>
-    <loc>http://jimliu.net/2012/09/26/%E6%88%91%E8%BF%996%E5%B9%B4%E6%9D%A5%E7%9A%84%E6%88%90%E9%95%BF%E4%B8%8E%E5%80%92%E9%80%80%EF%BC%8C%E6%9A%A8%E3%80%8A%E9%BB%91%E5%AE%A2%E4%B8%8E%E7%94%BB%E5%AE%B6%E3%80%8B%E8%AF%BB%E5%90%8E%E6%84%9F/</loc>
+    <loc>http://jimliu.net/2012/09/27/javascript%E4%B8%AD%E7%9A%84%E5%BC%82%E6%AD%A5%E6%A2%B3%E7%90%86%EF%BC%883%EF%BC%89-%E4%BD%BF%E7%94%A8wind-js/</loc>
     <lastmod>2015-03-26T11:21:23.000Z</lastmod>
   </url>
   
@@ -152,7 +167,7 @@
   </url>
   
   <url>
-    <loc>http://jimliu.net/2012/07/02/%E6%88%91%E5%9C%A8w3ctech-2012-mobile%E4%B8%93%E9%A2%98%E4%BC%9A%E8%AE%AE%E4%B8%8A%E7%9A%84%E5%88%86%E4%BA%AB/</loc>
+    <loc>http://jimliu.net/2012/10/16/%E4%BC%AAhowto-%E5%A6%82%E4%BD%95%E5%86%99%E7%AE%80%E5%8E%86/</loc>
     <lastmod>2015-03-26T11:21:23.000Z</lastmod>
   </url>
   
@@ -172,7 +187,7 @@
   </url>
   
   <url>
-    <loc>http://jimliu.net/2013/09/08/%E4%BD%BF%E7%94%A8hexo%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2/</loc>
+    <loc>http://jimliu.net/2012/03/15/%E4%B9%8B%E5%89%8D%E7%9A%84%E5%8D%9A%E5%AE%A2header%E7%94%A8%E7%9A%84%E7%85%A7%E7%89%87/</loc>
     <lastmod>2015-03-26T11:21:23.000Z</lastmod>
   </url>
   
@@ -212,17 +227,7 @@
   </url>
   
   <url>
-    <loc>http://jimliu.net/2012/06/04/%E4%BC%AA%E8%BD%AC%E8%BD%BD-gif%E9%80%9F%E5%BA%A6%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/</loc>
-    <lastmod>2015-03-26T11:21:23.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://jimliu.net/2012/10/16/%E4%BC%AAhowto-%E5%A6%82%E4%BD%95%E5%86%99%E7%AE%80%E5%8E%86/</loc>
-    <lastmod>2015-03-26T11:21:23.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://jimliu.net/2012/03/15/%E4%B9%8B%E5%89%8D%E7%9A%84%E5%8D%9A%E5%AE%A2header%E7%94%A8%E7%9A%84%E7%85%A7%E7%89%87/</loc>
+    <loc>http://jimliu.net/2012/09/25/%E3%80%8A%E9%BB%91%E5%AE%A2%E4%B8%8E%E7%94%BB%E5%AE%B6%E3%80%8B-%E6%96%87%E6%91%98/</loc>
     <lastmod>2015-03-26T11:21:23.000Z</lastmod>
   </url>
   

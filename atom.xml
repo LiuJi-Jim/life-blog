@@ -5,7 +5,7 @@
   <subtitle><![CDATA[Again, Jim Liu's Blog]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://jimliu.net//"/>
-  <updated>2015-08-03T02:27:22.000Z</updated>
+  <updated>2015-09-26T03:43:15.000Z</updated>
   <id>http://jimliu.net//</id>
   
   <author>
@@ -14,6 +14,77 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[JS中的二进制操作简介]]></title>
+    <link href="http://jimliu.net/2015/09/25/a-brief-look-at-binary-ops-in-js/"/>
+    <id>http://jimliu.net/2015/09/25/a-brief-look-at-binary-ops-in-js/</id>
+    <published>2015-09-25T04:31:35.000Z</published>
+    <updated>2015-09-26T03:43:15.000Z</updated>
+    <content type="html"><![CDATA[<p>写这篇博客的起源是在<a href="http://div.io" target="_blank" rel="external">div.io</a>上的一篇<a href="http://div.io/topic/766" target="_blank" rel="external">文章《你所不知道的JavaScript数组》by 小胡子哥</a>下的评论中的讨论。</p>
+<p>因为随着XHR2和现代浏览器的普及，在浏览器当中处理二进制不再向过去那样无所适从，随着Canvas/WebGL等新技术逐渐开始进入大众视野，也会用到一些字节数组或者16位、8位整数等东西。在node.js刚刚发布的4.0版本中，Buffer的底层使用了更符合JS标准的Uint8Array来实现，浏览器和node.js再次向相同的目标靠近了一点点，所以对于JS中处理二进制，我就打算写这篇文章作一个入门性质的流水账，方便一些对二进制处理不了解的同学快速入门，虽然在前端领域用到的不多，不过也可以作为茶余饭后的休闲谈资。</p>
+<a id="more"></a>
+<h2 id="二进制数据在JS程序里的表达">二进制数据在JS程序里的表达</h2><p>现今世界上几乎所有的计算机体系结构都是以字节（byte）为二进制数据的基本单位（注：不是说最小单位），所以二进制常常以字节数组的形式存在于程序当中。例如在C#里面，就用<code>byte[]</code>，标准C里面没有<code>byte</code>类型，但可以通过<code>typedef</code>把<code>byte</code>定义为<code>unsigned char</code>的别名，效果是一样的。</p>
+<p>JS设计之初似乎根本没想过要处理二进制的东西，加上对类型的极度弱化，对于字节的概念可以说是非常非常的模糊。如果要表达字节数组，那么似乎只能用一个普通数组来表示。</p>
+<p>HTML5体系引入了一大堆新的东西，比如XHR2，是可以上传或下载二进制内容的，与之配套的东西就是JS里的<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer" target="_blank" rel="external">ArrayBuffer</a>和<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray" target="_blank" rel="external">Typed Array</a>了。</p>
+<p><code>ArrayBuffer</code>是一个固定长度的字节序列，你可以通过<code>new ArrayBuffer(length)</code>来得到一片空间，或者用下文将会介绍的方法从XHR2等途径获取。由于内部实现与数组不一样，<code>ArrayBuffer</code>通常都是连续内存（注意，这只是经验之谈，并不是规范也不是文档所明确的），因此对于高密度的访问操作而言它比JS中的Array速度会快很多（但并不要用它来简单地代替Array）。如果用Chrome的Profile工具查看Heap Snapshot，会发现ArrayBuffer会被单独列为一类，也许它的内存分配和布局与Array以及其他JS对象有一些差别吧。</p>
+<p><code>ArrayBuffer</code>是不能直接被访问的，因此需要借助Typed Array。Typed Array是一组具体数据类型的Array-Like类型的统称，包括</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Int8Array</span>             <span class="number">8</span>位有符号整数，类似于C里面的char</span><br><span class="line"><span class="built_in">Uint8Array</span>            <span class="number">8</span>位无符号整数，类似于C里面的unsigned char</span><br><span class="line"><span class="built_in">Uint8ClampedArray</span>     <span class="number">8</span>位无符号整数，跟Uint8类似，但在溢出处理上不大一样</span><br><span class="line"><span class="built_in">Int16Array</span>            后面这些类型就不罗嗦了</span><br><span class="line"><span class="built_in">Uint16Array</span></span><br><span class="line"><span class="built_in">Int32Array</span></span><br><span class="line"><span class="built_in">Uint32Array</span></span><br><span class="line"><span class="built_in">Float32Array</span></span><br><span class="line"><span class="built_in">Float64Array</span></span><br></pre></td></tr></table></figure>
+<p>Typed Array的背后是一个<code>ArrayBuffer</code>，也就是说，<strong>事实上的数据是存在<code>ArrayBuffer</code>里面的，而Typed Array只是给你提供了一个某种类型的读写接口</strong>，用<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays" target="_blank" rel="external">MDN的话</a>说，叫做</p>
+<blockquote>
+<p>Multiple views on the same data</p>
+</blockquote>
+<p>举个栗子，如果我们有一个<code>ArrayBuffer</code>名为buffer（先不考虑怎么构造这个测试数据），内容如下：</p>
+<figure class="highlight dns"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">01 02 03 04</span> <span class="number">05 06 07 08</span></span><br></pre></td></tr></table></figure>
+<p>也就是说它有8个字节，我们分别用它来构造Uint8Array，Uint16Array，Uint32Array，则可以得到</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span>  u8 = <span class="keyword">new</span>  <span class="built_in">Uint8Array</span>(buffer); <span class="comment">// length为8</span></span><br><span class="line"><span class="keyword">var</span> u16 = <span class="keyword">new</span> <span class="built_in">Uint16Array</span>(buffer); <span class="comment">// length为4</span></span><br><span class="line"><span class="keyword">var</span> u32 = <span class="keyword">new</span> <span class="built_in">Uint32Array</span>(buffer); <span class="comment">// length为2</span></span><br></pre></td></tr></table></figure>
+<p>它们的内容分别为</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>]</span><br><span class="line">[<span class="number">513</span>, <span class="number">1027</span>, <span class="number">1541</span>, <span class="number">2055</span>]</span><br><span class="line">[<span class="number">67305985</span>, <span class="number">134678021</span>]</span><br></pre></td></tr></table></figure>
+<p>这不难理解。</p>
+<p>可以看出，如果要手工构造上面的测试数据<code>ArrayBuffer</code>，用Uint8Array就会很方便（呃事实上这是我个人最常用的一种Typed Array）。</p>
+<p>而如果用同样的<code>ArrayBuffer</code>构建带符号整数类型，则可能因为整数溢出而得到不同的结果，上面的例子并没有碰到，有兴趣的话可以自己试试。因此使用Typed Array也可以用来做有符号数和无符号数的转换。</p>
+<p>如果你用过canvas的<code>getImageData/putImageData</code>的话，会发现它给你的就是一个Uint8ClampedArray，这东西访问起来速度比JS的原生Array快很多，使得对canvas进行高速的像素操作成为可能。</p>
+<p>然而最最重要的一个概念还是：<strong>Typed Array不直接存放任何数据，所有对Typed Array进行读写的操作，最终都会落实到它背后所持有的<code>ArrayBuffer</code>的身上。</strong><code>ArrayBuffer</code>才是真正的<strong>raw bytes，而Typed Array只是一个操作窗口/操作视图（View）。</strong></p>
+<h2 id="获取二进制数据">获取二进制数据</h2><p>nodejs那边先按住不表，这里谈谈在网页里如何获取二进制数据？常见的办法有3种，1是通过<code>XMLHttpRequest 2</code>，2是通过<code>File</code>和<code>Blob</code>一套相关接口。</p>
+<h3 id="通过XMLHttpRequest_2">通过XMLHttpRequest 2</h3><p>XHR2的接口跟XHR几乎是一样的，当制定<code>xhr.responseType = &#39;arraybuffer&#39;</code>以后，在成功获取数据的回调里就可以通过<code>xhr.response</code>来得到请求结果的<code>ArrayBuffer</code>了，然后就可以按照你的意愿来构造各种Typed Array进行访问。</p>
+<p><code>responseType</code>还可以有<code>blob</code>取值，可以用<code>xhr.response</code>获得<a href="https://developer.mozilla.org/en-US/docs/Web/API/Blob" target="_blank" rel="external">Blob</a>对象。</p>
+<h3 id="通过File和Blob">通过File和Blob</h3><p>在HTML5中提供了对表单的文件控件<code>&lt;input type=&quot;file&quot; /&gt;</code>更丰富的操作，可以通过<code>input</code>DOM对象的<code>.files</code>来获取一个<code>FileList</code>，当然通常浏览器都只提供了单选的文件控件，于是这里都只会有一个<a href="https://developer.mozilla.org/en-US/docs/Web/API/File" target="_blank" rel="external">File</a>对象。另外，通过拖拽、剪贴板等方式也能获取到<code>File</code>或者<code>Blob</code>。</p>
+<p><code>File</code>继承了<code>Blob</code>，并提供了<code>name</code>, <code>lastModifiedDate</code>等基础元数据，但是依然是一个深度封装，不能直接获取到它的二进制。</p>
+<p><code>Blob</code>是<code>Binary large object</code>的缩写，它与<code>ArrayBuffer</code>的区别是除了raw bytes以外它还提供了mime type作为元数据。但它依然是无法直接被读写的。</p>
+<p>这时候需要借助<a href="https://developer.mozilla.org/en-US/docs/Web/API/FileReader" target="_blank" rel="external">FileReader</a>的帮忙。<code>FileReader</code>提供了一组用来将<code>Blob</code>读取为更为实用的类型的方法</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">readAsArrayBuffer</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="title">readAsBinaryString</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="title">readAsDataURL</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="title">readAsText</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+<p>例如<br><figure class="highlight nimrod"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> file = get_file_some_how();</span><br><span class="line"><span class="keyword">var</span> fr = new <span class="type">FileReader</span>();</span><br><span class="line">fr.onload = function(e) &#123;</span><br><span class="line">    e.target.<span class="literal">result</span>; // 读取的结果</span><br><span class="line">&#125;;</span><br><span class="line">fr.readAsDataUrl(file); // readAsArrayBuffer</span><br></pre></td></tr></table></figure></p>
+<p>可以干什么呢？例如图片上传之前的本地预览（甚至基于canvas的编辑）等等都可以实现了。</p>
+<p><code>Blob</code>的其他构造方法多而杂，这里就先不到处搬运文档了。</p>
+<h2 id="消费二进制数据">消费二进制数据</h2><p>何谓消费？最常见的方式也许就是通过XHR2直接把二进制数据以文件方式POST到服务端去。</p>
+<p>这里我比较推荐使用<a href="https://developer.mozilla.org/en-US/docs/Web/API/FormData" target="_blank" rel="external">FormData</a>来构造POST数据。因为在服务端收的时候会比较容易一些，具体有兴趣可以去找找别人的例子。</p>
+<p>虽然直接提交<code>ArrayBuffer</code>也是可以的，但是这种时候服务端收到的POST body会是一大团，用起来不方便。如果要使用FormData来提交<code>ArrayBuffer</code>，需要先将其构造成<code>Blob</code>。</p>
+<h2 id="对Typed_Array的构造留个心眼">对Typed Array的构造留个心眼</h2><p>当使用<code>new xxxxxArray(arrayBuffer)</code>这个重载进行构造的时候，它会默认基于此<code>ArrayBuffer</code>进行构造。但当使用<code>new xxxxArray(another_typed_array)</code>这个重载的时候，则是进行“拷贝构造”，这样两个Typed Array会指向不同的buffer，需要注意这是否符合预期。</p>
+<p>如果需要基于同一个<code>ArrayBuffer</code>来构造Typed Array，可以使用Typed Array的<code>buffer</code>, <code>byteLength</code>, <code>byteOffset</code>来获取它背后的<code>ArrayBuffer</code>。</p>
+<h2 id="Tips（坑）">Tips（坑）</h2><h3 id="对内存对齐留个心眼">对内存对齐留个心眼</h3><p>当使用ArrayBuffer来构造Typed Array的时候，可以指定<code>byteOffset</code>参数，例如</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> buffer = get_array_buffer_some_how();</span><br><span class="line"><span class="keyword">var</span> i16 = <span class="keyword">new</span> <span class="built_in">Int16Array</span>(buffer, <span class="number">10</span>);</span><br></pre></td></tr></table></figure>
+<p>上面的代码就能以<code>buffer</code>向后偏移10字节处为起点来构造<code>Int16Array</code>，但是如果将10设置为一个奇数，会发现如下错误：</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">RangeError: <span class="built_in">start</span> <span class="built_in">offset</span> <span class="operator">of</span> Int16Array should be <span class="operator">a</span> multiple <span class="operator">of</span> <span class="number">2</span></span><br></pre></td></tr></table></figure>
+<p>这是因为Typed Array对内存对齐有要求，它不能在非对齐的位置建立，同理，Uint32Array和Int32Array则要求偏移量是4字节对齐的。</p>
+<p>因此如果你希望在非对齐的位置进行读写，则需要借助<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView" target="_blank" rel="external">DataView</a>的帮忙。</p>
+<h3 id="对字节序留个心眼">对字节序留个心眼</h3><p><strong>我们日常中所写的程序，几乎都不需要关心<a href="https://zh.wikipedia.org/wiki/%E5%AD%97%E8%8A%82%E5%BA%8F" target="_blank" rel="external">字节序</a></strong>，因此这个问题没那么严重，知道自己的程序会有字节序问题的人，开发到这里也肯定会知道问题的存在，但这里还是稍微提一下。</p>
+<p>按照MDN的说法，Typed Array只会使用当前平台的字节序，例如我们现在用的桌面电脑不论PC还是Mac都是x86/x64的，也就是little-endian了。</p>
+<p>使用<code>DataView</code>，不仅可以解决上面说到的内存对齐的问题，还可以指定读写时的字节序，具体参数都在文档里面了，就不搬运了。</p>
+<p>使用<code>DataView</code>配合Typed Array也可以做到一个检测当前平台字节序的技巧：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">isLittleEndian</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> buf = <span class="keyword">new</span> <span class="built_in">ArrayBuffer</span>(<span class="number">2</span>);</span><br><span class="line">    <span class="keyword">var</span> view = <span class="keyword">new</span> <span class="built_in">DataView</span>(buf);</span><br><span class="line">    view.setInt16(<span class="number">0</span>, <span class="number">256</span>, <span class="literal">true</span>); <span class="comment">// 显式以little endian写入数据</span></span><br><span class="line">    <span class="comment">// 此时buf里的内存布局应该是 00 01</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> i16 = <span class="keyword">new</span> <span class="built_in">Int16Array</span>(buf);</span><br><span class="line">    <span class="comment">// 如果以little endian读取，它就是256；以big endian读取，则是1</span></span><br><span class="line">    <span class="keyword">return</span> (i16[<span class="number">0</span>] === <span class="number">256</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果你编写的程序需要垮体系结构例如x86/ARM/PPC等，则在交换文件和网络包的时候需要谨慎处理字节序，当然一个办法是在这些地方预先规范统一字节序以防后患。不过那些都是题外话了。</p>
+<h3 id="小姐小结"><del>小姐</del>小结</h3><p>使用<code>ArrayBuffer</code>来存储一段字节，使用Typed Array来构建一个具体数值类型的访问窗口，使用<code>DataView</code>对非对齐或在乎字节序的<code>ArrayBuffer</code>进行更精确的操作，使用XHR2, <code>Blob</code>, <code>File</code>, <code>FileReader</code>, <code>FormData</code>等多种方式来获取或消费<code>ArrayBuffer</code>。</p>
+<p>另外罗嗦一句，浏览器还提供了一系列所谓的“Binary String”，就是一些看起来像乱码一样的字符串，然后又提供了<code>atob</code>/<code>btoa</code>这种方式来对Base64和“Binary String”进行相互转换，甚至<code>FileReader</code>还提供了<code>readAsBinaryString</code>方法（已经废弃了，善哉）。<strong>这个Binary String真是谁用谁遭殃</strong>，别问我为什么知道……</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>写这篇博客的起源是在<a href="http://div.io">div.io</a>上的一篇<a href="http://div.io/topic/766">文章《你所不知道的JavaScript数组》by 小胡子哥</a>下的评论中的讨论。</p>
+<p>因为随着XHR2和现代浏览器的普及，在浏览器当中处理二进制不再向过去那样无所适从，随着Canvas/WebGL等新技术逐渐开始进入大众视野，也会用到一些字节数组或者16位、8位整数等东西。在node.js刚刚发布的4.0版本中，Buffer的底层使用了更符合JS标准的Uint8Array来实现，浏览器和node.js再次向相同的目标靠近了一点点，所以对于JS中处理二进制，我就打算写这篇文章作一个入门性质的流水账，方便一些对二进制处理不了解的同学快速入门，虽然在前端领域用到的不多，不过也可以作为茶余饭后的休闲谈资。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[来吧，造个模板引擎轮子——实现功能]]></title>
@@ -87,7 +158,7 @@
     <link href="http://jimliu.net/2015/07/27/make-a-js-tpl-engine--code-gen/"/>
     <id>http://jimliu.net/2015/07/27/make-a-js-tpl-engine--code-gen/</id>
     <published>2015-07-27T12:13:23.000Z</published>
-    <updated>2015-07-28T03:08:26.000Z</updated>
+    <updated>2015-07-28T03:08:27.000Z</updated>
     <content type="html"><![CDATA[<p>接<a href="/2015/07/22/make-a-js-tpl-engine--parsing/">上篇</a>和<a href="/2015/07/13/make-a-js-tpl-engine/">上上篇</a>，这一篇将介绍在上一篇区分出“模板语言”与“自然语言”的结构之后，如何进行“语法分析”、“语义分析”和“目标代码生成”。</p>
 <p>这里几个关键词都加了引号，主要是因为和经典编译原理上定义的几个环节只是意合而非形同，不过用这样经典的三段式结构来打比方也许可以更好理解一些。</p>
 <a id="more"></a>
@@ -1187,44 +1258,6 @@
     <summary type="html">
     <![CDATA[<p>前阵子和好基友<a href="http://weibo.com/licstar">@licstar</a>一起做了一个<del>很蛋疼</del>很好玩的数据可视化小品，叫做<a href="http://bsgdqx.sinaapp.com/">北上广大迁徙</a>。使用了<a href="http://wuxian.baidu.com/map/">百度地图</a>手机App的热力图数据，做成了动态的，并对其中的热点进行解读，来了解大城市中人群每天一个循环的“迁徙”。</p>
 <p>整个开发用了几个小时的时间吧，我负责前端，他负责数据部分以及提供算法，这篇文章简单介绍一下其中前端部分在开发中的一些小心得。</p>]]>
-    
-    </summary>
-    
-      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[JavaScript中定时器的精度]]></title>
-    <link href="http://jimliu.net/2014/04/26/js-timing-precision/"/>
-    <id>http://jimliu.net/2014/04/26/js-timing-precision/</id>
-    <published>2014-04-26T15:23:12.000Z</published>
-    <updated>2015-03-26T11:21:23.000Z</updated>
-    <content type="html"><![CDATA[<p>之前写了<a href="/2014/03/16/hrt-in-js/">一篇文章</a>介绍JS中的高精度计时，那么，与高精度相对的，低精度又是什么呢？或者说我们常接触到的精度是在什么水平？</p>
-<p>这篇文章主要探讨一下JS里常用的定时器，看看它们能达到什么精度。由于结论我也不知道，所以基本上这篇文章算边做实验边写的吧，有问题希望各位看官能帮忙指出。文中的实验覆盖范围很小，而且方法也极度不严谨，大家先且一看吧，也许有时间我会再重新做实验。</p>
-<a id="more"></a>
-<h2 id="正传">正传</h2><h3 id="setTimeout">setTimeout</h3><p>曾几何时，有前辈教诲我们，JS里<code>setTimeout</code>是不精确的，因为它所做的事情只是把任务添加到事件队列当中。如果在这个任务执行之前有别的任务执行的比较慢（比如死循环、大规模DOM操作、fs.同步IO等），那么后面的任务就会被推迟执行了。</p>
-<p>与此同时，<code>setTimeout(func, 0)</code>是我们常见的一种奇怪的技巧，它可以让任务推迟执行，而又不推迟很多。说直观一点，通过这种技巧可以模拟一个低优先级的任务，比如我们在操作DOM的同时又希望<code>window.scrollTo(0, 0)</code>，也许我们就会把后者放在<code>setTimeout 0</code>当中。在没有研究清楚event loop前，这也许是心理安慰，但因地制宜地用这个技巧常常会发生一些老中医般的意想不到的神奇效果。</p>
-<p>我们先看看在没有任何其他繁忙任务时，<code>setTimeout 0</code>能达到多少精度。</p>
-<figure class="highlight lisp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">var start = hrt<span class="list">()</span><span class="comment">;</span></span><br><span class="line">setTimeout<span class="list">(<span class="keyword">function</span><span class="list">()</span>&#123;</span><br><span class="line">  var now = hrt<span class="list">()</span><span class="comment">;</span></span><br><span class="line">  console.log<span class="list">(<span class="keyword">now</span> - start)</span><span class="comment">;</span></span><br><span class="line">&#125;, <span class="number">0</span>)</span><span class="comment">;</span></span><br></pre></td></tr></table></figure>
-<p>配合使用上回的高精度计时函数使用，在OSX Chrome34中，我这大概是9~10ms，而在node.js里则可以达到1.2~2.6ms的样子。然后我们慢慢增大延迟值，试着探索一下setTimeout有多少精度吧。<br>粗略实验下，发现在Chrome中，setTimeout的时间下限基本上就是9~10ms，当延迟在10多20这个水平时候，也能达到，但波动相当大。延迟到30以上，基本上实际时间比设置值只会多到1~2ms的样子；而在node中，即使设置很小的延迟，也能达到，但实际时间也会比设置值多个1~2ms。</p>
-<p>模拟一下setTimeout被推迟的情况<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> start = hrt();</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">var</span> i=<span class="number">0</span>; i&lt;<span class="number">1e8</span>; ++i) ;</span><br><span class="line">setTimeout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">  <span class="keyword">var</span> now = hrt();</span><br><span class="line">  <span class="built_in">console</span>.log(now - start);</span><br><span class="line">&#125;, <span class="number">0</span>);</span><br></pre></td></tr></table></figure></p>
-<p>明显就看到时间变长多了，所以必须谨记<code>setTimeout</code>并不靠谱。</p>
-<h3 id="setInterval">setInterval</h3><p>这是用来做周期触发的回调用的，首先我们也丧心病狂的试试<code>setInterval 0</code>吧。</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> start = hrt(), last = start;</span><br><span class="line"><span class="keyword">var</span> id = setInterval(<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">  <span class="keyword">var</span> now = hrt();</span><br><span class="line">  <span class="built_in">console</span>.log(now - last);</span><br><span class="line">  last = now;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (now - start &gt; <span class="number">2000</span>) clearInterval(id);</span><br><span class="line">&#125;, <span class="number">0</span>);</span><br></pre></td></tr></table></figure>
-<p>在Chrome里平均稳定在4.6ms左右一次，当时间设置到6ms以上时，基本上能达到，但实际触发时间比设置要大1ms左右。node这边依然要好一些，几乎能达到任何设置的时间，但也会有大概1ms的延迟。毫无疑问<code>setInterval</code>也是会被负荷重的任务推迟，就不演示了。</p>
-<h3 id="setImmediate">setImmediate</h3><p>这是node.js才有的函数，我这里它大概有不到1ms的延迟。在朴灵的《深入浅出node.js》一书中对这个函数有比较详尽的解释，这里我就不赘述了。</p>
-<p>不得不说的是——setImmediate也会被同步的代码阻塞——yes, this is JavaScript。</p>
-<h3 id="小结">小结</h3><p>到这里，常用的setXXX系列手工产生异步的办法都看了一遍。不得不承认node与浏览器在这些核心函数上优化都是相当到位的。但是其他浏览器，包括windows上，尤其是某些老旧的IE，我对它们表示不乐观，还好我现在的工作很少和这些东西打交道，改天有时间我应该会再用手机做一次测试，以求更贴近我的工作环境。</p>
-<h2 id="番外篇">番外篇</h2><h3 id="requestAnimationFrame">requestAnimationFrame</h3><p>这个东西，我觉得基本上把它当做一个<code>setTimeout 0</code>来看待就行了，现在比较推崇用它来做动画，我们也看看它的精度吧。</p>
-<figure class="highlight openscad"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">var start = hrt<span class="params">()</span>, last = start;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">loop</span><span class="params">()</span>&#123;</span></span><br><span class="line">  var now = hrt<span class="params">()</span>;</span><br><span class="line">  console.<span class="built_in">log</span><span class="params">(now - last)</span>;</span><br><span class="line">  last = now;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> <span class="params">(now - start &lt; <span class="number">2000</span>)</span> requestAnimationFrame<span class="params">(loop)</span>;</span><br><span class="line">&#125;</span><br><span class="line">loop<span class="params">()</span>;</span><br></pre></td></tr></table></figure>
-<p>我本来满心期望它有很稳定的触发间隔，但我失望了，从15ms多到17ms都有，不是很稳定。但据说它给浏览器带来的符合是更小的，所以会有更好的性能？这个15~17ms很有讲究，因为这刚好就是60FPS，似乎我还真没见过什么浏览器是超过60FPS的。</p>
-<h3 id="setZeroTimeout">setZeroTimeout</h3><p>这是一个很有趣的黑科技(<a href="https://github.com/shahyar/setZeroTimeout-js" target="_blank" rel="external">github</a>)，它通过<code>postMessage</code>来为浏览器模拟<code>setImmediate</code>，（在可能的时候）避免使用<code>setTimeout 0</code>，试了一下，用它的确是能做到0~1ms的触发时间，简直厉害……</p>
-<p>值得一提的是，我们有时候会用<code>setTimeout</code>嵌套来达到与<code>setInterval</code>类似的效果，嵌套使用<code>setTimeout 0</code>还可以（我刚试了下，反复<code>setTimeout 0</code>能达到和<code>setInterval 0</code>一样的4~5ms精度），嵌套<code>setZeroTimeout</code>因为触发太频繁，不出一秒浏览器就直接卡死了……</p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>之前写了<a href="/2014/03/16/hrt-in-js/">一篇文章</a>介绍JS中的高精度计时，那么，与高精度相对的，低精度又是什么呢？或者说我们常接触到的精度是在什么水平？</p>
-<p>这篇文章主要探讨一下JS里常用的定时器，看看它们能达到什么精度。由于结论我也不知道，所以基本上这篇文章算边做实验边写的吧，有问题希望各位看官能帮忙指出。文中的实验覆盖范围很小，而且方法也极度不严谨，大家先且一看吧，也许有时间我会再重新做实验。</p>]]>
     
     </summary>
     
