@@ -5,7 +5,7 @@
   <subtitle><![CDATA[Again, Jim Liu's Blog]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://jimliu.net//"/>
-  <updated>2015-09-26T05:55:43.000Z</updated>
+  <updated>2015-09-30T03:41:47.000Z</updated>
   <id>http://jimliu.net//</id>
   
   <author>
@@ -14,6 +14,154 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[十一长假之前悄悄发布一个情怀之作-h5pal（无底天坑）]]></title>
+    <link href="http://jimliu.net/2015/09/30/h5pal-release/"/>
+    <id>http://jimliu.net/2015/09/30/h5pal-release/</id>
+    <published>2015-09-30T15:33:33.000Z</published>
+    <updated>2015-09-30T03:41:47.000Z</updated>
+    <content type="html"><![CDATA[<p>趁着大家都赶着休假去了，悄悄发布，免得被喷，23333。</p>
+<p><a href="https://github.com/LiuJi-Jim/h5pal" target="_blank" rel="external">h5pal</a>是《仙剑奇侠传》的web移植。</p>
+<a id="more"></a>
+<h2 id="0-_前言">0. 前言</h2><p>这是一个坑了太久太久的项目，久到我已经不记得挖这个坑是什么时候了。大概是13年的夏天吧，我挖了这个坑，然后信心满满的在当年十一长假宅了N天（我还比较清楚的记得那时候正是WOW开荒围攻奥格瑞玛副本的阶段），写下了整个框架，以及最核心的一部分代码，然后，就没有然后了。</p>
+<p>大概一年后，我又翻出来了这个坑，重构了大量的代码，但是进度几乎没有实质性的进步，甚至因为重构而有所倒退- -“，不过因为读了《游戏引擎架构》这本书，我对这个坑又有了新的认识，对于这个程序到底要怎么写心里有谱多了。</p>
+<p>本来计划是在今年夏天搞出来，这样可以赶上仙剑20周年（1995年7月）发布，不过不用想也知道毫无疑问是继续坑了。</p>
+<p>磕磕绊绊到如今，总算是把游戏的总体完成度拉到了一个比较能见人的程度，于是我觉得还是赶紧发布的好，免得又变有生之年了。</p>
+<h2 id="1-_无图言屌">1. 无图言屌</h2><p><strong><a href="http://v.youku.com/v_show/id_XMTM0ODQzNzM2NA==.html" target="_blank" rel="external">优酷视频</a></strong>——有视频有JB！</p>
+<p><img src="http://liuji-jim.github.io/h5pal/screenshots/00.png" alt=""></p>
+<p><img src="http://liuji-jim.github.io/h5pal/screenshots/01.png" alt=""></p>
+<p><img src="http://liuji-jim.github.io/h5pal/screenshots/02.png" alt=""></p>
+<p><img src="http://liuji-jim.github.io/h5pal/screenshots/03.png" alt=""></p>
+<p><img src="http://liuji-jim.github.io/h5pal/screenshots/04.png" alt=""></p>
+<p><img src="http://liuji-jim.github.io/h5pal/screenshots/05.png" alt=""></p>
+<p><img src="http://liuji-jim.github.io/h5pal/screenshots/06.png" alt=""></p>
+<p><img src="http://liuji-jim.github.io/h5pal/screenshots/07.png" alt=""></p>
+<p><img src="http://liuji-jim.github.io/h5pal/screenshots/dpg.gif" alt=""></p>
+<h2 id="2-_自问自答的FAQ">2. 自问自答的FAQ</h2><h3 id="2-1-_能玩吗？">2.1. 能玩吗？</h3><p><strong>能</strong>。但在GitHub repo里并不会包含游戏的资源文件，于是需要自己去找（嘿嘿<a href="http://pan.baidu.com/s/1dD2kHLv" target="_blank" rel="external"><del>mq2x</del></a>）。由于不分发游戏资源文件，且考虑到体积，我也不会提供一个在线游玩的版本。所以基本上只有开发者或者动手能力强的同学才能玩上它了（如果你真的想玩……）</p>
+<p>不考虑遇到BUG（无数个）造成游戏直接罢工的情况下（当然身为作者的我是可以驾轻就熟地避过这些BUG的233333），<strong>已经可以从新开游戏一直玩到大结局了，而且我已经通关两三遍了XD</strong></p>
+<h3 id="2-2-_这是什么程度的移植？">2.2. 这是什么程度的移植？</h3><p><strong>完整移植</strong>。h5pal从<a href="http://sdlpal.codeplex.com/" target="_blank" rel="external">SDLPAL</a>里平移（就是抄啦）了大量的代码。SDLPAL是一个基于SDL的跨平台版仙剑，它已经能顺利的运行在Windows、Linux、OS X、Symbian、PSP、Android等很多种平台上面。</p>
+<p>h5pal与SDLPAL有着相同的出发点，就是实现仙剑的主程序，你只需要有仙剑的资源文件就可以运行整个游戏。</p>
+<h3 id="2-3-_为什么需要仙剑的原版资源文件">2.3. 为什么需要仙剑的原版资源文件</h3><p>出于上面所说的只实现主程序的出发点，并且出于技(xīn)术(lǐ)洁(biàn)癖(tài)，我选择不对资源文件进行任何预处理。如果按照现代游戏引擎的方式，先把资源文件里的位图、Sprite、数据等资料都解开成更适合HTML5/JS所需要的结构化数据，整个开发也许会变得容易很多。</p>
+<p><strong>但那样就不好玩了</strong></p>
+<p><img src="/uploads/2015/not-beautiful.jpg" alt=""></p>
+<p>因此最终我选择了保留SDLPAL的味道，不对资源文件进行任何的预处理，而是直接读取原始资源文件。当然因为完成度和工作量的原因我只能支持一个固定版本的资源文件，而SDLPAL则有更强的兼容性（甚至支持民间MOD仙剑梦幻版）。并且SDLPAL实现了半即时制战斗的创新，我个人不太喜欢，也没有迁移这个。</p>
+<h3 id="2-4-_使用了什么游戏引擎/框架/库/技术">2.4. 使用了什么游戏引擎/框架/库/技术</h3><p>从思路上看的话，可以说使用了<a href="https://github.com/finscn/The-Best-JS-Game-Framework" target="_blank" rel="external">The-Best-JS-Game-Framework</a>。</p>
+<p>最主要的，这个程序主要使用了<a href="https://github.com/tj/co" target="_blank" rel="external">co</a>，使用co/yield/generator来改善异步开发的体验，让整个庞大的程序实现成为了可能——前言中说的去年的一次大重构就是干这个——这是一个非常重要的重构，过去的话一个异步的update/render loop就可以让人抓狂，以至于我现在根本不想再写异步的JS了T_T，也许有机会我会再写一篇文章来介绍JS“同步”编程以及<a href="https://github.com/ubolonton/js-csp" target="_blank" rel="external">js-csp</a>这个非常好玩的东西。但你知道co其实是一个非常非常简单的库，所以即使没有co的话，<a href="http://jimliu.net/2014/11/28/a-brief-look-at-es6-generator-function/">自己造一个</a>堪堪一用的轮子也非常容易，所以想解除这个依赖是很简单的。</p>
+<p>在这个坑之初，原生Promise还没普及，所以引入了<a href="https://github.com/kriskowal/q" target="_blank" rel="external">q</a>，但其实在整个项目中贯彻了co之后，很少用得着Promise，并且也可以很容易的向原生Promise迁移，当然因为懒我是没这么干的。</p>
+<p>其他方面可以说几乎没有依赖第三方的库了，可能还有jQuery啊这类的东西，只是用了一丁丁点，非常容易解除依赖。</p>
+<p><strong>仙剑是一个很古老的游戏，使用现代游戏引擎重新实现仙剑的主程序并没有太直接的帮助</strong>。现代的2D游戏引擎围绕Sprite和场景管理为主，虽然在SDLPAL和h5pal中也有Sprite和场景模块，但具体到技术层面和现代游戏引擎里的还是差别比较大。再加上技(xīn)术(lǐ)洁(biàn)癖(tài)的原因，我没有用任何现代的游戏引擎，不过等到轮子造得差不多的时候，发现游戏引擎的思想果然是几十年没有太大变化……</p>
+<p>由于音乐和音效系统彻底坑了（原因见后文），所以WebAudio暂时不涉及。图形方面只涉及到canvas 2D，并且因为仙剑本身的资源都是像素级的，所以图形这一层也基本上都是在<code>getImageData/putImageData</code>的层次直接操作像素，并没有使用任何canvas的绘图API。因此如果后续把绘图层迁移到WebGL也会很简单，不过目前看来完全没有这个必要。</p>
+<p>h5pal使用GPLv3发布，我对开源协议几乎不懂，只知道GPL是比较严格的一种协议，而且SDLPAL是用GPLv3的，考虑到我抄了他很多代码，于是用了这个至少不比他宽松的协议，并且再次向SDLPAL表示敬意。</p>
+<h3 id="2-5-_为什么没实现音乐/音效部分，不是有Audio和WebAudio了吗？">2.5. 为什么没实现音乐/音效部分，不是有Audio和WebAudio了吗？</h3><p>音效部分仙剑用的是voc格式，这个格式太古老了以至于Audio和WebAudio都不可能直接支持它。为了不对资源文件做预处理的原则，在这里就让它坑了。</p>
+<p>音乐部分仙剑用的是MIDI，目前在Web里有<a href="https://github.com/mudcube/MIDI.js" target="_blank" rel="external">MIDI.js</a>可以处理（P.S.这个项目相当之屌！）。但是懂MIDI的人都知道，MIDI格式本身并不复杂，难的在于实现音色库。这样一来会引入很大一堆东西，甚至上百MB的音色库，这非常不现实，所以我选择先(forever)把它坑了。</p>
+<h3 id="2-6-_为什么没有实现存档？">2.6. 为什么没有实现存档？</h3><p>其实是实现了（隐藏功能哦），但因为存档到资源文件的话，需要向服务端POST，这样需要CGI支持了，麻烦……然后我为了方便自己玩就用了很猥琐的办法实现（其实还是堪堪一用的）。</p>
+<h3 id="2-7-_现在看起来都是dev状态，什么时候会成为成品游戏？">2.7. 现在看起来都是dev状态，什么时候会成为成品游戏？</h3><p>也许永远不会，因为没动力再把各种BUG还有音频部分的坑填了……</p>
+<p>如果有生之年真的能填，那么也许可以用node-webkit这类的东西打包成成品游戏，不过……有意思么……</p>
+<h3 id="2-8-_有可能在手机上运行吗">2.8. 有可能在手机上运行吗</h3><p>目前不可以，性能最好的iOS Safari尚未支持yield/generator，而Android Chrome我目前没有关注。</p>
+<p>性能方面没有明确的评价，在MacbookPro上CPU占用率并不高，但是内存很高（因为惨无人道的用内存，毫无优化之心），所以我觉得还是挺堪忧的。</p>
+<h3 id="2-9-_所以总的完成度？">2.9. 所以总的完成度？</h3><p>直接搬GitHub上给（胡邹）的吧：</p>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th style="text-align:right">进度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>资源</td>
+<td style="text-align:right">90%</td>
+</tr>
+<tr>
+<td>读档</td>
+<td style="text-align:right">99%</td>
+</tr>
+<tr>
+<td>存档</td>
+<td style="text-align:right">40%</td>
+</tr>
+<tr>
+<td>Surface</td>
+<td style="text-align:right">90%</td>
+</tr>
+<tr>
+<td>位图</td>
+<td style="text-align:right">99%</td>
+</tr>
+<tr>
+<td>Sprite</td>
+<td style="text-align:right">99%</td>
+</tr>
+<tr>
+<td>地图</td>
+<td style="text-align:right">90%</td>
+</tr>
+<tr>
+<td>场景</td>
+<td style="text-align:right">90%</td>
+</tr>
+<tr>
+<td>调色盘</td>
+<td style="text-align:right">90%</td>
+</tr>
+<tr>
+<td>文本</td>
+<td style="text-align:right">99%</td>
+</tr>
+<tr>
+<td>脚本（天坑）</td>
+<td style="text-align:right">70%</td>
+</tr>
+<tr>
+<td>平常UI</td>
+<td style="text-align:right">90%</td>
+</tr>
+<tr>
+<td>战斗UI</td>
+<td style="text-align:right">90%</td>
+</tr>
+<tr>
+<td>战斗（天坑）</td>
+<td style="text-align:right">70%</td>
+</tr>
+<tr>
+<td>播片</td>
+<td style="text-align:right">90%</td>
+</tr>
+<tr>
+<td>结局</td>
+<td style="text-align:right">95%</td>
+</tr>
+<tr>
+<td>音乐</td>
+<td style="text-align:right">0%</td>
+</tr>
+<tr>
+<td>音效</td>
+<td style="text-align:right">0%</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-_后记">3. 后记</h2><p>（呃，这个真的是流水账了，可能就长了）</p>
+<p>其实一开始让我发布h5pal的时候，我是拒绝的。因为我只想把它当做一个情怀的玩具，烂在自己的硬盘里面算了。而且心理洁癖造成我觉得没完成的东西就不要发布了吧。后来在@licstar的鞭策之下一点点推进，断断续续改了很多没头绪的BUG。突然有一天似乎流程能走通了（那时候还没实现战斗），而他竟然磕磕绊绊的就玩到通关了，我特么真是惊了，瞬间有种拨云见日的感觉。</p>
+<p>我知道即使发布了也估计没有人会用这个版本来玩，不过如标题所说，情怀之作。今年的仙剑6让很多玩家非常失望，而身为老仙剑迷的我其实从4代过后就已经弃坑了。尽管如此，我一直都认为如果想做一名合格的RPG玩家，从游戏评论的角度出发的话，仙剑1一定是必玩之作，因为在那个时候它是中文RPG游戏当中能和同期日系RPG有一战的一作，代表了当年RPG的最高水平，可以称为游戏发展史上的一个标志。选择仙剑很大一部分原因当然是有SDLPAL这个现成的对象可以抄，不过情怀满分这一点也是其他游戏不可取代的。</p>
+<p>我是一名游戏爱好者，也一直想着能做游戏，并且是想做出版级的“大”游戏。不过因为各种原因，似乎离这个目标越来越远了。其实游戏是一个非常大也非常复杂的软件工程，甚至有人说游戏是软件工程当中最难的一个分支。我一直非常佩服各种3A大厂，能够集结上千人，几千万美元的资金做出一部部牛逼的作品（每打通一个游戏我都要把制作群字幕看完），也非常佩服各路独立游戏神人，能在那么有限的资源下做出精彩的作品。虽然仙剑不是新IP，我想我也不太有可能做新IP，甚至说没有SDLPAL和PalResearch的基础的话也不可能做出h5pal，不过这也已经在很大程度上满足了我做游戏的梦想吧，能做到现在这个程度我还是很开心的。</p>
+<p>至于为什么是用HTML5/JS来实现呢？首先我本职是做前端的，对JS是非常熟悉，也可以当练手用呗（虽然整个h5pal的JS代码几乎没有任何技术难度可言吧……）其次就是因为SDLPAL本身已经做到跨很多很多平台了，惟独web这个炙手可热的平台还是个空缺。我在网上也没有找到仙剑1的完整web移植。另一方面，因为有别的一些老游戏的web移植中有很多（比如Diablo、星际）只是伪移植，也就是用原版游戏资源解包以后在web上做一个demo，根本没法玩的，这一点坚定了我做完整移植和资源文件不进行预处理的目标。</p>
+<p>最大的遗憾也是留下了音频这个无底天坑，因为仙剑1的经典的配乐很得人心，没有音乐的伴随，即使体验剧情也会觉得少了太多味道，可惜可惜。</p>
+<p>h5pal里面实现了一个用来读取C结构体指针的库，C里面通过指针转换，从文件里读取一段字节直接“铺开内存”就能转成一个结构体，这一点非常好用。这个JS库利用getter/setter可以直接把字段的操作落在ArrayBuffer（JS里的字节数组）上，能把ArrayBuffer直接转成JS对象，还可以让不同对象共享内存，在h5pal里是一个很核心的库了（重构的时候也是血虐啊）。我觉得还挺方便的，也许用在node里的话实现一些native互访以及网络协议的时候会用得着吧。以后有时间的话可能会考虑把它重构一下，API弄弄更易用了单独发布一个库吧（有生之年</p>
+<p>最后感谢@licstar的鞭策（催）和积极的帮忙测试，如果不是这么催的话估计早就烂硬盘里了。</p>
+<p>最后的最后，我才发现仙剑里的女生都很积极主动啊，有的地方甚至还挺毁三观的……</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>趁着大家都赶着休假去了，悄悄发布，免得被喷，23333。</p>
+<p><a href="https://github.com/LiuJi-Jim/h5pal">h5pal</a>是《仙剑奇侠传》的web移植。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[JS中的二进制操作简介]]></title>
@@ -1215,49 +1363,6 @@
     <summary type="html">
     <![CDATA[<p><strong>这篇文章是科普性质的，外加推销一下中文注释……</strong></p>
 <p>LRU(Least Recently Used, 近期最少使用)算法是缓存置换算法当中的经典案例——这个中文翻译听起来相当莫名其妙，所以我们还是叫LRU吧。虽然我们现在常常都用了更高阶的缓存服务，但如果要在一些语言（比如JS）当中自己实现一个简单的K-V的缓存类的时候，不放试试写一个LRU，因为它的算法思路真的相当简单，但实现起来又是非常有趣。</p>]]>
-    
-    </summary>
-    
-      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA["北上广大迁徙"前端开发心得]]></title>
-    <link href="http://jimliu.net/2014/05/06/bsgdqx/"/>
-    <id>http://jimliu.net/2014/05/06/bsgdqx/</id>
-    <published>2014-05-06T15:23:12.000Z</published>
-    <updated>2015-03-26T11:21:23.000Z</updated>
-    <content type="html"><![CDATA[<p>前阵子和好基友<a href="http://weibo.com/licstar" target="_blank" rel="external">@licstar</a>一起做了一个<del>很蛋疼</del>很好玩的数据可视化小品，叫做<a href="http://bsgdqx.sinaapp.com/" target="_blank" rel="external">北上广大迁徙</a>。使用了<a href="http://wuxian.baidu.com/map/" target="_blank" rel="external">百度地图</a>手机App的热力图数据，做成了动态的，并对其中的热点进行解读，来了解大城市中人群每天一个循环的“迁徙”。</p>
-<p>整个开发用了几个小时的时间吧，我负责前端，他负责数据部分以及提供算法，这篇文章简单介绍一下其中前端部分在开发中的一些小心得。</p>
-<a id="more"></a>
-<h2 id="灰度图">灰度图</h2><p>实际上看到的热力图是彩色的，但为什么标题是灰度图？这个说来话长。</p>
-<p>虽然最终是图片，但其实一开始我们就并没有打算用图片，因为采集到的数据只有整点的，每天从0点到24点，只有25张图，做个GIF就好了，基本比较难看出什么门道来。所以需要把动画效果做出来，就要进行<strong>插值</strong>。也就是需要传输<strong>原始数据</strong>。</p>
-<p>地图的大小不完全一样，大概是600*600的点阵，每个时间节点有36万个点，以每个1字节计，不压缩需要<strong>360KB</strong>，25张也接近10MB了。这种二进制存储要在WEB里传输并用JS处理，就得先经过BASE64，会损失33%的体积，大概<strong>13~15MB</strong>，即使用之前在我俩的<a href="https://github.com/liuji-jim/bad-apple" target="_blank" rel="external">Bad Apple</a>山寨的一种“BASE91”，也会超过10MB，所以是必须压缩的。</p>
-<p>于是我想到了结合二者的办法，<strong>把数据编码成图片</strong>。前端先使用canvas的<code>drawImage</code>把图片画到canvas上，再用<code>getImageData</code>获取字节数组，这样可以反解出每个像素使用颜色所表示的数值。<br>用图片还完美解决了压缩问题，在Bad Apple里我们用了自己实现的LZW，效果其实也不错<del>而且听起来更酷</del>（那时候为什么没想到用这个办法来着），不过这次没那么大动干戈，JPG无疑是不二选择。</p>
-<p>编码其实再简单不过了，热力图中从蓝到红的各种颜色其实是对一个归一化值的映射，并不是真正的彩色。那么存的时候只需要存一个数值就够了，为了尽可能照顾压缩，直接存成了灰度图，最后灰度图每个小时是<strong>30~40KB</strong>，一天不到<strong>1MB</strong>，事实上如果再把画质调低一点会更小（估计500~600KB没压力），而且也不怎么看得出来。</p>
-<p>因为JPG会产生伪色，所以前端取颜色的时候把rgb做了平均——图简单的话直接rgb随便取一个也行，差不了多少，可以省一个除法——但是这个取值只用每幅图做一次，所以不重要，懒得优化。然后对数据重新进行一次归一化（直接插值的话我觉得可以不做归一化，而是插值完了再归一化）。</p>
-<h2 id="动画">动画</h2><p>动画是通过<code>requestAnimationFrame</code>做的，这里面用了3个时间概念。<br><strong>当时是半夜写的，思路很晕，所以这么乱七八糟的计时不看也罢。</strong></p>
-<p><code>秒表时间</code>：基本的计时，用秒表当前掐出来的时间，是后面的基础<br><code>播放时间</code>：用来表示动画播放了多久，用它除<code>每一个小时所对应的秒表时间</code>就可以知道应该播放哪一帧<br><code>挂钟时间</code>：表示“真实”时间，这个真实是指最终映射到的24H里的时间，而并不是计时概念上的真实，用于显示以及触发<code>故事板</code></p>
-<p>每一帧先用<code>秒表时间</code>减去<code>开始时间</code>，再加上次<code>暂停时间</code>，获得当前的<code>播放时间</code>，用它和所定义的播放时间与挂钟时间的比例进行简单运算（比如播放4秒对应现实1小时），可以算出当前应该播放哪一帧，插值的<code>delta</code>值，同时也得到了<code>挂钟时间</code>。</p>
-<p>在暂停的时候更新<code>暂停时间</code>为当前的<code>播放时间</code>；在开始的时候更新<code>开始时间</code>为当前的<code>秒表时间</code>。</p>
-<p>如果要实现进度条，可以在拖拽的时候先暂停，拖拽过程中更新<code>暂停时间</code>，撒手了重新播放就行了。</p>
-<p>但不得不吐槽<code>requestAnimationFrame</code>，我估计它实现的初衷是做60FPS，但是事实上我发现它触发率很不稳定，常常在17ms左右，也就是根本达不到60FPS。<br>这也就算了，也许我只需要老老实实地按照它触发频率，配合计时器做动画就够了。但问题是我每一帧的计算量可能比较大，现在我觉得60FPS下CPU占用太高了，想实现更低的帧率，用它就根本没精度可言了。所以后来我在另一个程序里，考虑用<code>setInterval 0</code>配合高精度计时来做到像20, 25这样的帧率控制。</p>
-<h2 id="插值">插值</h2><p>为了模拟非整点的状态变化，用了最简单的线性插值（LERP），每次通过两帧来插值：<br><figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">var color = val1 <span class="keyword">*</span> (1 - delta) + val2 <span class="keyword">*</span> delta;</span><br></pre></td></tr></table></figure></p>
-<p>值得一提的是里面的颜色值并不是原始值，因为热力图里的值事实上是阶梯状的，对插值不友好，所以licstar先自己YY了一个转换规则把他们都转换成线性分布的，插值完了再转回来。<br>本来以为插值会比较影响性能，但实际上发现因为LERP实在太简单，影响很小。</p>
-<p>对插值结果进行一下归一化，可以通过查表或者简单if的方式变换到最终要画的颜色。</p>
-<p>画的时候因为是逐像素的，所以还是用<code>getImageData</code>和<code>putImageData</code>（简直是神器……）绘图非常简单，因为canvas是透明的，所以只要把地图垫在底下，canvas直接画就行了。</p>
-<p>这个插值极其山寨，因为它只能表示每一个点自己的变化状态，所以看起来就像是“躁动”而不是“迁徙”。由于数据源的归一化效果很奇怪，上海和广州的结果插值之后会有很明显的很奇怪的呼吸效果，整个地图会忽明忽暗的，这里就不吐槽数据源了，因为其实也算来之不易……</p>
-<h2 id="故事板">故事板</h2><p>后来纠结的licstar发现这么看动画好像看不出来什么，于是加了一个在旁边显示一些注解的功能，我称其为故事板。</p>
-<p>每个Story都是一个div这类的东西，用绝对定位，事先设计好，指定一个开始时间、结束时间（形如9.5表示9:30）。</p>
-<p>开始播放前遍历所有这一类div，对他们的开始时间和结束时间分别给个数组并且排序，在播放过程中，两个数组各有一个只增不减的游标，跟着时间走，对应的div显示或隐藏就行了，简单粗暴……大概是这么个样<br><figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> (<span class="type">list</span>.index &lt; <span class="type">list</span>.<span class="property">length</span> &amp;&amp; <span class="type">list</span>[<span class="type">list</span>.index].<span class="property">time</span> &lt;= currentTime)&#123;</span><br><span class="line">  <span class="type">list</span>[<span class="type">list</span>.index].dom.fadeIn(<span class="number">200</span>);</span><br><span class="line">  <span class="type">list</span>.index++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="黑科技">黑科技</h2><p><strong>快速取整</strong></p>
-<p>一般会用<code>Math.floor</code>来向下取整，之前在网上有看到用<code>~~(x)</code>就能快速取整，计算密集的时候真的比<code>Math.floor</code>快不少！这程序里面需要做除法结果取整的地方挺多的，所以到处都充斥着这个办法。</p>
-<p><del>吐槽下，帮官微带了1000转发呢……抽奖有礼品，这个都不单独给来个礼品神马的 T_T</del></p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>前阵子和好基友<a href="http://weibo.com/licstar">@licstar</a>一起做了一个<del>很蛋疼</del>很好玩的数据可视化小品，叫做<a href="http://bsgdqx.sinaapp.com/">北上广大迁徙</a>。使用了<a href="http://wuxian.baidu.com/map/">百度地图</a>手机App的热力图数据，做成了动态的，并对其中的热点进行解读，来了解大城市中人群每天一个循环的“迁徙”。</p>
-<p>整个开发用了几个小时的时间吧，我负责前端，他负责数据部分以及提供算法，这篇文章简单介绍一下其中前端部分在开发中的一些小心得。</p>]]>
     
     </summary>
     
