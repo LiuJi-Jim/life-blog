@@ -5,7 +5,7 @@
   <subtitle><![CDATA[Again, Jim Liu's Blog]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://jimliu.net//"/>
-  <updated>2015-09-30T11:54:38.000Z</updated>
+  <updated>2015-10-13T09:00:36.000Z</updated>
   <id>http://jimliu.net//</id>
   
   <author>
@@ -14,6 +14,368 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[Swift入门笔记-3]]></title>
+    <link href="http://jimliu.net/2015/10/10/beginning-swift-3/"/>
+    <id>http://jimliu.net/2015/10/10/beginning-swift-3/</id>
+    <published>2015-10-10T15:33:33.000Z</published>
+    <updated>2015-10-13T09:00:36.000Z</updated>
+    <content type="html"><![CDATA[<p><del>霉霉</del>斯威夫特入门笔记，继续流水账。</p>
+<a id="more"></a>
+<h1 id="5-_错误处理">5. 错误处理</h1><p>Swift的错误处理使用比较常见的结构化异常处理方式，配合Optional类型。</p>
+<h2 id="异常类型">异常类型</h2><p>有如C#里，<code>Exception</code>是所有异常的基类，Swift里有<code>ErrorType</code>这个协议（协议有点像<code>interface</code>，以后再说）来充当异常的。</p>
+<p>由于Swift里面可以让枚举也实现协议，于是可以写出这种看起来很奇怪的代码（搬运例子）</p>
+<figure class="highlight fortran"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">enum</span> VendingMachineError: ErrorType &#123;</span><br><span class="line">    <span class="keyword">case</span> InvalidSelection</span><br><span class="line">    <span class="keyword">case</span> InsufficientFunds(required: <span class="type">Double</span>)</span><br><span class="line">    <span class="keyword">case</span> OutOfStock</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="抛出异常">抛出异常</h2><p>有点像JAVA，声明函数的时候加一个<code>throws</code>就表示这个函数可能会抛出异常，在这个函数里就能用<code>throw</code>了。</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">willThrow</span><span class="params">()</span></span> throws &#123;</span><br><span class="line">    <span class="comment">// 这里就可以throw</span></span><br><span class="line">    throw <span class="type">VendingMachineError</span>.<span class="type">OutOfStock</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">wontThrow</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="comment">// 这里就不能throw</span></span><br><span class="line">    <span class="comment">// throw VendingMachineError.OutOfStock</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="捕获异常">捕获异常</h2><p>在调用<code>throws</code>声明的函数的时候，就必须要捕获异常。如果你认为捕获异常是用<code>try</code>的话，只对了一半……</p>
+<p>很明显，<code>throws</code>声明是具有传染性的，一旦一个函数链上有某个函数会抛异常，那么它的上游必须能够妥善处理这个异常，否则上游就得继续抛异常，上游的上游……</p>
+<p>对于<del>我们无处安放的青春</del>无法妥善处理的异常，只能继续向上抛，于是Swift提供了一个语法糖</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">func <span class="title">cannotHandleError</span><span class="params">()</span> <span class="keyword">throws</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> willThrow()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="真·捕获异常">真·捕获异常</h2><p>要想捕获到异常，需要这样：</p>
+<figure class="highlight coffeescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">func canHandleError() &#123;</span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> cannotHandleError()</span><br><span class="line">    &#125; <span class="keyword">catch</span> VendingMachineError.OutOfStock &#123;</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">"sold out"</span>)</span><br><span class="line">    &#125; <span class="keyword">catch</span> &#123;</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">"oops"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中<code>catch</code>和之前<code>switch-case</code>一样，支持模式匹配语法。</p>
+<h2 id="无视异常">无视异常</h2><p>如果调用一个<code>throws</code>方法的时候，“自认为”这次它不会抛出异常，可以用<code>try!</code>来调用，这样不会让<code>throws</code>传染。如果在运行时发生异常，它会造成运行时错误。</p>
+<h2 id="收尾工作">收尾工作</h2><p>Swift没有<code>finally</code>，有点像Go那样有个<code>defer</code></p>
+<figure class="highlight livescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">func canHandleError<span class="function"><span class="params">()</span> -&gt;</span> String &#123;</span><br><span class="line">    defer &#123;</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">"do some cleaning up before return"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> cannotHandleError()</span><br><span class="line">    &#125; <span class="keyword">catch</span> VendingMachineError.OutOfStock &#123;</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">"sold out"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"over"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>defer</code>代码块会在函数结束之后，<code>return</code>之前执行，即使执行过程中发生了异常，也会保证被执行。而且和Go类似，一个函数里有多个<code>defer</code>的时候它们是倒序执行的。</p>
+<h1 id="6-_类型转换">6. 类型转换</h1><h2 id="类型检查">类型检查</h2><p>和C#非常像，用<code>is</code>来检查一个对象是否是某个类型的实例</p>
+<h2 id="type_casting">type casting</h2><p>还是和C#非常像，使用<code>as</code>来做类型转换。</p>
+<p>不过<code>as</code>有两种，一种是<code>as?</code>，转换结果是一个Optional类型，转换失败的时候就为<code>nil</code>。另一种是<code>as!</code>，转换失败的时候直接抛出运行时错误。</p>
+<h2 id="“万物之源”类型">“万物之源”类型</h2><p>Go里有两种“万物之源”类型，一种是<code>AnyObject</code>，一种是<code>Any</code>，前者包含任意<code>class</code>的，后者包含任意类型（包括函数）。</p>
+<p>在使用<code>as</code>转换一个数组的时候，有一个类似C# 4.0里泛型逆变的语法糖</p>
+<figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> movie <span class="keyword">in</span> someObjects <span class="keyword">as</span>! [Movie] &#123;</span><br><span class="line">    <span class="comment">// ..</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中<code>someObjects</code>本身是一个<code>[AnyObject]</code>，在遍历的时候把它转成了<code>[Movie]</code>。然而对于真·泛型类型，似乎不起作用</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Container</span>&lt;<span class="type">T</span>&gt; </span>&#123;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br><span class="line"><span class="variable"><span class="keyword">var</span> c1</span> = Container<span class="type">&lt;Shape&gt;</span>()</span><br><span class="line"><span class="variable"><span class="keyword">var</span> c2</span>: Container<span class="type">&lt;Rect&gt;</span>? = c1 <span class="keyword">as</span>? Container<span class="type">&lt;Rect&gt;</span></span><br></pre></td></tr></table></figure>
+<p>发现c2是<code>nil</code>，Xcode也在c2那一行提示了这个转换永远不可能成功（好残忍）。</p>
+<h1 id="7-_扩展">7. 扩展</h1><p>Swift提供给一个类添加功能的能力，这有点像是Go里的“先定义类型，再实现接口”这种说法，但事实上看疗效的话更像是Ruby那种可以把语言改得面目全非的样子。</p>
+<p>Swift 中的扩展可以：（搬运）</p>
+<ul>
+<li>添加getter/setter（包括静态的）</li>
+<li>添加方法（包括静态的）</li>
+<li>提供新的构造器</li>
+<li>定义下标脚本</li>
+<li>定义和使用新的嵌套类型</li>
+<li>使一个已有类型符合某个协议</li>
+</ul>
+<p>语法就不演示了，很简单的。</p>
+<h1 id="8-_协议">8. 协议</h1><p>Swift里的<code>protocol</code>就是C#和Java里的<code>interface</code></p>
+<p>协议的语法跟C#太像了，不写例子了…………</p>
+<p>协议可以用来规定属性getter/setter（包括静态的）、方法（包括静态的）、构造函数。</p>
+<p>Swift里的协议可以提供默认实现，也就是说它在一定程度上可以当做<code>abstract class</code>的作用。</p>
+<p>其他什么实现协议、协议继承、协议组合这些，看一眼就明白了……</p>
+<h1 id="9-_泛型">9. 泛型</h1><p>啊啊，有泛型的语言我喜欢。</p>
+<p>Swift里的泛型和C#的如出一辙，并且Swift里也有<code>where</code>从句来对泛型参数进行约束。</p>
+<p>惟独在泛型协议这一块，Swift用起来很奇怪，比如我想定义一个泛型List接口，在C#里：</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">IList</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="comment">// 我瞎写的可能语法有点不全对</span></span><br><span class="line">    <span class="keyword">void</span> Push(T item);</span><br><span class="line">    <span class="built_in">int</span> Count &#123; <span class="literal">get</span>; &#125;</span><br><span class="line">    T <span class="keyword">this</span>[<span class="built_in">int</span> index] &#123; <span class="literal">get</span>; <span class="literal">set</span>; &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在Swift里要用一个叫“关联类型”的特性</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">protocol</span> <span class="title">IList</span> </span>&#123;</span><br><span class="line">    <span class="keyword">typealias</span> <span class="type">T</span></span><br><span class="line">    <span class="func"><span class="keyword">func</span> <span class="title">push</span><span class="params">(item: T)</span></span></span><br><span class="line">    <span class="keyword">var</span> <span class="built_in">count</span>: <span class="type">Int</span> &#123; <span class="keyword">get</span> &#125;</span><br><span class="line">    <span class="keyword">subscript</span>(index: <span class="type">Int</span>) -&gt; <span class="type">T</span> &#123; <span class="keyword">get</span> <span class="keyword">set</span> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>突然又不好看了……</p>
+<p>这样可以用一个具体类型来实现它</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">IntList</span>: <span class="typename">IList &#123;</span></span></span><br><span class="line">    typealias T = <span class="typename">Int</span></span><br><span class="line">    func push(item: <span class="typename">Int</span>) &#123;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">    <span class="variable"><span class="keyword">var</span> count</span>: <span class="typename">Int</span> &#123;</span><br><span class="line">        <span class="keyword">get</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    subscript(index: <span class="typename">Int</span>) -&gt; <span class="typename">Int</span> &#123;</span><br><span class="line">        <span class="keyword">get</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">set</span> &#123;</span><br><span class="line">            </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因为有类型推导，上面的<code>typealias T = Int</code>可以省略。</p>
+<p>也可以实现成泛型的：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">GenericList</span>&lt;<span class="title">T</span>&gt;: <span class="title">IList</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> items = [<span class="type">T</span>]()</span><br><span class="line">    <span class="func"><span class="keyword">func</span> <span class="title">push</span><span class="params">(item: T)</span></span> &#123;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">var</span> <span class="built_in">count</span>: <span class="type">Int</span> &#123;</span><br><span class="line">        <span class="keyword">get</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">subscript</span>(index: <span class="type">Int</span>) -&gt; <span class="type">T</span> &#123;</span><br><span class="line">        <span class="keyword">get</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> items[index]</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">set</span> &#123;</span><br><span class="line">            </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="to_be_continued">to be continued</h1><p>今天先到这儿吧（好少）…………</p>
+<p>等等，后面好像，没什么东西可以说了，访问限制、运算符重载什么的，看一眼就知道了啊。</p>
+<p>要不后面就开始看看iOS开发的吧。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p><del>霉霉</del>斯威夫特入门笔记，继续流水账。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[Swift入门笔记-2]]></title>
+    <link href="http://jimliu.net/2015/10/09/beginning-swift-2/"/>
+    <id>http://jimliu.net/2015/10/09/beginning-swift-2/</id>
+    <published>2015-10-09T15:33:33.000Z</published>
+    <updated>2015-10-13T09:00:33.000Z</updated>
+    <content type="html"><![CDATA[<p><del>霉霉</del>斯威夫特入门笔记，继续流水账。</p>
+<a id="more"></a>
+<h1 id="3-_struct与class">3. struct与class</h1><h2 id="基础">基础</h2><p>Swift<del>抄C#设计</del>里的<code>struct</code>和<code>class</code>可谓貌合神离，<code>struct</code>是值类型，<code>class</code>是引用类型。</p>
+<p>所以<code>class</code>可以用<code>===</code>和<code>!==</code>来比较Reference Equal。</p>
+<p><strong>Swift里的数组、字符串、字典是值类型。</strong></p>
+<h2 id="定义">定义</h2><p>太老套了，没什么值得说的……</p>
+<h3 id="构造函数">构造函数</h3><figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">class <span class="keyword">Person</span> &#123;</span><br><span class="line">    init() &#123;</span><br><span class="line">        // ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>构造函数固定叫<code>init</code>，可以被重载。</p>
+<h3 id="定义property">定义property</h3><p>像是JS和C#的结合体，并不像C#那样区分field和property，但是在对property定义getter/setter的时候语法很像。</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Person</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> firstName: <span class="built_in">String</span> = <span class="string">""</span></span><br><span class="line">    <span class="keyword">var</span> lastName: <span class="built_in">String</span> = <span class="string">""</span></span><br><span class="line">    <span class="keyword">var</span> fullName: <span class="built_in">String</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> firstName + <span class="string">" "</span> + lastName</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的例子里<code>fullName</code>因为只有getter所以可以使用隐藏get写法，完整写法：</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> someProperty: <span class="built_in">String</span> &#123;</span><br><span class="line">    <span class="literal">get</span> &#123;</span><br><span class="line">        <span class="comment">// blablabla</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="literal">set</span>(newValue) &#123;</span><br><span class="line">        <span class="comment">// blablabla</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果把setter的参数省略，在函数体里面可以隐式使用<code>newValue</code>这个变量。</p>
+<p>对于一般的属性（Swift里管叫存储属性）可以定义Observer来监听它的变动：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Person</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> firstName: <span class="type">String</span> = <span class="string">""</span> &#123;</span><br><span class="line">        <span class="keyword">willSet</span>(newValue) &#123;</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">"willSet"</span>, firstName, <span class="string">"to"</span>, newValue)</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">didSet</span>(oldValue) &#123;</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">"didSet"</span>, oldValue, <span class="string">"to"</span>, firstName);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>类似地，这里的<code>newValue</code>和<code>oldValue</code>两个参数也是可以隐式使用的。</p>
+<p>属性可以定义成lazy的，在<code>var</code>前面加个<code>lazy</code>就行，这样只有在这个属性第一次被访问的时候才会进行初始化。</p>
+<p>属性可以定义成只读的，用<code>let</code>定义的属性在构造函数里有唯一的一次赋值机会。</p>
+<p>静态属性的定义及使用方法和C#没有太大区别。</p>
+<h3 id="定义method">定义method</h3><p>和定义一般的方法没有明显区别，可以隐式使用<code>self</code>访问上下文对象。</p>
+<p>给<code>struct</code>定义方法时，默认只支持纯函数，如果修改了自身属性，需要在<code>func</code>前面声明一下<code>mutating</code>，因为是值类型，甚至可以对<code>self</code>重新赋值。</p>
+<h3 id="定义索引器">定义索引器</h3><p>索引器，在C++里好像叫<code>[]</code>运算符，在Swift里叫“下标脚本”</p>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">class <span class="keyword">Person</span> &#123;</span><br><span class="line">    subscript(i: Int) -&gt; String &#123;</span><br><span class="line">        get &#123;</span><br><span class="line">            // 返回与入参匹配的Int类型的值</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        set(newValue) &#123;</span><br><span class="line">            // 执行赋值操作</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>和定义property的时候类似，当只有getter的时候也可以用简便写法。</p>
+<h3 id="继承">继承</h3><figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Car</span>: <span class="title">Vehicle</span> </span>&#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="func"><span class="keyword">func</span> <span class="title">run</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>getter/setter也可以重写，属性observer也可以重写，用<code>final</code>标记的方法和属性不能重写。用<code>final</code>标记的<code>class</code>不能被继承。</p>
+<h2 id="实例化">实例化</h2><h3 id="构造">构造</h3><p>如上面所说，构造函数叫<code>init</code>，与普通函数的区别是，构造函数的第一个参数在调用时不能省略参数名（也还是可以用<code>_</code>来discard）。</p>
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="label">class</span> Car &#123;</span><br><span class="line">    let <span class="keyword">brand: </span><span class="keyword">String</span><br><span class="line"></span>    init(<span class="keyword">brand: </span><span class="keyword">String) </span>&#123;</span><br><span class="line">        <span class="keyword">self.brand </span>= <span class="keyword">brand</span><br><span class="line"></span>    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="label">var</span> <span class="literal">c1</span> = Car(<span class="keyword">brand: </span><span class="string">"BMW"</span>) // 这里<span class="keyword">brand: </span>不能省</span><br></pre></td></tr></table></figure>
+<p>常量字段在构造函数里有唯一一次赋值机会（父类的常量字段在子类构造函数里不能改）。</p>
+<p>构造函数分两种，一种叫“指定构造器”就是上面那种看起来很普通的，一种叫“便利构造器”，在构造函数声明前面加个<code>convenience</code>：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">convenience <span class="keyword">init</span>() &#123;</span><br><span class="line">    <span class="keyword">self</span>.<span class="keyword">init</span>(brand: <span class="string">"unknown"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在<code>convenience</code>构造函数里面必须调用它的其他构造函数。</p>
+<p>Swift的实例构造过程也是常见的所谓“两段式构造”：</p>
+<ol>
+<li>申请内存、给属性赋空值；调用子类构造器，完成子类属性赋值；调用父类构造器，完成父类属性赋值。</li>
+<li>构造完成，可在子类构造器中执行任何其他操作。</li>
+</ol>
+<p>换句话说，在调用<code>super.init</code>之前，是不能访问父类属性的，在之后就可以了。</p>
+<p>Swift里还有一种特殊的“可失败构造器”，就是在<code>init</code>后面加个<code>?</code>，在构造失败的时候，可以<code>return nil</code>。</p>
+<h3 id="析构">析构</h3><p>析构函数叫<code>deinit</code>（还敢再难听一点吗），是一个无参数无返回值函数，没有别的重载。</p>
+<p>对象的析构时机当然就是生命周期结束的时候啦，这个比较复杂，等学到ARC的时候再细看吧。</p>
+<h1 id="4-_ARC">4. ARC</h1><p>ARC就是Automatic Reference Counting，自动引用计数。</p>
+<p>Swift里没有传统意义上说的GC，对于引用计数为0的对象将会销毁（析构）。</p>
+<figure class="highlight openscad"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">func nonsense<span class="params">()</span> &#123;</span><br><span class="line">    <span class="built_in">let</span> car = Car<span class="params">()</span></span><br><span class="line">    print<span class="params">(car.brand)</span></span><br><span class="line">&#125;</span><br><span class="line">nonsense<span class="params">()</span></span><br></pre></td></tr></table></figure>
+<p>函数<code>nonsense</code>执行完以后，<code>car</code>就被销毁了，它的析构函数也被调用。</p>
+<h2 id="循环引用">循环引用</h2><p>这种情况太常见了，比如对象<code>a</code>持有一个对象<code>b</code>的引用，<code>b</code>也持有一个<code>a</code>的引用，也就是<code>a.b = b</code>，<code>b.a = a</code>，就构成了一个循环引用。这种时候，<code>a = nil; b = nil;</code>并不会让<code>a</code>和<code>b</code>被析构，因为虽然外部引用没了，但内部还存在引用，于是内存泄露，gg。</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> b: <span class="type">B</span>?</span><br><span class="line">    <span class="keyword">deinit</span> &#123;</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">"A is dead"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> a: <span class="type">A</span>?</span><br><span class="line">    <span class="keyword">deinit</span> &#123;</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">"B is dead"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> a: <span class="type">A</span>? = <span class="type">A</span>()</span><br><span class="line"><span class="keyword">var</span> b: <span class="type">B</span>? = <span class="type">B</span>()</span><br><span class="line">a!.b = b</span><br><span class="line">b!.a = a</span><br><span class="line"></span><br><span class="line">a = <span class="literal">nil</span></span><br><span class="line">b = <span class="literal">nil</span></span><br></pre></td></tr></table></figure>
+<p>会发现<code>a</code>和<code>b</code>的析构函数都没被调用。</p>
+<h2 id="弱引用">弱引用</h2><p>如果一个对象只被弱引用，那么它就可以被回收掉。在Swift里面用<code>weak</code>来把一个引用声明为弱引用，如</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span> </span>&#123;</span><br><span class="line">    <span class="keyword">weak</span> <span class="keyword">var</span> a: <span class="type">A</span>?</span><br><span class="line">    <span class="keyword">deinit</span> &#123;</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">"B is dead"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>还是刚才的代码，这时候神奇的时期发生了，<code>a</code>和<code>b</code>被销毁了。为什么呢？因为<code>b</code>对<code>a</code>的引用改成了弱引用，在<code>a</code>和<code>b</code>都被赋值为<code>nil</code>后，<code>a</code>就只被弱引用（被<code>b</code>）了，于是它可以被回收，所以先看到<code>A is dead</code>；进而<code>a</code>对<code>b</code>的强引用也就不存在了（<code>a</code>都挂了），于是可以回收<code>B is dead</code>，计划通。</p>
+<h2 id="无主引用">无主引用</h2><p>弱引用的例子是非常容易，就是弱引用对象可能会为<code>nil</code>。例如游客<code>Customer</code>与票<code>Ticket</code>，游客可以不持有票，但是票必须有主人。表现为<code>Customer</code>的<code>ticket</code>数学是一个<code>Ticket?</code>，而<code>Ticket</code>的<code>holder</code>属性是<code>Customer</code>（不能为<code>nil</code>）。</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Customer</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> ticket: <span class="type">Ticket</span>?</span><br><span class="line">    <span class="keyword">deinit</span> &#123;</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">"Customer is dead"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Ticket</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> holder: <span class="type">Customer</span></span><br><span class="line">    <span class="keyword">init</span>(holder: <span class="type">Customer</span>) &#123;</span><br><span class="line">        <span class="keyword">self</span>.holder = holder</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">deinit</span> &#123;</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">"Ticket is dead"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> jim: <span class="type">Customer</span>? = <span class="type">Customer</span>()</span><br><span class="line">jim!.ticket = <span class="type">Ticket</span>(holder: jim!)</span><br><span class="line"></span><br><span class="line">jim = <span class="literal">nil</span></span><br></pre></td></tr></table></figure>
+<p>很明显上面的代码有循环强引用，<code>jim</code>不会被销毁，它所持有的<code>ticket</code>也不会被销毁。</p>
+<p>然而票对游客的引用其只是一个“从属”关系，并不是真正的“持有”，所以这里应该把<code>Ticket</code>的<code>holder</code>属性定义为<strong>无主引用</strong></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">unowned <span class="variable"><span class="keyword">var</span> holder</span>: Customer</span><br></pre></td></tr></table></figure>
+<p>这样就上面的代码将<code>jim</code>置为空时，<code>jim</code>仅仅被<code>jim.ticket</code>持有无主引用，于是它可以被销毁，先能看到<code>Customer is dead</code>；接下来，因为<code>jim</code>不存在了，<code>jim</code>对<code>jim.ticket</code>所持有的强引用也随之被打破，<code>jim.ticket</code>也被销毁，于是看到<code>Ticket is dead</code>，计划通。</p>
+<p>我理解其实无主引用是一个语法糖，因为其实只用<code>weak ptr</code>也够了（C++11就只有<code>weak_ptr&lt;T&gt;</code>而没有<code>unowned_ptr&lt;T&gt;</code>，但是这样在语义上必须允许一个引用为<code>nil</code>，也许Swift希望在概念上保留不能为空的机会，于是引入了这个东西。而如果没有它的话就只能靠程序员自己去理解了……</p>
+<h2 id="两边都不能为空时的循环引用">两边都不能为空时的循环引用</h2><p>例如<code>City</code>必须属于一个国家，<code>Country</code>也必须有一个<code>capital</code>，两者缺一不可。</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">City</span> </span>&#123;</span><br><span class="line">    <span class="keyword">let</span> name: <span class="type">String</span></span><br><span class="line">    <span class="keyword">unowned</span> <span class="keyword">let</span> country: <span class="type">Country</span> <span class="comment">// 因为City“隶属于”Country，这里声明成无主引用</span></span><br><span class="line">    <span class="keyword">init</span>(name: <span class="type">String</span>, country: <span class="type">Country</span>) &#123;</span><br><span class="line">        <span class="keyword">self</span>.name = name</span><br><span class="line">        <span class="keyword">self</span>.country = country</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">deinit</span> &#123;</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">"<span class="subst">\(<span class="keyword">self</span>.name)</span> is dead"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Country</span> </span>&#123;</span><br><span class="line">    <span class="keyword">let</span> name: <span class="type">String</span></span><br><span class="line">    <span class="keyword">var</span> capital: <span class="type">City</span></span><br><span class="line">    <span class="keyword">init</span>(name: <span class="type">String</span>, capitalName: <span class="type">String</span>) &#123;</span><br><span class="line">        <span class="keyword">self</span>.name = name</span><br><span class="line">        <span class="keyword">self</span>.capital = <span class="type">City</span>(name: capitalName, country: <span class="keyword">self</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">deinit</span> &#123;</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">"<span class="subst">\(<span class="keyword">self</span>.name)</span> is dead"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> usa: <span class="type">Country</span>? = <span class="type">Country</span>(name: <span class="string">"USA"</span>, capitalName: <span class="string">"Washington"</span>)</span><br><span class="line">usa = <span class="literal">nil</span></span><br></pre></td></tr></table></figure>
+<p>看起来很美好啊，但其实是不行的，因为在<code>self.capital = City(name: capitalName, country: self)</code>这句话当中，<code>self.capital</code>还没有值，这样<code>self</code>就还没构造完成（所谓两段式构造），于是<code>country: self</code>这个传参就不能用，造成了先有鸡还是先有蛋的问题。</p>
+<p>Swift为了解决这个问题提供了一个叫做“隐式解析可选类型”的特性，把</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable"><span class="keyword">var</span> capital</span>: City</span><br></pre></td></tr></table></figure>
+<p>的定义改成</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable"><span class="keyword">var</span> capital</span>: City!</span><br></pre></td></tr></table></figure>
+<p>这样在<code>Country</code>的构造阶段它的值会被自动赋值为<code>nil</code>（于是妈了个臀的我就想问问这和<code>City?</code>有啥区别？）。</p>
+<p>然后就可以先后看到<code>USA is dead</code>和<code>Washington is dead</code>了。<del>我不会告诉你一开始我写的demo是<code>China</code>和<code>Beijing</code>，然后程序一跑通我给吓尿了，赶紧改？</del></p>
+<h1 id="to_be_continued">to be continued</h1><p>今天先到这儿吧…………下一篇什么内容再说了。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p><del>霉霉</del>斯威夫特入门笔记，继续流水账。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[Swift入门笔记-1]]></title>
+    <link href="http://jimliu.net/2015/10/08/beginning-swift-1/"/>
+    <id>http://jimliu.net/2015/10/08/beginning-swift-1/</id>
+    <published>2015-10-08T15:33:33.000Z</published>
+    <updated>2015-10-13T09:00:31.000Z</updated>
+    <content type="html"><![CDATA[<p><del>霉霉</del>斯威夫特入门笔记，继续流水账。</p>
+<a id="more"></a>
+<h1 id="2-_函数">2. 函数</h1><h2 id="定义">定义</h2><figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">sayHello</span><span class="params">(name: String)</span></span> -&gt; <span class="type">String</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"Hello, <span class="subst">\(name)</span>!"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="参数">参数</h2><p>但如果你的函数有两个或更多参数……</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">my_max</span><span class="params">(a: Int, b: Int)</span></span> -&gt; <span class="type">Int</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> a &gt; b ? a: b</span><br><span class="line">&#125;</span><br><span class="line">my_max(<span class="number">3</span>, <span class="number">4</span>) <span class="comment">// 这样调用是不对的</span></span><br><span class="line">my_max(<span class="number">3</span>, b: <span class="number">4</span>) <span class="comment">// 这样才行</span></span><br></pre></td></tr></table></figure>
+<p>有没有很想骂人？<img src="/uploads/public/tiebaxiao.gif" alt=""></p>
+<p>辣磨，如何才能用<code>my_max(3, 4)</code>来调用呢？</p>
+<p>首先，在Swift里参数名有“内外”之分，函数外可以用一个名字（具名传参），函数内可以用另一个名字，例如：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">my_max</span><span class="params">(one a: Int, the_other b: Int)</span></span> -&gt; <span class="type">Int</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> a &gt; b ? a: b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中<code>one</code>和<code>the_other</code>分别叫外部参数名（External Parameter Name），而<code>a</code>和<code>b</code>叫内部参数名或者局部参数名（Local Parameter Name），这样在调用它的时候可以使用具名传参：</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">my_max</span><span class="params">(one: <span class="number">3</span>, the_other: <span class="number">4</span>)</span></span></span><br></pre></td></tr></table></figure>
+<p>有没有想继续骂人？<img src="/uploads/public/tiebaxiao.gif" alt="">别着急，到目前为止，我们大概可以猜到如下规则：</p>
+<ul>
+<li>第一个参数在没有指定外部参数名的时候，不用具名传参</li>
+<li>第一个参数在指定外部参数名的时候，需要具名传参</li>
+<li>其他参数不论是否指定参数名，都需要具名传参</li>
+<li>？？？？？？？？？</li>
+</ul>
+<p>补全第四条，似乎就找到了“其他参数不需要具名传参”的真谛了……于是乎Swift里有这么个东西叫“忽略外部参数名（Omitting External Parameter Names）”</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">my_max</span><span class="params">(a: Int, <span class="number">_</span> b: Int)</span></span> -&gt; <span class="type">Int</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> a &gt; b ? a: b</span><br><span class="line">&#125;</span><br><span class="line">my_max(<span class="number">3</span>, <span class="number">4</span>) <span class="comment">// 终于可以这样写了</span></span><br></pre></td></tr></table></figure>
+<p>把参数<code>b</code>的外部参数名写叫<code>_</code>，传参的时候就可以忽略它了……<strong>获得BUFF：心满意足</strong></p>
+<p><img src="/uploads/public/kengdie.gif" alt=""></p>
+<p>我只想说：呵呵</p>
+<h3 id="参数默认值">参数默认值</h3><figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">greeting</span><span class="params">(name: String, word: String = <span class="string">"Hello"</span>)</span></span> -&gt; <span class="type">String</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"<span class="subst">\(word)</span>, <span class="subst">\(name)</span>!"</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">greeting(<span class="string">"Jim"</span>)</span><br><span class="line">greeting(<span class="string">"Jim"</span>, word: <span class="string">"hehe"</span>)</span><br></pre></td></tr></table></figure>
+<p>四不四很简单呐？虽然一般来说把带默认值的参数放在最后是比较方便的，但是也可以用些取巧的做法，比如：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">rnd</span><span class="params">(<span class="built_in">min</span>: Int = <span class="number">0</span>, <span class="built_in">max</span>: Int)</span></span> -&gt; <span class="type">Int</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">min</span> + random() % (<span class="built_in">max</span> - <span class="built_in">min</span>)</span><br><span class="line">&#125;</span><br><span class="line">rnd(<span class="number">10</span>, <span class="built_in">max</span>: <span class="number">20</span>)</span><br><span class="line">rnd(<span class="built_in">max</span>: <span class="number">10</span>)</span><br></pre></td></tr></table></figure>
+<p>小子有种放学别走，我和你聊聊什么是<strong>函数重载</strong>。</p>
+<h3 id="可变参数（Variadic_Parameters）">可变参数（Variadic Parameters）</h3><figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">my_max</span><span class="params">(nums: Int...)</span></span> -&gt; <span class="type">Int</span> &#123;</span><br><span class="line">    <span class="keyword">var</span> <span class="built_in">max</span> = <span class="type">Int</span>.<span class="built_in">min</span></span><br><span class="line">    <span class="keyword">for</span> n <span class="keyword">in</span> nums &#123;</span><br><span class="line">        <span class="keyword">if</span> (n &gt; <span class="built_in">max</span>) &#123;</span><br><span class="line">            <span class="built_in">max</span> = n</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">max</span></span><br><span class="line">&#125;</span><br><span class="line">my_max(<span class="number">11</span>, <span class="number">33</span>, <span class="number">22</span>, <span class="number">55</span>, <span class="number">44</span>)</span><br></pre></td></tr></table></figure>
+<p>和C#里的可变参数差不多，不过事实上Swift只限制一个函数至多有一个可变参数，但却不限制可变参数必须是最后一个参数，于是结合具名参数，可以搞出很奇怪的东西来，比如：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">my_max</span><span class="params">(nums: Int..., nonsense: Int)</span></span> -&gt; <span class="type">Int</span> &#123;</span><br><span class="line">    <span class="keyword">var</span> <span class="built_in">max</span> = <span class="type">Int</span>.<span class="built_in">min</span></span><br><span class="line">    <span class="keyword">for</span> n <span class="keyword">in</span> nums &#123;</span><br><span class="line">        <span class="keyword">if</span> (n &gt; <span class="built_in">max</span>) &#123;</span><br><span class="line">            <span class="built_in">max</span> = n</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">max</span></span><br><span class="line">&#125;</span><br><span class="line">my_max(<span class="number">11</span>, <span class="number">33</span>, <span class="number">22</span>, <span class="number">55</span>, <span class="number">44</span>, <span class="number">66</span>, nonsense: <span class="number">999</span>)</span><br></pre></td></tr></table></figure>
+<p>反正如果谁写这样的代码我绝对不会砍ta的……</p>
+<p><strong>然而我没有找到JS里的<code>apply</code>或者C#那样可以把数组直接扔进去铺开可变参数那种语法……</strong></p>
+<h3 id="常量参数和变量参数">常量参数和变量参数</h3><p>参数在函数里都被当做常量（<code>let</code>定义的），如果想在函数里修改参数的值，需要在定义前面加一个<code>var</code>。</p>
+<p><strong>但是这里的修改只是对传参副本的修改，不会对传参原本值进行修改。</strong>这么设计也许只是为了让函数看起来更pure一点，默认immutable。</p>
+<h3 id="inout参数">inout参数</h3><p>正如上面所说，<code>var</code>参数只能修改传参副本，那么要修改参数原本的话，就需要用到<code>inout</code>参数：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">my_swap</span><span class="params">(<span class="keyword">inout</span> a: Int, <span class="keyword">inout</span> <span class="number">_</span> b: Int)</span></span> &#123;</span><br><span class="line">    <span class="keyword">let</span> tmp = a</span><br><span class="line">    a = b</span><br><span class="line">    b = tmp</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> aa = <span class="number">3</span>, bb = <span class="number">5</span></span><br><span class="line">my_swap(&amp;aa, &amp;bb)</span><br></pre></td></tr></table></figure>
+<p>还搞个<code>&amp;</code>看着跟取址似的，蒙谁呢……</p>
+<h2 id="函数重载">函数重载</h2><figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">rnd</span><span class="params">(<span class="built_in">min</span>: Int, <span class="number">_</span> <span class="built_in">max</span>: Int)</span></span> -&gt; <span class="type">Int</span> &#123;</span><br><span class="line">    <span class="keyword">let</span> range = <span class="built_in">max</span> - <span class="built_in">min</span></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">min</span> + random() % range</span><br><span class="line">&#125;</span><br><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">rnd</span><span class="params">(<span class="built_in">max</span>: Int)</span></span> -&gt; <span class="type">Int</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> rnd(<span class="number">0</span>, <span class="built_in">max</span>)</span><br><span class="line">&#125;</span><br><span class="line">rnd(<span class="number">10</span>, <span class="number">20</span>)</span><br><span class="line">rnd(<span class="number">100</span>)</span><br></pre></td></tr></table></figure>
+<p>参考文献里没有，试出来的，大概就是这么个样吧……</p>
+<h2 id="函数类型">函数类型</h2><p>Swift应该也算First-class Function语言吧。</p>
+<p>Swift里的函数类型用了一个很像Haskell的很讨巧的表示方法，如上面的rnd那个双参数重载，它的类型为：</p>
+<figure class="highlight fortran"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(<span class="built_in">Int</span>, <span class="built_in">Int</span>) -&gt; <span class="built_in">Int</span></span><br></pre></td></tr></table></figure>
+<p>知道了定义，那么函数就可以当强类型变量来用了：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable"><span class="keyword">var</span> secretFunc</span>: (<span class="typename">Int</span>, <span class="typename">Int</span>) -&gt; <span class="typename">Int</span> = rnd</span><br><span class="line">secretFunc(<span class="number">20</span>, <span class="number">40</span>)</span><br></pre></td></tr></table></figure>
+<p>也可以用来传参，实现高阶函数</p>
+<figure class="highlight livescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">func run<span class="function"><span class="params">(fn: () -&gt; Void)</span> &#123;</span><br><span class="line">    <span class="title">fn</span><span class="params">()</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="title">func</span> <span class="title">haha</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="title">print</span><span class="params">(<span class="string">"Haha"</span>)</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="title">run</span><span class="params">(haha)</span></span></span><br></pre></td></tr></table></figure>
+<p>也可以用来当返回值类型……</p>
+<figure class="highlight sml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">func mkFunc<span class="literal">()</span> -&gt; <span class="literal">()</span> -&gt; <span class="type">Void</span> &#123;</span><br><span class="line">    func hehe<span class="literal">()</span> &#123;</span><br><span class="line">        print(<span class="string">"Hehe"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    return hehe</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">let</span> <span class="keyword">fn</span> = mkFunc<span class="literal">()</span></span><br><span class="line"><span class="keyword">fn</span><span class="literal">()</span></span><br></pre></td></tr></table></figure>
+<p>于是就可以用来实现Curry函数（¯﹃¯）……</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">func saySomethingTo(word: <span class="built_in">String</span>, <span class="keyword">to</span> name: <span class="built_in">String</span>) <span class="subst">-&gt; </span><span class="built_in">String</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"\(word), \(name)!"</span></span><br><span class="line">&#125;</span><br><span class="line">func curry(fn: (<span class="built_in">String</span>, <span class="built_in">String</span>) <span class="subst">-&gt; </span><span class="built_in">String</span>, _ first_param: <span class="built_in">String</span>) <span class="subst">-&gt; </span>(<span class="built_in">String</span>) <span class="subst">-&gt; </span><span class="built_in">String</span> &#123;</span><br><span class="line">    func f2(second_param: <span class="built_in">String</span>) <span class="subst">-&gt; </span><span class="built_in">String</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> fn(first_param, second_param)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> f2</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">let</span> sayHelloTo <span class="subst">=</span> curry(saySomethingTo, <span class="string">"Hello"</span>)</span><br><span class="line">sayHelloTo(<span class="string">"Jim"</span>)</span><br></pre></td></tr></table></figure>
+<p>看起来有点挫…………或许可以把它写得更像Haskell一点…………</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="func"><span class="keyword">func</span> <span class="title">saySomethingTo</span><span class="params">(word: String)</span></span>(<span class="number">_</span> name: <span class="type">String</span>) -&gt; <span class="type">String</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"<span class="subst">\(word)</span>, <span class="subst">\(name)</span>!"</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">let</span> sayHelloTo = saySomethingTo(<span class="string">"Hello"</span>)</span><br><span class="line">sayHelloTo(<span class="string">"Jim"</span>)</span><br></pre></td></tr></table></figure>
+<p>Ahhhhhhh STFU，看起来就像Haskell里的函数叠罗汉，这里的<code>saySometingTo</code>其实是一个<code>(String) -&gt; (String -&gt; String)</code>，所以它是“自带curry功能的函数”，然后Swift大概是实现了一个语法糖使得上面那个<code>name</code>参数也可以访问。</p>
+<h2 id="闭包">闭包</h2><h3 id="基本概念">基本概念</h3><p>在上面的第一个curry函数例子里面其实已经展示了闭包，和JS还有C#里面没有什么区别，简单的理解还是函数可以捕获它词法上下文当中的变量，即使它的父级上下文已经结束，被捕获的变量依然会存在。</p>
+<h3 id="匿名函数">匿名函数</h3><p>C#里有两种方式来构造匿名函数，一个是C# 2.0里的“Anonymous Function”也就是匿名函数，一种是C# 3.0里面的“Lambda Expression”。貌似类似的东西在OC里面叫做代码块（block）——一听这名字就low多了是不（论起名的重要性）。</p>
+<p>Swift使用一种叫“闭包表达式（Closure Expressions）”的方式构造匿名函数，我觉得这个命名太玄了，还是习惯叫匿名函数吧。它的语法是：</p>
+<figure class="highlight livescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123; <span class="function"><span class="params">(parameters)</span> -&gt;</span> returnType <span class="keyword">in</span></span><br><span class="line">    statements</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>基本用法：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable"><span class="keyword">var</span> testFunc</span>: (<span class="typename">Int</span>, <span class="typename">Int</span>) -&gt; <span class="typename">Int</span></span><br><span class="line">testFunc = &#123; (a: <span class="typename">Int</span>, b: <span class="typename">Int</span>) <span class="keyword">in</span></span><br><span class="line">    <span class="keyword">return</span> a + b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>参数可以支持类型推导，这时候参数列表的<code>( )</code>也可以省略</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">testFunc = &#123; <span class="operator">a</span>, b <span class="operator">in</span></span><br><span class="line">    <span class="constant">return</span> <span class="operator">a</span> - b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当匿名函数只有一个表达式的时候，可以用隐式返回（Implicit Return），可以不写<code>return</code></p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">testFunc = &#123; <span class="operator">a</span>, b <span class="operator">in</span> <span class="operator">a</span> * b &#125;</span><br></pre></td></tr></table></figure>
+<p>像Haskell里一样丧心病狂的是，可以把运算符当函数用……</p>
+<figure class="highlight lisp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">testFunc = <span class="list">(<span class="keyword">/</span>)</span></span><br></pre></td></tr></table></figure>
+<h3 id="尾随闭包（Trailing_Closure）">尾随闭包（Trailing Closure）</h3><p>当函数的最后一个参数是一个函数时，在调用的时候可以把它写在参数列表之外，形成一个很奇怪的语法结构：</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">func printAndDo(<span class="keyword">n</span>: Int, then: (Int) -&gt; Int) -&gt; Int &#123;</span><br><span class="line">    <span class="keyword">print</span>(<span class="keyword">n</span>)</span><br><span class="line">    <span class="keyword">return</span> then(<span class="keyword">n</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 传统方式</span></span><br><span class="line">printAndDo(100, then: &#123; <span class="keyword">n</span> <span class="keyword">in</span></span><br><span class="line">    <span class="keyword">print</span>(<span class="keyword">n</span>)</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">n</span></span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// 使用Trailing Closure</span></span><br><span class="line">printAndDo(100) &#123; <span class="keyword">n</span> <span class="keyword">in</span></span><br><span class="line">    <span class="keyword">print</span>(<span class="keyword">n</span>)</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">n</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>又到了同学们都喜欢的填空题时间了，这次的题目是：然而___________</p>
+<p>如果用匿名函数来“美化”一下上面写的那个curry函数，大概是这么个样子</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">func curry(fn: (<span class="built_in">String</span>, <span class="built_in">String</span>) <span class="subst">-&gt; </span><span class="built_in">String</span>, _ first_param: <span class="built_in">String</span>) <span class="subst">-&gt; </span>(<span class="built_in">String</span>) <span class="subst">-&gt; </span><span class="built_in">String</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> &#123; second_param <span class="keyword">in</span></span><br><span class="line">        fn(first_param, second_param)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当然其实更“严肃”的curry函数也许应该是这么写</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">func curry(fn: (<span class="built_in">String</span>, <span class="built_in">String</span>) <span class="subst">-&gt; </span><span class="built_in">String</span>) <span class="subst">-&gt; </span>(<span class="built_in">String</span> <span class="subst">-&gt; </span>(<span class="built_in">String</span> <span class="subst">-&gt; </span><span class="built_in">String</span>)) &#123;</span><br><span class="line">    <span class="keyword">return</span> &#123; f1 <span class="keyword">in</span></span><br><span class="line">        &#123; f2 <span class="keyword">in</span></span><br><span class="line">            fn(f1, f2)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">let</span> sayHelloTo <span class="subst">=</span> curry(saySomethingTo)(<span class="string">"Hello"</span>)</span><br></pre></td></tr></table></figure>
+<p>甚至直接写成泛型的吧</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">func curry&lt;T1, T2, T3&gt;(<span class="function"><span class="keyword">fn</span>: </span>(T1, T2) -&gt; T3) -&gt; (T1 -&gt; (T2 -&gt; T3)) &#123;</span><br><span class="line">    <span class="keyword">return</span> &#123; f1 <span class="keyword">in</span> &#123; f2 <span class="keyword">in</span> <span class="function"><span class="keyword">fn</span></span>(f1, f2) &#125; &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>有没有觉得自己的装逼技巧又提高了？<img src="/uploads/public/tiebaxiao.gif" alt=""></p>
+<h1 id="to_be_continued">to be continued</h1><p>今天先到这儿吧…………下一篇开始struct和class。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p><del>霉霉</del>斯威夫特入门笔记，继续流水账。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[Swift入门笔记-0]]></title>
+    <link href="http://jimliu.net/2015/10/07/beginning-swift-0/"/>
+    <id>http://jimliu.net/2015/10/07/beginning-swift-0/</id>
+    <published>2015-10-07T15:33:33.000Z</published>
+    <updated>2015-10-13T09:00:27.000Z</updated>
+    <content type="html"><![CDATA[<p><del>霉霉</del>斯威夫特入门笔记，纯熟流水账。</p>
+<a id="more"></a>
+<h1 id="0-_准备工作">0. 准备工作</h1><h2 id="工具">工具</h2><p>Xcode里用Playground来玩是最简单的方法。</p>
+<h2 id="参考文献">参考文献</h2><p>参考文献：<a href="http://wiki.jikexueyuan.com/project/swift/" target="_blank" rel="external">The Swift Programming Language 中文版</a></p>
+<h1 id="1-_基础部分">1. 基础部分</h1><h2 id="分号">分号</h2><p>Swift可以不写分号，也可以写分号，Fuck。</p>
+<h2 id="变量、常量">变量、常量</h2><h3 id="基本方法">基本方法</h3><p><code>var</code>定义变量，<code>let</code>定义常量（严格来说不是真正的常量，在class中可以通过构造函数有机会修改它，后文详述）。</p>
+<h3 id="类型推导和标注">类型推导和标注</h3><p>默认具有类型推导，如：</p>
+<p><code>var msg = &quot;Hello, world!&quot;</code></p>
+<p>整数literal会被推导成<code>Int</code>类型，浮点数literal会被推导成<code>Double</code>类型。</p>
+<p>需要的时候可以自己加上类型标注，如：</p>
+<p><code>var msg: String</code></p>
+<h2 id="类型">类型</h2><h3 id="类型转换">类型转换</h3><p>把类型当一个函数看就行，如：</p>
+<p><code>let some_int = Int(some_double)</code></p>
+<h3 id="布尔类型">布尔类型</h3><p><code>true</code>和<code>false</code>将会被推导成<code>Bool</code>类型。</p>
+<h3 id="类型别名">类型别名</h3><p><code>typealias Byte = UInt8</code>——C里的<code>typedef</code>有木有……</p>
+<h3 id="元组（直接搬例子了）">元组（直接搬例子了）</h3><h4 id="定义：">定义：</h4><p><code>let http404Error = (404, &quot;Not Found&quot;)</code></p>
+<h4 id="使用：">使用：</h4><p><code>let (statusCode, statusMessage) = http404Error</code>——解构有木有</p>
+<p><code>let (justTheStatusCode, _) = http404Error</code>——discard解构有木有</p>
+<p><code>http404Error.0</code>——直接访问元组里的某个元素</p>
+<h4 id="命名元素：">命名元素：</h4><p><code>let http200Status = (statusCode: 200, description: &quot;OK&quot;)</code></p>
+<p><code>http200Status.statusCode</code>——访问某个元素</p>
+<h3 id="optionals">optionals</h3><p>跟C#里的<code>Nullable</code>类型如出一辙……</p>
+<p><code>var maybeInt: Int? = 404</code>——<code>maybeInt</code>是一个<code>Int</code>的optional，现在它包含值，是404</p>
+<p><code>maybeInt = nil</code>——现在它不包含值了</p>
+<p>东西有点儿多，剩下的关于optionals的东西后面再慢慢说……</p>
+<h2 id="运算符">运算符</h2><h3 id="算术运算符">算术运算符</h3><p><code>+ - * / % ++ --</code>无外乎这些了，<code>/</code>对<code>Int</code>类型是整除（好啊我喜欢），自增自减的前置后置规则和C里的一样。同样也有<code>+= -= *= /=</code>等……</p>
+<h3 id="比较运算符">比较运算符</h3><p>除了常规的<code>== != &lt; &gt; &lt;= &gt;=</code>外，也有<code>===</code>和<code>!==</code>来提供Reference Equal。</p>
+<h3 id="空合运算符(Nil_Coalescing_Operator)">空合运算符(Nil Coalescing Operator)</h3><p>专门给optionals用的，和C#如出一辙，<code>a ?? b</code>等效于<code>a != nil ? a! : b</code></p>
+<h3 id="区间构造器">区间构造器</h3><p>类似巨蟒或者Go那种快速构造一个数组的办法</p>
+<p><code>a...b</code>——闭-闭区间</p>
+<p><code>a..&lt;b</code>——闭-开区间（还能再丑一点儿吗）</p>
+<h2 id="字符串">字符串</h2><h3 id="基础">基础</h3><p><code>&quot;xxxx&quot;</code>字符串literal会被推导成<code>String</code>类型。</p>
+<p>Swift里的<code>String</code>被当做值类型，所以不能用<code>===</code>来比较，这样让它在参数传递的时候更容易知行合一。但猜测Runtime上还是用了字符串驻留集这类的技术来提高性能。</p>
+<h3 id="字符">字符</h3><p>用<code>str.characters</code>来获取<code>str</code>的字符数组，可以<code>for-in</code>来遍历它。</p>
+<h3 id="字符串连接">字符串连接</h3><p>大家都喜欢的<code>+</code>和<code>+=</code>（F*ck PHP）</p>
+<h3 id="Interpolation">Interpolation</h3><p><code>var msg = &quot;Hello, \(name)&quot;</code>——几乎是现代语言必备功能了……</p>
+<h3 id="Unicode">Unicode</h3><p>用<code>\u{十六进制}</code>来表示任意Unicode字符。</p>
+<p>用<code>str.utf8 str.utf16 str.unicodeScalars</code>可以获取它不同的表示方法。</p>
+<h3 id="strlen">strlen</h3><p>Swift似乎不建议在码元级别对字符串进行处理，而建议用<code>str.characters</code>来在字符的级别进行处理，这样可以避免踩到一些组合字符的坑。</p>
+<h3 id="索引">索引</h3><p>正因为不能直接在码元级别处理，所以直接用整数下标的方式访问字符串就瞎了，于是Swift里用了一套乍看之下有点复杂的index机制来对字符进行索引，烦，不搬了……</p>
+<h3 id="比较">比较</h3><p>用<code>==</code>可以比较字符串。用<code>hasPrefix hasSuffix</code>相当于C#里面的<code>startWith endWith</code>。</p>
+<h2 id="数组、集合、字典">数组、集合、字典</h2><h3 id="数组">数组</h3><p><code>var arr = Array&lt;Int&gt;()</code>——完整声明</p>
+<p><code>var arr = [Int]()</code>——简便声明</p>
+<p><code>var arr = [1, 2, 3]</code>——使用literal声明，类型推导成了<code>[Int]</code></p>
+<p><code>var arr = arr1 + arr2</code>——两个字符串连接</p>
+<p><code>arr[0] = 1</code>——赋值</p>
+<p><code>arr[1..3] = [11, 22, 33]</code>——解构式赋值，少的吞掉，多的插入</p>
+<p>——于是可以玩出……<code>arr[1...1] = [arr[1], 11, 22, 33]</code>来当插入用，23333（不推荐，哈哈）</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> <span class="keyword">item</span> <span class="operator">in</span> arr &#123;</span><br><span class="line">   <span class="comment"> // 遍历</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">for</span> (i, <span class="built_in">value</span>) <span class="operator">in</span> arr &#123;</span><br><span class="line">   <span class="comment"> // 能获取索引的遍历</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="集合">集合</h3><p><code>var set = Set&lt;String&gt;()</code>——空集合</p>
+<p><code>var set: Set&lt;String&gt; = [&quot;Jim&quot;, &quot;Liu&quot;]</code>——使用literal声明</p>
+<p><code>var set: Set = [&quot;Liu&quot;, &quot;Jim&quot;]</code>——使用literal简便声明，类型被推导成了<code>Set&lt;String&gt;</code></p>
+<p><code>set1 == set2</code>——集合可以用<code>==</code>来判等</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> <span class="keyword">item</span> <span class="operator">in</span> <span class="built_in">set</span> &#123;</span><br><span class="line">   <span class="comment"> // 遍历</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>……然后还有一堆集合操作的函数</p>
+<h3 id="字典">字典</h3><p><code>var dict = Dictionary&lt;String, Int&gt;()</code>——完整声明</p>
+<p><code>var dict = [String: Int]()</code>——简便声明</p>
+<p><code>var dict = [&quot;Jim&quot;: 1, &quot;Liu&quot;: 2]</code>——使用literal简便声明，并能使用类型推导</p>
+<p><code>dict[&quot;Jim&quot;] = 10</code>——赋值</p>
+<figure class="highlight ceylon"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="keyword">let</span> <span class="keyword">value</span> = dict[<span class="string">"Jim"</span>] &#123;</span><br><span class="line">    <span class="comment">// 判断存在外加获取值</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight ceylon"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (key, <span class="keyword">value</span>) <span class="keyword">in</span> dict &#123;</span><br><span class="line">    <span class="comment">// 遍历外加类型推导</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="枚举">枚举</h2><h3 id="定义">定义</h3><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">Direction</span> &#123;</span></span><br><span class="line">    <span class="keyword">case</span> North</span><br><span class="line">    <span class="keyword">case</span> South</span><br><span class="line">    <span class="keyword">case</span> West</span><br><span class="line">    <span class="keyword">case</span> East</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>Swift里的枚举不会被隐式赋值为自增整数</strong>，如果需要定义一个“带值”的枚举，比如想把它持久化的，可以用“Raw Value”定义方式：</p>
+<figure class="highlight fortran"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">enum</span> Direction: <span class="built_in">Int</span> &#123;</span><br><span class="line">    <span class="keyword">case</span> North = <span class="number">0</span></span><br><span class="line">    <span class="keyword">case</span> South</span><br><span class="line">    <span class="keyword">case</span> West</span><br><span class="line">    <span class="keyword">case</span> East</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这样后面的<code>South</code>啥的会自增赋值，当然手工指定也可以。不止是<code>Int</code>类型的，其他类型也行。</p>
+<p>除了Raw Value以外，Swift还支持“相关值”（Associated Value），具体就不搬运资料了。</p>
+<h3 id="使用">使用</h3><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">var</span> dir = Direction<span class="class">.North</span></span><br><span class="line"><span class="tag">var</span> dir2: Direction</span><br><span class="line">dir2 = .North</span><br></pre></td></tr></table></figure>
+<p>如上面第三行所示，对确定类型的枚举变量赋值的时候可以省略枚举的类型名称，又是个挺逗逼的语法糖。</p>
+<p>有Raw Value的枚举可以用<code>.rawValue</code>来获取值，也可以用<code>Direction(rawValue: 0)</code>的方式来构造。</p>
+<h2 id="#">#</h2><h2 id="流程控制">流程控制</h2><h3 id="for循环">for循环</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> <span class="keyword">var</span> i = <span class="number">0</span>; i &lt; <span class="built_in">len</span>; i++ &#123;</span><br><span class="line">    <span class="comment">// 传统for循环</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">1</span>..&lt;n &#123;</span><br><span class="line">   <span class="regexp">//</span> <span class="keyword">for</span>-<span class="keyword">in</span>循环，功能比较丰富，可以遍历数组、集合、字典</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="while循环">while循环</h3><figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> condition &#123;</span><br><span class="line">    <span class="regexp">//</span> 普通<span class="keyword">while</span>循环</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight cal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">repeat</span> &#123;</span><br><span class="line">    // 相当于<span class="keyword">do</span>-<span class="keyword">while</span></span><br><span class="line">&#125; <span class="keyword">while</span> condition</span><br></pre></td></tr></table></figure>
+<h3 id="if">if</h3><p>好像没什么好说的……</p>
+<p>类似C#，Swift里的condition必须是<code>Bool</code>表达式，不会像C和JS里那样隐式转换，因此<code>while n--</code>或者<code>if obj</code>就是不行的了。</p>
+<h3 id="switch">switch</h3><p><strong>默认不fallthrough</strong>，但是保留了<code>break</code>来满足强迫症患者的需要（其实还是有点儿用的，Swift里的<code>case</code>分支内容不允许为空，所以可以写个<code>break</code>来占位置）。</p>
+<p>类似Go，<code>switch</code>的条件可以是区间：</p>
+<figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">switch</span> (n) &#123;</span><br><span class="line">    <span class="keyword">case</span> <span class="number">1</span> ..&lt; <span class="number">5</span>:</span><br><span class="line">        <span class="comment">// <span class="doctag"><span class="keyword">xxx</span></span></span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>switch</code>一个枚举的时候，也可以省略枚举类型名：</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">switch</span> dir &#123;</span><br><span class="line">    <span class="keyword">case</span> .North:</span><br><span class="line">        print(<span class="string">"running to north"</span>)</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        print(<span class="string">"unknown"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>switch</code>一个元组的时候，可以有一些看起来像模式匹配的语法糖，如：</p>
+<figure class="highlight processing"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">switch</span> <span class="built_in">point</span> &#123;</span><br><span class="line">    <span class="keyword">case</span> (<span class="number">0</span>, <span class="number">0</span>):</span><br><span class="line">        <span class="comment">// 精确匹配</span></span><br><span class="line">    <span class="keyword">case</span> (_, <span class="number">0</span>):</span><br><span class="line">        <span class="comment">// discard其中某个元素</span></span><br><span class="line">    <span class="keyword">case</span> (-<span class="number">2.</span>..<span class="number">2</span>, -<span class="number">2.</span>..<span class="number">2</span>):</span><br><span class="line">        <span class="comment">// 对其元素使用区间条件</span></span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        <span class="comment">// 默认</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当需要用到元素值的时候又可以用类似解构的语法了，Swift里称为<em>值绑定（Value Binding）</em>：</p>
+<figure class="highlight ceylon"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">switch</span> point &#123;</span><br><span class="line">    <span class="keyword">case</span> (<span class="keyword">let</span> x, <span class="number">0</span>):</span><br><span class="line">        <span class="comment">// 这里可以用x</span></span><br><span class="line">    <span class="keyword">case</span> (<span class="number">0</span>, <span class="keyword">let</span> y):</span><br><span class="line">        <span class="comment">// 这里可以用y</span></span><br><span class="line">    <span class="keyword">case</span> <span class="keyword">let</span> (x, y):</span><br><span class="line">        <span class="comment">// 呵呵</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后还支持一个<code>where</code>从句，看起来也挺像模式匹配：</p>
+<figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">switch</span> point &#123;</span><br><span class="line">    <span class="function"><span class="keyword">case</span> <span class="title">let</span> (<span class="params">x, y</span>) <span class="keyword">where</span> x </span>== y:</span><br><span class="line">        <span class="comment">// 哦</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>最后，用<code>fallthrough</code>可以显式fallthrough。</p>
+<h3 id="guard">guard</h3><figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">guard let name = <span class="keyword">person</span><span class="comment">["name"]</span> else &#123;</span><br><span class="line">    return</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>满足条件则继续执行，否则执行<code>else</code>，有<code>if-else</code>还搞这个语法糖，还是有点儿卵用的。比如你可以写成</p>
+<figure class="highlight mel"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">guard <span class="keyword">condition</span> <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>而不需要写成</p>
+<figure class="highlight mel"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> !<span class="keyword">condition</span> &#123;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>照照镜子，有没有觉得变帅了？</p>
+<h3 id="continue/break">continue/break</h3><p>可以通过标签来跳出指定层次的循环，像JavaScript那样，然而___________。</p>
+<h1 id="to_be_continued">to be continued</h1><p>今天先到这儿吧…………下一篇开始函数和闭包。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p><del>霉霉</del>斯威夫特入门笔记，纯熟流水账。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[十一长假之前悄悄发布一个情怀之作-h5pal（无底天坑）]]></title>
@@ -168,7 +530,7 @@
     <link href="http://jimliu.net/2015/09/26/a-brief-look-at-binary-ops-in-js/"/>
     <id>http://jimliu.net/2015/09/26/a-brief-look-at-binary-ops-in-js/</id>
     <published>2015-09-26T04:31:35.000Z</published>
-    <updated>2015-09-26T05:55:43.000Z</updated>
+    <updated>2015-09-26T05:55:44.000Z</updated>
     <content type="html"><![CDATA[<p>写这篇博客的起源是在<a href="http://div.io" target="_blank" rel="external">div.io</a>上的一篇<a href="http://div.io/topic/766" target="_blank" rel="external">文章《你所不知道的JavaScript数组》by 小胡子哥</a>下的评论中的讨论。</p>
 <p>因为随着XHR2和现代浏览器的普及，在浏览器当中处理二进制不再向过去那样无所适从，随着Canvas/WebGL等新技术逐渐开始进入大众视野，也会用到一些字节数组或者16位、8位整数等东西。在node.js刚刚发布的4.0版本中，Buffer的底层使用了更符合JS标准的<code>Uint8Array</code>来实现，浏览器和node.js再次向相同的目标靠近了一点点，所以对于JS中处理二进制，我就打算写这篇文章作一个入门性质的流水账，方便一些对二进制处理不了解的同学快速入门，虽然在前端领域用到的不多，不过也可以作为茶余饭后的休闲谈资。</p>
 <a id="more"></a>
@@ -1246,123 +1608,6 @@
 ]]></content>
     <summary type="html">
     <![CDATA[<p>最近开始学（其实就是玩）ES6里的<code>generator/yield</code>，以及传说中的<a href="https://github.com/tj/co">co</a>。</p>]]>
-    
-    </summary>
-    
-      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[关于李娜退役的一点感受]]></title>
-    <link href="http://jimliu.net/2014/09/19/something-about-lina-s-quit/"/>
-    <id>http://jimliu.net/2014/09/19/something-about-lina-s-quit/</id>
-    <published>2014-09-19T11:34:31.000Z</published>
-    <updated>2015-03-26T11:21:23.000Z</updated>
-    <content type="html"><![CDATA[<p>过了这么久，李娜终于还是打破沉默，正式宣布了退役。这也让我想起小时候的一点点微不足道的事情。<br><a id="more"></a></p>
-<p>我小时候很爱打乒乓球，大概五年级的时候，每天下午放学我就会去和一群中学生混在一起打球，打到天黑了就回家吃饭。<br>到初一的时候，有一个很好的机会，学校将会选拔一些学生代表学校参加县里面的选拔，成功的话将会和小时候教过我打球的“偶像”哥哥们一起代表县里面去地区参加比赛。</p>
-<p>经过了简单的“海选”，我记得有十来个男生、4个女生被学校选中，我们在一间空教室里摆上了球桌，买了几框球，每天放学就自己“训练”起来——加引号是因为我们没有教练指导，只有体育老师会督促我们练习和跑步。一段时间后，一些同学没有坚持下来，没再来“训练”，最后大概有6个男生、2个女生，还在坚持每天放学来打球，打到天黑——因为普通教室的灯光不足以提供打球。</p>
-<p>快到了正式选拔的时候，我已经是初中组的4个男生当中表现比较好的了。入围的话，就有机会去县里面，获得更好的训练条件，以及更专业的老师的指导。哪怕最后不能代表县队出赛，也将会是一个很好的机会。</p>
-<p>很可惜在选拔前一周左右的时候，我的右手食指在体育课上打篮球的时候受伤了，当时整个手指肿得很严重，筷子都拿不稳，所幸的是没有伤着骨头。我成天盼着它快点好吧快点好吧，可是看着食指上缠着的膏药，又看看作业本上用中指夹着笔写出来的蹩脚的字，我眼泪几次几欲流出来。</p>
-<p>然而伤病是无情的，队内选拔赛的时候，我手上还缠着膏药，食指还是肿得像拇指那么粗。其实，说是“选拔”，但名额是弹性的，也就是说，其实我们大家都完全有机会去县里。我是队里唯一一个初一的男生，也就是最小的一个，大家都挺照顾我，甚至一位同学直接说要退出，把名额让给我。</p>
-<p>现在想一想，原来我现在可笑的倔脾气，早在那时候就已经埋下种子了。我没有接受同学的好意，甚至也没有看完比赛，在中间一个休息时刻就无声的走了。</p>
-<p>从那以后，我很少再打乒乓球，即使打起来也不会像当年那么认真——甚至于到后来几乎没有认真的发过几次球，而只是陪体育课上的队友不断地枯燥地练习推挡，给他指导一些动作和步法的细节，亦或者用左手陪前女友或者@licstar娱乐一下。</p>
-<p>即使是我这么三脚猫的选手，伤病也是这么无情。运动员最怕的就是受伤，一旦受伤，连训练都没法保持，更别说比赛了。而且受伤期间无法训练那种感情上其实是很折磨的。也许不是我当年矫情，而是那时候那个12岁的小孩真的没法承受这么残酷的事实吧。</p>
-<p>因为年纪大了或者自己不想打了而退役的运动员相比之下是比较幸运的，而因为伤病而退役的运动员则是很痛苦的，不论是身体上还是感情上，他们需要承担的东西实在太多。</p>
-<p>对于困难的事情，坚持下去很难，而其中有些事，放弃也许比坚持还难。</p>
-<hr>
-<p>当我讲完这个故事之后，我突然觉得似乎我应该重新开始打乒乓球。</p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>过了这么久，李娜终于还是打破沉默，正式宣布了退役。这也让我想起小时候的一点点微不足道的事情。<br>]]>
-    
-    </summary>
-    
-      <category term="生活" scheme="http://jimliu.net/tags/%E7%94%9F%E6%B4%BB/"/>
-    
-      <category term="站着说话不腰疼" scheme="http://jimliu.net/tags/%E7%AB%99%E7%9D%80%E8%AF%B4%E8%AF%9D%E4%B8%8D%E8%85%B0%E7%96%BC/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[Jim Plays <Summer>]]></title>
-    <link href="http://jimliu.net/2014/07/05/summer/"/>
-    <id>http://jimliu.net/2014/07/05/summer/</id>
-    <published>2014-07-05T12:36:20.000Z</published>
-    <updated>2015-03-26T11:21:23.000Z</updated>
-    <content type="html"><![CDATA[<p>虽然不喜欢夏天，不过也是这个季节的主题曲吧，还是要欢快地弹的！<br>节奏好不稳，造成有的地方巨难听……<br>有点脑残了，用了广角镜，相机角度非常憋屈。另外视频声音好像有点小，另外优酷上好像有点音画不同步！</p>
-<p><strong>视频+手机观看：</strong><a href="http://v.youku.com/v_show/id_XNzM2MTk4OTg0.html" target="_blank" rel="external">优酷</a><br><strong>MP3+高清下载：</strong><a href="http://pan.baidu.com/s/1qW2mBsK" target="_blank" rel="external">百度网盘</a></p>
-<embed src="http://player.youku.com/player.php/sid/XNzM2MTk4OTg0/v.swf" allowfullscreen="true" quality="high" width="480" height="400" align="middle" allowscriptaccess="always" type="application/x-shockwave-flash">
-
-<p><strong>设备&amp;&amp;软件：</strong><br>键盘：Casio PX135<br>音源：The Grand 2<br>摄像：SONY NEX-6, Sigma 19/2.8<br>编辑：SONY Vegas</p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>虽然不喜欢夏天，不过也是这个季节的主题曲吧，还是要欢快地弹的！<br>节奏好不稳，造成有的地方巨难听……<br>有点脑残了，用了广角镜，相机角度非常憋屈。另外视频声音好像有点小，另外优酷上好像有点音画不同步！</p>
-<p><strong>视频+手机观看：</strong>]]>
-    </summary>
-    
-      <category term="音乐" scheme="http://jimliu.net/tags/%E9%9F%B3%E4%B9%90/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[一个eval引发的血案]]></title>
-    <link href="http://jimliu.net/2014/06/25/an-eval-cataclysm/"/>
-    <id>http://jimliu.net/2014/06/25/an-eval-cataclysm/</id>
-    <published>2014-06-25T03:23:12.000Z</published>
-    <updated>2015-03-26T11:21:23.000Z</updated>
-    <content type="html"><![CDATA[<p>昨天碰到一个线上问题，一个页面在一般的情况下加载执行，它的交互功能是正常的，但使用异步方式加载它的内容进来塞页面里，交互功能就丢掉了。</p>
-<a id="more"></a>
-<p>同步加载的情况就不说了，先介绍下异步的加载情况。</p>
-<p>以异步方式请求同一个页面，带上特殊参数的时候，服务端会依据一些页面中埋的注释当做定界符，把页面拆成小块小块的，比如头部一块，胸部一块（←_←听起来怪怪的），<del>腿部</del>页脚一块。变成“半结构化数据”，其中每一块都是HTML片段，我们出问题的那一段就管叫<code>body</code>吧。</p>
-<p>由于<code>body</code>里夹杂了一些JavaScript，又由于一些复杂的历史原因<sup>1</sup>，在异步拿到这些半结构化数据之后，需要将<code>body</code>里的<code>&lt;script&gt;</code>提取出来妥善处理之后依次执行。</p>
-<p>在大多数情况下这个程序虽然看起来很trick，但是好赖运行得不错。可昨天突然遇到一个BUG，就是某个页面里的<code>body</code>在异步加载的方式下，交互功能就没了。首先可以用脚趾头确定这肯定是JS执行的问题，然后看了下这个页面的<code>body</code>内容，发现它里面有三段<code>&lt;script&gt;</code>，单步执行进去看，在异步的情况下都匹配出来了，也都执行了，但交互没生效。而将其中某一段摘出来扔控制台里再执行一遍，交互就回来了。</p>
-<p>仔细观察这段问题代码，它定义了一个<strong>全局函数</strong><sup>2</sup>，定义就定义吧，这么多页面也没能一个个code review，且行且珍惜。</p>
-<hr>
-<p>以上就是故事背景了（比尼玛正文还长）。那为什么全局函数在这里就失效了呢？究其原因是因为<code>eval</code>。</p>
-<p>在上面提到的那个加载器里面，会将匹配出来的<code>&lt;script&gt;</code>用<code>eval</code>方式执行的，<strong><code>eval</code>是局部作用域、局部作用域、作用域、域</strong>——为了凸显本文的核心问题，我将这句话的混响调长了一点点。而且这还不是问题的全部，更不可思议的是这也有<strong>浏览器兼容性问题</strong><sup>3</sup>，具体内容太复杂了，我就不搬运了，大家搜一下就行。</p>
-<p>书接上回，在那个交互里，点击的时候会调用它之前定义的那个全局函数，如果正确执行的话那就刚刚好。而现在<code>eval</code>了之后，那个全局函数自然没被定义到全局上面，就挂了。神奇的是这段代码<del>很良心</del>的加了<code>try/catch</code>，于是也没看到控制台里有报错。</p>
-<p>事已至此，只要倒霉加载器改用<strong>“全局eval”</strong>就能解决这个问题了（喂喂不是应该让做那个页面的人重构代码吗？），具体的方式我也不搬了，大家自己搜吧。</p>
-<hr>
-<h3 id="附注">附注</h3><ol>
-<li>f*cking historical reasons</li>
-<li>f*cking global function</li>
-<li>f*cking browser compatibility problems</li>
-</ol>
-<h3 id="参考文献">参考文献</h3><ol>
-<li><a href="http://blog.csdn.net/cuixiping/article/details/4823119" target="_blank" rel="external">让eval()全局作用域执行的方法深入研究(javascript)</a></li>
-<li><a href="http://www.cnblogs.com/rubylouvre/archive/2010/04/09/1708419.html" target="_blank" rel="external">globalEval函数</a></li>
-</ol>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>昨天碰到一个线上问题，一个页面在一般的情况下加载执行，它的交互功能是正常的，但使用异步方式加载它的内容进来塞页面里，交互功能就丢掉了。</p>]]>
-    
-    </summary>
-    
-      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[LRU缓存置换算法]]></title>
-    <link href="http://jimliu.net/2014/05/13/lru-cache/"/>
-    <id>http://jimliu.net/2014/05/13/lru-cache/</id>
-    <published>2014-05-13T11:23:12.000Z</published>
-    <updated>2015-03-26T11:21:23.000Z</updated>
-    <content type="html"><![CDATA[<p><strong>这篇文章是科普性质的，外加推销一下中文注释……</strong></p>
-<p>LRU(Least Recently Used, 近期最少使用)算法是缓存置换算法当中的经典案例——这个中文翻译听起来相当莫名其妙，所以我们还是叫LRU吧。虽然我们现在常常都用了更高阶的缓存服务，但如果要在一些语言（比如JS）当中自己实现一个简单的K-V的缓存类的时候，不放试试写一个LRU，因为它的算法思路真的相当简单，但实现起来又是非常有趣。</p>
-<a id="more"></a>
-<h3 id="为什么需要置换算法">为什么需要置换算法</h3><p>实现一个K-V cache的类，我们需要什么API？精简下来，我认为说到底就3个吧：<br><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">get</span><span class="params">(key)</span></span></span><br><span class="line"><span class="function"><span class="title">set</span><span class="params">(key, value)</span></span></span><br><span class="line"><span class="function"><span class="title">del</span><span class="params">(key)</span></span></span><br></pre></td></tr></table></figure></p>
-<p>这看起来就是一个字典而已，和LRU没什么关系。问题就在于缓存的空间是有限的，要么是硬件受限，要么是我们不想给这么多内存。所以当空间满的时候，再添加新的缓存，需要置换出去旧的。置换哪个出去就是门学问了。</p>
-<p>最容易的比如FIFO，先进先出，其他还有很多，这里不详细介绍了，可以去翻翻计算机组成原理看看。</p>
-<h3 id="LRU置换算法介绍">LRU置换算法介绍</h3><p>其实思路很简单，就是“把最近没用过的一个置换出去”。<br>实现上，可以描述为一个双端的列表，表头是最近用过的，而表尾是最近没用过的。<br><figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">set</span>时，如果缓存在列表里，把它摘出来放在表头上，否则直接放在表头上。</span><br><span class="line"><span class="keyword">get</span>时，把它摘出来放在表头上。</span><br><span class="line">del时，把它摘出来释放掉，如果它是表尾，那么维护一下新的表尾。</span><br><span class="line">置换时，换出表尾释放掉。</span><br></pre></td></tr></table></figure></p>
-<p>很明显用一个双端队列可以比较容易地实现上述算法，主要的问题是：用双链表构造的双端队列，因为不能随机访问，在按key查找时，需要<code>O(n)</code>的时间查找。（根据局部性原理，从队头查找会更容易快速找到目标，这是一个优化点。）</p>
-<h3 id="JS实现">JS实现</h3><p>isaacs大神（npm以及node.js的主要作者）的<a href="https://github.com/isaacs/node-lru-cache" target="_blank" rel="external">node-lru-cache</a>里用的是hash表加上队头和队尾两个索引来替代双链表。这样可以获得分摊<code>O(1)</code>时间的查找，构造比较巧妙。</p>
-<p>我把它的源代码加了中文注释，还算比较详细吧，有兴趣的童鞋可以去看看。<a href="https://github.com/LiuJi-Jim/node-lru-cache" target="_blank" rel="external">github</a></p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p><strong>这篇文章是科普性质的，外加推销一下中文注释……</strong></p>
-<p>LRU(Least Recently Used, 近期最少使用)算法是缓存置换算法当中的经典案例——这个中文翻译听起来相当莫名其妙，所以我们还是叫LRU吧。虽然我们现在常常都用了更高阶的缓存服务，但如果要在一些语言（比如JS）当中自己实现一个简单的K-V的缓存类的时候，不放试试写一个LRU，因为它的算法思路真的相当简单，但实现起来又是非常有趣。</p>]]>
     
     </summary>
     
