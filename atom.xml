@@ -5,7 +5,7 @@
   <subtitle><![CDATA[Again, Jim Liu's Blog]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://jimliu.net//"/>
-  <updated>2015-10-14T09:29:26.000Z</updated>
+  <updated>2015-10-14T09:32:42.000Z</updated>
   <id>http://jimliu.net//</id>
   
   <author>
@@ -20,15 +20,15 @@
     <link href="http://jimliu.net/2015/10/14/curry-function-in-es6/"/>
     <id>http://jimliu.net/2015/10/14/curry-function-in-es6/</id>
     <published>2015-10-14T15:33:33.000Z</published>
-    <updated>2015-10-14T09:29:26.000Z</updated>
+    <updated>2015-10-14T09:32:42.000Z</updated>
     <content type="html"><![CDATA[<p>Curry函数是老掉牙的话题了，不过有ES6的新语法糖以后，可以更愚快的装逼了。</p>
 <a id="more"></a>
 <p>定义：</p>
 <figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">var</span> curry = fn =&gt; (...<span class="attribute">left</span>) =&gt; (...<span class="attribute">right</span>) =&gt; <span class="function"><span class="title">fn</span><span class="params">(...left, ...right)</span></span></span><br></pre></td></tr></table></figure>
 <p>有没有很像Haskell，2333333。上面装的逼主要用到了ES6中的以下新特性：</p>
 <p><strong>箭头函数</strong>（Arrow Function），其他语言里一般叫Lambda表达式（Lambda Expression）。</p>
-<p><strong>剩余参数</strong>，因为ES6之前一般用<code>arguments</code>来做可变长参数，而strict mode里是不给用<code>arguments</code>的，于是ES6提供这个特性，可以让函数声明的时候最后一个参数是变长的，而形参可以当数组来用。</p>
-<p><strong>展开参数</strong>，这算是一个<code>apply</code>的语法糖，可以在函数调用的时候把一个数组扔进去，展开成多个参数传递。</p>
+<p><strong>剩余参数</strong>（Rest Parameters)，因为ES6之前一般用<code>arguments</code>来做可变长参数，而strict mode里是不给用<code>arguments</code>的，于是ES6提供这个特性，可以让函数声明的时候最后一个参数是变长的，而形参可以当数组来用。</p>
+<p><strong>展开参数</strong>（Spread Parameters），这算是一个<code>apply</code>的语法糖，可以在函数调用的时候把一个数组扔进去，展开成多个参数传递。</p>
 <p>不过上面这个实现<code>curry</code>的方法虽然逼格够高，但其实有一个小小的缺陷，不知道观众老爷有没有看出来？</p>
 <p>使用：</p>
 <figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">var</span> concat = (...args) =&gt; args.<span class="function"><span class="title">join</span><span class="params">(<span class="string">''</span>)</span></span></span><br><span class="line"></span><br><span class="line"><span class="tag">var</span> hehe = <span class="function"><span class="title">curry</span><span class="params">(concat)</span><span class="params">(<span class="string">'hehe'</span>, <span class="string">'haha'</span>)</span></span></span><br><span class="line">console.<span class="function"><span class="title">log</span><span class="params">(hehe(<span class="string">'heihei'</span>)</span></span>) <span class="comment">// hehehahaheihei</span></span><br></pre></td></tr></table></figure>
