@@ -14,7 +14,7 @@ Curry函数是老掉牙的话题了，不过有ES6的新语法糖以后，可以
 var curry = fn => (...left) => (...right) => fn(...left, ...right)
 ```
 
-`curry`的实现有没有很像Haskell，2333333。上面装的逼主要用到了ES6中的以下新特性：
+有没有很像Haskell，2333333。上面装的逼主要用到了ES6中的以下新特性：
 
 **箭头函数**（Arrow Function），其他语言里一般叫Lambda表达式（Lambda Expression）。
 
