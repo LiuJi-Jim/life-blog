@@ -18,11 +18,9 @@ var curry = fn => (...left) => (...right) => fn(...left, ...right)
 
 **箭头函数**（Arrow Function），其他语言里一般叫Lambda表达式（Lambda Expression）。
 
-**剩余参数**，因为ES6之前一般用`arguments`来做可变长参数，而strict mode里是不给用`arguments`的，于是ES6提供这个特性，可以让函数声明的时候最后一个参数是变长的，而形参可以当数组来用。
+**剩余参数**（Rest Parameters)，因为ES6之前一般用`arguments`来做可变长参数，而strict mode里是不给用`arguments`的，于是ES6提供这个特性，可以让函数声明的时候最后一个参数是变长的，而形参可以当数组来用。
 
-**展开参数**，这算是一个`apply`的语法糖，可以在函数调用的时候把一个数组扔进去，展开成多个参数传递。
-
-不过上面这个实现`curry`的方法虽然逼格够高，但其实有一个小小的缺陷，不知道观众老爷有没有看出来？
+**展开参数**（Spread Parameters），这算是一个`apply`的语法糖，可以在函数调用的时候把一个数组扔进去，展开成多个参数传递。
 
 使用：
 
@@ -67,5 +65,7 @@ var saySomethingTo = (word, name, end) => concat(word, ', ', name, end)
 var sayHelloTo = saySomethingTo.curry('Hello').curryR('!!!')
 console.log(sayHelloTo('Jim')) // Hello, Jim!!!
 ```
+
+不过上面这个实现`curry`的方法虽然逼格够高，但其实有一个小小的缺陷，不知道观众老爷有没有看出来？
 
 装逼完毕……
