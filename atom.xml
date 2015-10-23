@@ -5,7 +5,7 @@
   <subtitle><![CDATA[Again, Jim Liu's Blog]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://jimliu.net//"/>
-  <updated>2015-10-22T05:43:18.000Z</updated>
+  <updated>2015-10-23T06:39:55.000Z</updated>
   <id>http://jimliu.net//</id>
   
   <author>
@@ -14,6 +14,109 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[使用JavaScript实现“真·函数式编程”-2]]></title>
+    <link href="http://jimliu.net/2015/10/22/real-functional-programming-in-javascript-2/"/>
+    <id>http://jimliu.net/2015/10/22/real-functional-programming-in-javascript-2/</id>
+    <published>2015-10-22T15:33:33.000Z</published>
+    <updated>2015-10-23T06:39:55.000Z</updated>
+    <content type="html"><![CDATA[<p>上一篇文章<a href="/2015/10/21/real-functional-programming-in-javascript-1/">使用JavaScript实现“真·函数式编程”</a>本来以为可以一次性写完的，结果话痨本色，没办法，继续填坑，这篇应该可以完结了，讲道理嘛。</p>
+<p>这篇当中将介绍如何在纯函数式的限制之下实现“局部变量”和“状态”。</p>
+<a id="more"></a>
+<h1 id="2-_实现局部变量">2. 实现局部变量</h1><p>首先考虑这样一段代码</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getName</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">'name from somewhere'</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">greeting</span>(<span class="params">word</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> name = getName()</span><br><span class="line">    <span class="keyword">return</span> word + <span class="string">', '</span> + name</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">console</span>.log(greeting(<span class="string">'Hello'</span>))</span><br></pre></td></tr></table></figure>
+<p>这是一段典型的命令式编程的代码，它最主要的问题就是<strong>局部变量<code>name</code></strong>。</p>
+<p>在上一篇文章的第一个实现对数组遍历的例子当中我们已经对“顺序执行”初窥门径，通过构造了一个<code>two_steps</code>函数，实现两个步骤（函数）顺序执行。</p>
+<p>在这个构造过程当中，我们得到一个重要的思路，就是在函数式语言当中，<strong>如果你想“获得”一个什么东西，就构造一个新的函数，把它参数化</strong>。对于<code>two_steps</code>的例子而言，“想获得”的是一个<code>step2</code>，就把它参数化了。</p>
+<p>所以当需要“获得”局部变量的时候，自然而然我们会想到，把要拿的东西参数化就OK了，于是我们可以简单的这么构造：</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// local :: a -&gt; (a -&gt; b) -&gt; b</span></span><br><span class="line">const local = <span class="tag">a</span> =&gt; f =&gt; <span class="function"><span class="title">f</span><span class="params">(a)</span></span></span><br></pre></td></tr></table></figure>
+<p><code>local</code>函数接收两个参数，<code>a</code>是要“捕获”的值，<code>f</code>是接收或者说消费这个值的函数，用它来改造上面的代码</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">greeting</span>(<span class="title">word</span>) &#123;</span></span><br><span class="line">    <span class="constant">return</span> <span class="built_in">local</span>(getName())(name =&gt; <span class="built_in">word</span> + <span class="string">', '</span> + name)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上文当中将<code>getName()</code>的结果“捕获”作为后面函数的参数，实现了“局部变量”<code>name</code>。把上面的函数按照“真·函数式编程”规则改写：</p>
+<figure class="highlight coffeescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="reserved">const</span> getName = <span class="function"><span class="params">()</span> =&gt;</span> <span class="string">'name from somewhere'</span></span><br><span class="line"></span><br><span class="line"><span class="reserved">const</span> greeting = word =&gt; local(getName())(name =&gt; word + <span class="string">', '</span> + name)</span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(greeting(<span class="string">'Hello'</span>)) <span class="regexp">//</span> 结果是<span class="string">'Hello, name from somewhere'</span></span><br></pre></td></tr></table></figure>
+<p><img src="/uploads/public/perfect.jpg" alt=""></p>
+<p>不难发现我们这个<code>local</code>其实就是<code>two_steps</code>的简化版，区别在于<code>two_steps</code>的第一个<code>step1</code>是一个函数，而<code>local</code>则是一个值，如果用<code>two_steps</code>实现<code>local</code>那么就是：</p>
+<figure class="highlight ocaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">const local = <span class="keyword">value</span> =&gt; step2 =&gt; two_steps (_ =&gt; <span class="keyword">value</span>) (step2) <span class="literal">()</span></span><br></pre></td></tr></table></figure>
+<p>看，我们这个<code>local</code>的风格，看起来非常像JS当中的“回调”的方式——事实上，因为像Haskell这样的纯函数式语言没有顺序执行，你可以认为每一行代码执行顺序是不一定的，这非常类似于在JS中我们遇到了海量异步操作的时候：<strong>异步操作的执行顺序是不一定的，所以才会用回调函数来保证“异步操作-&gt;处理结果”这个顺序。</strong>回调是一种非常朴素，非常好理解，但写起来却反人类的异步编程方式。我一直不批判浏览器和node.js里把API都用回调风格来定义，因为它很原始，大家都懂，至于后来的如<code>Promise</code>这些方式，也可以用回调的API轻松封装出来，咸甜酸辣，五仁叉烧，任君挑选。</p>
+<p>OK，扯远了，也许你觉得上面的例子太过简单，下面我们来看这篇文章中真正重点的内容。</p>
+<h1 id="3-_实现状态">3. 实现状态</h1><p>以下的例子基本上都源自从<a href="http://www.cnblogs.com/fzwudc/archive/2011/04/19/2020982.html" target="_blank" rel="external">陈年译稿——一个面向Scheme程序员的monad介绍</a>文中搬运和改造，我从这篇文章获得了巨大的启发，也先对作者和译者表示感谢。</p>
+<p>我们写程序的过程当中常常回用到<strong>自增ID</strong>这种东西，如果在JS里要实现一个自增ID，可能会这么写</p>
+<figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> __guid = <span class="number">0</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">guid</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> __guid++</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>好嘛，绕了一圈，又回到刚才的话题了，局部变量（这次在闭包里面而已，本质是一样的），和二次赋值。但是经过前文的启发很容易就能用参数化的方式来解决这个问题</p>
+<figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">guid</span><span class="params">(oldValue)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> newValue = oldValue + <span class="number">1</span></span><br><span class="line">    <span class="keyword">return</span> [newValue, newValue]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>也就是</p>
+<figure class="highlight lisp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">const guid = oldValue =&gt;</span><br><span class="line">    local<span class="list">(<span class="keyword">oldValue</span> + <span class="number">1</span>)</span><span class="list">(<span class="keyword">newValue</span> =&gt; [newValue, newValue])</span></span><br></pre></td></tr></table></figure>
+<p>我们把局部变量参数化，然后把返回值改成了一个数组（因为JS里没有元组，所以只能用数组暂代），这样在需要<code>guid</code>的时候，需要把之前的返回值的第二个值作为参数传进去；而整个程序则需要使用一个初始值（我们管叫“种子”）来启动它。</p>
+<p>现在假如我们有3个名字，分别要对它们用<code>guid</code>来编号并且输出，也就是说需要连续执行3次<code>guid</code>，这里涉及到的就是顺序执行以及<code>guid</code>的状态参数传递：</p>
+<figure class="highlight openscad"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">const counting = state =&gt;</span><br><span class="line">    local <span class="params">(guid<span class="params">(state)</span>)</span> <span class="params">(<span class="params">([id1, state1])</span> =&gt;</span><br><span class="line">        local <span class="params">(guid<span class="params">(state1)</span>)</span> <span class="params">(<span class="params">([id2, state2])</span> =&gt;</span><br><span class="line">            local <span class="params">(guid<span class="params">(state2)</span>)</span> <span class="params">(<span class="params">([id3, state3])</span> =&gt;</span><br><span class="line">               `Alice:$&#123;id1&#125; Bob:$&#123;id2&#125; Chris:$&#123;id3&#125;`</span><br><span class="line">            )</span></span><br><span class="line">        )</span></span><br><span class="line">    )</span></span><br><span class="line">console.<span class="built_in">log</span><span class="params">(counting<span class="params">(<span class="number">0</span>)</span>)</span> <span class="comment">// 结果是Alice 0, Bob 1, Chris 2</span></span><br></pre></td></tr></table></figure>
+<p>也许你已经被后面谜一般的这一堆括号所惹毛了，如果你能忍着继续看下去的话也许可以真的获得这篇文章的乐趣（捂脸</p>
+<p>对于没有副作用的函数（纯函数），不需要带上<code>state</code>这个参数，而对于有副作用的函数——我们称之为“操作”——这里体现为调用了<code>guid</code>函数的，就需要带上<code>state</code>这个参数。</p>
+<p>看，<code>state</code>就是我们所说的“状态”，整个过程中，都把它（用数组的第二个值）揣着，当一个函数需要状态的时候就传给它，它用完了又捡回来揣着。</p>
+<p>看起来没什么不对，但是<code>guid(state)</code>这个函数总是给人隐隐的不爽：<code>state</code>是<code>guid</code>自身的状态，却需要<code>counting</code>这个消费者在整个调用过程当中帮它传递，这是不爽的，因此不妨把<code>guid</code>的<code>state</code>参数定义为<code>curry</code>形式：</p>
+<figure class="highlight pf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">const guid = () =&gt; <span class="keyword">state</span> =&gt;</span><br><span class="line">    local(<span class="keyword">state</span> + <span class="number">1</span>)(state1 =&gt; [state1, state1])</span><br></pre></td></tr></table></figure>
+<p>进而<code>counting</code>中的<code>local</code>的第一步不再是一个已算出的值，而是一个<code>curry</code>了第一个参数（空），需要第二个参数<code>state</code>的<code>guid</code>函数，这就是<code>curry</code>函数的精妙之处，它让函数可以“部分地”被执行，从而能够实现演算——我们把整个演算过程像代数推导一样列出来，最后把值代入就能计算出结果，是不是很像中学的时候解代数题、物理题什么的？</p>
+<p>于是，用了新的<code>guid</code>以后，<code>local</code>就不能应用于<code>guid</code>了，使用<code>two_steps</code>改写一下</p>
+<figure class="highlight openscad"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">const counting_by_steps = state =&gt; two_steps</span><br><span class="line">    <span class="params">(guid<span class="params">()</span>)</span> <span class="params">(<span class="params">([id1, state1])</span> =&gt; two_steps</span><br><span class="line">        <span class="params">(guid<span class="params">()</span>)</span> <span class="params">(<span class="params">([id2, state2])</span> =&gt; two_steps</span><br><span class="line">            <span class="params">(guid<span class="params">()</span>)</span> <span class="params">(<span class="params">([id3, state3])</span> =&gt; `Alice:$&#123;id1&#125; Bob:$&#123;id2&#125; Chris:$&#123;id3&#125;`)</span></span><br><span class="line">            <span class="params">(state2)</span>)</span></span><br><span class="line">        <span class="params">(state1)</span>)</span></span><br><span class="line">    <span class="params">(state)</span></span><br><span class="line">console.<span class="built_in">log</span><span class="params">(counting_by_steps<span class="params">(<span class="number">0</span>)</span>)</span></span><br></pre></td></tr></table></figure>
+<p>这时候你会觉得更烦了，因为这次虽然我们不需要给<code>guid()</code>主动传递<code>state</code>了，但在连续多次调用<code>two_steps</code>的时候，却需要把<code>state1</code>和<code>state2</code>给<code>two_steps</code>传递下去，能不能构造一个新的<code>two_steps</code>函数，让它能够透明地传递<code>state参数</code>呢？</p>
+<p>答案是显然的，回顾一下上文中<code>two_steps</code>的定义和实现：</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// two_steps :: (a -&gt; b) -&gt; (b -&gt; c) -&gt; a -&gt; c</span></span><br><span class="line"><span class="keyword">const</span> two_steps = step1 =&gt; step2 =&gt; param =&gt;</span><br><span class="line">    step2(step1(param))</span><br></pre></td></tr></table></figure>
+<p>我们想想，<code>two_steps</code>的<code>param</code>参数作用无外乎是作为“状态”传给<code>step1</code>，它的定义是<code>curry</code>化的，如果<code>two_steps</code>不传第三个参数，获得的就是一个内容为<code>step1-then-step2</code>的“部分函数”这个函数接收<code>param</code>参数，返回<code>step2</code>的结果。要让<code>two_steps</code>能够继续透明地使用这种“部分函数”，就是说<code>two_steps</code>的结果可以继续被<code>two_steps</code>组合，我们可以对<code>step1</code>和<code>step2</code>函数的类型进行限定</p>
+<figure class="highlight asciidoc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">step1 :: </span>State -&gt; [Value, State]</span><br><span class="line"><span class="bullet">step2 :: </span>State -&gt; [Value, State]</span><br><span class="line"><span class="bullet">param :: </span>State</span><br></pre></td></tr></table></figure>
+<p>其中<code>State</code>是状态的类型，<code>Value</code>是返回值的类型，在<code>guid</code>的例子里面，这两者都是<code>Number</code>。这样结合起来，新的<code>two_steps</code>——我们给它一个新名字叫<code>begin</code>——的类型限定就是</p>
+<figure class="highlight livescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">begin :: <span class="function"><span class="params">(State -&gt; [Value, State])</span> -&gt;</span> <span class="function"><span class="params">(State -&gt; [Value, State])</span> -&gt;</span> State<span class="function"> -&gt;</span> [Value, State]</span><br></pre></td></tr></table></figure>
+<p>对吧，<code>begin</code>的两个参数<code>step1</code>和<code>step2</code>都是<code>State -&gt; [Value, State]</code>类型，这跟它在只<code>curry</code>前两个参数，剩余<code>param</code>参数时的那个部分函数<code>step3</code>的类型（函数签名）是一样 的。</p>
+<p>从中抽取出一个模式：<code>State -&gt; [Value, State]</code>，我们用一个泛型来抽象它叫做<code>M&lt;Value&gt;</code>，不难发现，<code>guid</code>是<code>() -&gt; Number -&gt; [Number, Number]</code>也就是<code>() -&gt; M&lt;Number&gt;</code>类型（其<code>State</code>也是<code>Number</code>类型），用这个泛型可以把<code>begin</code>描述成：</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">begin</span> <span class="symbol">:</span><span class="symbol">:</span> <span class="constant">M&lt;Value&gt;</span> -&gt; <span class="constant">M&lt;Value&gt;</span> -&gt; <span class="constant">State </span>-&gt; [<span class="constant">Value,</span> <span class="constant">State]</span></span><br></pre></td></tr></table></figure>
+<p>这样我们可以顺利的推出<code>begin</code>的实现</p>
+<figure class="highlight pf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">const begin = step1 =&gt; step2 =&gt; <span class="keyword">state</span> =&gt; &#123;</span><br><span class="line">    const [value1, state1] = step1(<span class="keyword">state</span>)</span><br><span class="line">    return step2(state1)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>简化之，结果是</p>
+<figure class="highlight pf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">const begin = step1 =&gt; step2 =&gt; <span class="keyword">state</span> =&gt; step2(step1(<span class="keyword">state</span>)[<span class="number">1</span>])</span><br></pre></td></tr></table></figure>
+<p>这和<code>two_steps</code>如出一辙，区别只在于，对于<code>step2</code>，它<strong>丢弃了<code>step1</code>所产生的<code>Value</code></strong>，而只保留了它所产生的<code>State</code>。</p>
+<p>然而我们还是需要<code>Value</code>啊！说丢就丢这也太不负责任了吧！这时候自然想到“再加一个中间层”，我们设计这样一个函数：它的第二个参数消费<code>step1</code>所产生的<code>Value</code>，返回<code>step2</code>，这个<code>step2</code>再去消费<code>step1</code>所产生的<code>State</code>。把这个函数命名为<code>bind</code>，它的类型描述如下</p>
+<figure class="highlight livescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bind :: <span class="function"><span class="params">(State -&gt; [Value, State])</span> -&gt;</span> <span class="function"><span class="params">(Value -&gt; (State -&gt; [Value, State]))</span> -&gt;</span> State<span class="function"> -&gt;</span> [Value, State]</span><br></pre></td></tr></table></figure>
+<p>使用<code>M</code>泛型来描述它就是</p>
+<figure class="highlight fortran"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">bind</span> :: M&lt;<span class="keyword">Value</span>&gt; -&gt; (<span class="keyword">Value</span> -&gt; M&lt;<span class="keyword">Value</span>&gt;) -&gt; State -&gt; [<span class="keyword">Value</span>, State]</span><br></pre></td></tr></table></figure>
+<p>看，当使用<code>bind</code>来结合两个操作<code>step1</code>和<code>build_step2</code>的时候，<code>step1</code>消费掉<code>State</code>种子，产生一个返回值<code>Value</code>（并且可能产生了新的状态<code>State</code>）。紧接着<code>build_step2</code>消费了<code>step1</code>所返回的<code>Value</code>，并且它返回一个新的<code>M&lt;Value&gt;</code>也就是<code>step2</code>，<code>bind</code>函数会像<code>begin</code>那样，把<code>step1</code>所产生的新<code>State</code>作为参数传给<code>step2</code>，并且返回其结果。于是我们终于构造出了<code>bind</code>的实现：</p>
+<figure class="highlight pf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">const bind = step1 =&gt; build_step2 =&gt; <span class="keyword">state</span> =&gt; &#123;</span><br><span class="line">    const [value1, state1] = step1(<span class="keyword">state</span>)</span><br><span class="line">    const step2 = build_step2(value1)</span><br><span class="line">    return step2(state1)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>转换成“真·函数式编程”，这里利用<code>local</code>实现局部变量：</p>
+<figure class="highlight lisp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">const bind = step1 =&gt; build_step2 =&gt; state =&gt;</span><br><span class="line">    local <span class="list">(<span class="keyword">step1</span><span class="list">(<span class="keyword">state</span>)</span>)</span> <span class="list">(<span class="list">([value1, state1])</span> =&gt;</span><br><span class="line">        local <span class="list">(<span class="keyword">build_step2</span><span class="list">(<span class="keyword">value1</span>)</span>)</span> <span class="list">(<span class="keyword">step2</span> =&gt;</span><br><span class="line">            step2<span class="list">(<span class="keyword">state1</span>)</span></span><br><span class="line">        )</span></span><br><span class="line">    )</span></span><br></pre></td></tr></table></figure>
+<p>不难发现，<code>begin</code>是<code>bind</code>的一个特例，用<code>bind</code>来构造它的话就是</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> begin = step1 =&gt; step2 =&gt; bind (step1) (_ =&gt; step2)</span><br></pre></td></tr></table></figure>
+<p>非常的直白，忽略<code>step1</code>产生的<code>Value</code>，继续调用<code>step2</code>。现在使用<code>bind</code>来改进上面的多个带状态的顺序执行的代码</p>
+<figure class="highlight pf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">const returns = value =&gt; <span class="keyword">state</span> =&gt; [value, <span class="keyword">state</span>]</span><br><span class="line">const main = <span class="keyword">state</span> =&gt;</span><br><span class="line">    bind (guid()) (id1 =&gt;</span><br><span class="line">        bind (guid()) (id2 =&gt;</span><br><span class="line">            bind (guid()) (id3 =&gt;</span><br><span class="line">                returns(`Alice:$&#123;id1&#125; Bob:$&#123;id2&#125; Chris:$&#123;id3&#125;`)</span><br><span class="line">            ))) (<span class="keyword">state</span>) [<span class="number">0</span>]</span><br><span class="line">console.<span class="keyword">log</span>(main(<span class="number">0</span>)) // 结果是'Alice:<span class="number">1</span> Bob:<span class="number">2</span> Chris:<span class="number">3</span>'</span><br></pre></td></tr></table></figure>
+<p><img src="/uploads/public/perfect.jpg" alt=""></p>
+<p>注意上面的代码里面我们定义了一个<code>returns</code>函数，它接收一个<code>Value</code>，并且返回一个<code>M&lt;Value&gt;</code>。毫无疑问，<code>M&lt;Value&gt;</code>是比<code>Value</code>更“高阶”的类型，因为<code>M&lt;Value&gt;</code>当中含有<code>State</code>，而<code>Value</code>不含。</p>
+<p><code>bind</code>函数作用于<code>M&lt;Value&gt;</code>类型，因此需要<code>returns</code>，于是通过<code>returns</code>将一个<code>Value</code>转成<code>M&lt;Value&gt;</code>；而<code>main</code>函数是返回<code>Value</code>类型的，则通过<code>[0]</code>来将一个<code>M&lt;Value&gt;</code>抛弃<code>State</code>转回<code>Value</code>。</p>
+<p>还记得刚才那句话吗：</p>
+<blockquote>
+<p>对于没有副作用的函数（纯函数），不需要带上<code>state</code>这个参数，而对于有副作用的函数——我们称之为“操作”——这里体现为调用了<code>guid</code>函数的，就需要带上<code>state</code>这个参数。</p>
+</blockquote>
+<p>因为<code>main</code>函数抛弃了最终的<code>State</code>，所以它不在有副作用，又变成纯函数了；而正是因为它抛弃了<code>State</code>，它自身也变成无状态的了，所以毫无疑问重新调用<code>main(0)</code>就会让<code>guid</code>清零重新开始——局部变量，作用域，生命周期，有没有发现命令式编程里面的概念在这里体现出来了？</p>
+<h2 id="那么，M&lt;Value&gt;到底是什么？">那么，<code>M&lt;Value&gt;</code>到底是什么？</h2><p>从面相对象的角度去理解，我们可以说，<code>M&lt;Value&gt;</code>是一个封装了<code>State</code>在里面的“操作”。从函数式编程的角度去理解，我们理解为<code>Value</code>是一个“值”，而<code>M&lt;Value&gt;</code>是一个“计算”。</p>
+<p>对上面的东西做一个小结</p>
+<ol>
+<li><code>returns</code>函数将一个<code>Value</code>“提升”成<code>M&lt;Value&gt;</code>类型。</li>
+<li><code>begin</code>和<code>bind</code>函数将两个<code>M&lt;Value&gt;</code>绑定顺序关系（<code>begin</code>是<code>bind</code>的简化版）。<code>bind</code>函数中的<code>build_step2</code>将会有一个“临时”的机会获得<code>Value</code>，但是用完以后又必须回到<code>M&lt;Value&gt;</code>。</li>
+<li><code>[0]</code>将<code>M&lt;Value&gt;</code>“降级”回<code>Value</code>——这个过程将会不可逆地丢失掉<code>State</code>。</li>
+</ol>
+<p>我们上面的<code>returns</code>和<code>bind</code>这一对函数就实现了一个<code>Monad</code>——准确的说是<code>State Monad</code>。在Haskell里面，我们的<code>returns</code>叫做<code>return</code>，我们的<code>bind</code>叫做<code>bind</code>或者运算符<code>&gt;&gt;=</code>。这张图</p>
+<p><a href="http://zhuoqiang.me/what-is-monad.html" target="_blank" rel="external"><img src="/uploads/2015/monad.png" alt="via《道可叨 | Monad 最简介绍》"></a></p>
+<p>是我所见到的一个非常形象的描述。</p>
+<p>除了<code>State Monad</code>外还有很多种<code>Monad</code>，例如<code>Maybe</code>帮助Haskell实现了非常自然的错误处理，<code>IO</code>帮助Haskell实现了IO。在<code>Monad</code>的帮助之下Haskell更实现了<code>do notation</code>这种“顺序执行”的语法糖，可谓是Haskell的核心之一。</p>
+<h1 id="4-_总结">4. 总结</h1><p>到现在为止，循环有了，局部变量有了，状态也有了，可以说基本上已经没有写不出的程序了。当然，正经的程序是不可能这么写的，所以这两篇文章也就是分享一下我个人的学习心得，玩玩所谓“真·函数式编程”，以及——最重要的——还是装逼。</p>
+<p>好了，最后，我也不想说什么了，只能深吸口气，紧闭眼睛，一言(tú)以蔽之：</p>
+<p><img src="/uploads/public/zhe-bi-zhuang-de-you-dian-ji-shu.jpg" alt=""></p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>上一篇文章<a href="/2015/10/21/real-functional-programming-in-javascript-1/">使用JavaScript实现“真·函数式编程”</a>本来以为可以一次性写完的，结果话痨本色，没办法，继续填坑，这篇应该可以完结了，讲道理嘛。</p>
+<p>这篇当中将介绍如何在纯函数式的限制之下实现“局部变量”和“状态”。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[使用JavaScript实现“真·函数式编程”]]></title>
@@ -1557,53 +1660,6 @@
     <summary type="html">
     <![CDATA[<p>伟大领袖毛主席说，烂尾是不好的。虽然学习Go对我而言多半是玩票性质的，但是既然坑已经挖了就还是先安心填吧，反正快过年了，年前尽量就不要留遗憾了嘛对不对。</p>
 <p>这一篇将主要介绍Go当中的类型系统和面向对象编程实现。</p>]]>
-    
-    </summary>
-    
-      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[浅谈Angular与React]]></title>
-    <link href="http://jimliu.net/2015/02/05/angular-vs-react-in-shallow/"/>
-    <id>http://jimliu.net/2015/02/05/angular-vs-react-in-shallow/</id>
-    <published>2015-02-04T16:23:12.000Z</published>
-    <updated>2015-03-26T11:21:23.000Z</updated>
-    <content type="html"><![CDATA[<p>用Angular写了一个管理系统，用React只写了几百行玩具代码。</p>
-<p>因此是浅谈，真的很浅，完全可以说是对手感的评价。</p>
-<a id="more"></a>
-<h2 id="UI描述">UI描述</h2><h3 id="Angular">Angular</h3><p>Angular基本是做到了声明式UI，<code>ng-if</code>、<code>ng-repeat</code>这类的“流程控制”语法虽然看起来土鳖，但活儿好。至少对于UI的展现逻辑，基本上不再需要去它的controller里<code>if</code>或者<code>for</code>了。</p>
-<h3 id="React">React</h3><p>React说它的JSX是声明式的UI，这不扯吗，用了就知道，这东西只是比编程生成UI容易那么一丁丁点，仅仅是一丁丁点。</p>
-<p>要循环生成一个列表，还得先把它生成到一个数组里，再把数组塞进JSX，真是闹心。例如：</p>
-<figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> CardList = React.createClass(&#123;</span><br><span class="line">  render: <span class="function"><span class="keyword">function</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> button;</span><br><span class="line">    <span class="keyword">if</span> (loggedIn) &#123;</span><br><span class="line">      button = &lt;AddCardButton /&gt;;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      button = &lt;LoginButton /&gt;;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">var</span> cards = <span class="keyword">this</span>.props.data.map(<span class="function"><span class="keyword">function</span><span class="params">(item)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> (</span><br><span class="line">        &lt;Card data=&#123;item&#125; /&gt;</span><br><span class="line">      );</span><br><span class="line">    &#125;);</span><br><span class="line">    <span class="keyword">return</span> (</span><br><span class="line">      &lt;div className=<span class="string">"card-list"</span>&gt;</span><br><span class="line">        &lt;ul&gt;</span><br><span class="line">          &#123;cards&#125;</span><br><span class="line">        &lt;/ul&gt;</span><br><span class="line">        &lt;div className=<span class="string">"footer"</span>&gt;</span><br><span class="line">          &#123;button&#125;</span><br><span class="line">        &lt;/div&gt;</span><br><span class="line">      &lt;/div&gt;</span><br><span class="line">    );</span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-<p>不要怀疑哦，上面演示的条件与循环的实现基本上就是官方示例里面给的方式。恶心吗？恶心就对了。</p>
-<h2 id="UI构建">UI构建</h2><h3 id="Angular-1">Angular</h3><p>Angular的UI构建基本上还是按照“模板”的思路，是基于文本的，稍微方便一点代码分离啊、build啊什么的。管理文本资源对于前端来说是很熟悉的事情。</p>
-<h3 id="React-1">React</h3><p>React当中没有模板，它万物皆组件。JSX是编程语言，React的“模板”是基于DOM的，于是所有UI都是程序片段，视图与逻辑的分离的界线变得非常模糊。</p>
-<p>用JSX几乎是构建React组件的唯一办法，因为不用JSX的话，手写那些<code>React.createElement</code>无疑是反人类的，而且更跟“声明式UI”没有半毛钱的关系了。</p>
-<p>当然理解React的UI是程序片段这一点后，也就有办法来做视图和逻辑的拆分了——把视图当做JS模块来管理，可以部分借鉴现在各种JS模块化的思路。不过技术实现上差强人意。因为我没专注研究，就不丢人现眼了。</p>
-<h2 id="数据驱动UI">数据驱动UI</h2><p>两者都实现了由model去驱动view，本世代的前端框架，包括不限于Ember、Polymer、Vue、Avalon都是这个思路，可以说以jQuery为代表的围绕DOM操作构建UI的时代已经过去了。</p>
-<h3 id="Angular-2">Angular</h3><p>Angular用脏检查驱动视图更新，如果理解了<code>$digest</code>循环，就基本上了解了什么时候视图会被更新，如果要整合自己已有的组件，可以脱离<code>$digest</code>循环尽情玩耍，完事以后一个<code>$apply</code>把控制权交回去。被诟病的就是性能问题了。</p>
-<h3 id="React-2">React</h3><p>React使用虚拟DOM，可谓天马行空。</p>
-<p>React开发者认为“组件就是一个个状态机”（原文：React thinks of UIs as simple state machines），所以它是通过<code>setState</code>来驱动的。于是事实上你会发现还是需要手工去<code>setState</code>更新状态。当然对于控制狂来说这是好的，首先是UI的更新时机变得很明确；其次React认为这样可以让UI变得“Predictable”，可以通过编写任意<code>state</code>来精确地控制UI，提高UI的可测性。</p>
-<p>但虚拟DOM和传统DOM之间几乎是不兼容的，如果要整合一些自己已有的组件，而这些组件——不管是为了实现方便还是为了性能——有魔改DOM，比如modal把元素摘到body上去方便定位；比如slide每次只保留两个元素其他一律干掉。那么会打破虚拟DOM与传统DOM之间的关联关系，React会无情罢工。</p>
-<blockquote>
-<p>Unable to find element. This probably means the DOM was unexpectedly mutated (e.g., by the browser), usually due to forgetting a &lt;tbody&gt; when using tables, nesting tags like &lt;form&gt;, &lt;p&gt;, or &lt;a&gt;, or using non-SVG elements in an &lt;svg&gt; parent. Try inspecting the child nodes of the element with React ID</p>
-</blockquote>
-<h2 id="基础设施">基础设施</h2><h3 id="Angular-3">Angular</h3><p>Angular提供了大量的基础设施，如大量的内建<code>directive</code>、依赖注入等，明确了<code>controller</code>、<code>service</code>等概念，这样就给出了一个基本稳定的应用开发的路数。不论这种大量输出价值观是否好坏，至少在使用Angular开发该怎么构建应用程序的问题分歧是比较少的。</p>
-<h3 id="React-3">React</h3><p>React几乎不提供任何基础设施，我并不理解这一点是因为他们不输出价值观还是完成度不够。React的官方文档目录里面“TIPS”栏目几乎与“GUIDES”栏目一样多，让我觉得有点尴尬。相比Angular的大而全，React比较专注于以一种“万物皆组件”的方式构建一个干净的UI，而并不是构建一个完整的应用程序（那是Flux里的内容）。</p>
-<h2 id="周边设施">周边设施</h2><h3 id="Angular-4">Angular</h3><p>Angular的插件很丰富，ui-router几乎是市面上最强的SPA路由组件；ng-resource把数组魔改成Promise也是有点儿意思。如上文所说，理解了<code>$digest</code>循环后要整合现有的UI组件并不难。</p>
-<h3 id="React-4">React</h3><p>React的插件相对要少一些，本次React Conf上有演示的一个router组件我没体会过，不评价。如上文所说，因为虚拟DOM与传统DOM之间微妙的关系，整合现有UI组件会比较容易踩坑。</p>
-<h2 id="结论">结论</h2><p>如果Angular是一个家务活干得好的小媳妇儿，那么React就是一个磨人的小妖精。</p>
-<p>虽然很多人都觉得Angular主张太强，但其实除了“数据驱动UI”的观念需要稍微突破一下，两者相比之下Angular并没有那么多概念冲击，反而React要舍弃不少东西。</p>
-<p>经我观察其实Facebook也只在个人主页的侧边栏使用了React，然后据说Instagram是整个用React的，因为我不玩这个就没试。</p>
-<p>用React构建应用程序会存在方法论的分歧，当然既然React很专注解决UI组件的问题，那么我们可以用它配合一些之前对于View做的不好的框架，嗯你一定知道我说的就是backbone。</p>
-<p>Angular受大家诟病性能的问题比较突出，移动端肯定没戏了，React据说性能很好，这个我没有去评估。</p>
-<p>结论之结论：Angular是一个循序渐进的MVVM框架，之所以说循序渐进，是因为这些概念在其他语言和平台上面都已经得到过验证了，希望Angular 2.0能继续保留这些中庸而好用的哲学。React是一个狼群中的异类，JSX的存在让我觉得他们团队有JS偏执，虚拟DOM的存在让我觉得这个东西并不是Web开发，使用React开发项目也许需要做好面对“Culture Shock”的准备。</p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>用Angular写了一个管理系统，用React只写了几百行玩具代码。</p>
-<p>因此是浅谈，真的很浅，完全可以说是对手感的评价。</p>]]>
     
     </summary>
     
