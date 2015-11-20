@@ -5,7 +5,7 @@
   <subtitle><![CDATA[Again, Jim Liu's Blog]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://jimliu.net//"/>
-  <updated>2015-10-23T06:39:55.000Z</updated>
+  <updated>2015-11-09T06:39:47.000Z</updated>
   <id>http://jimliu.net//</id>
   
   <author>
@@ -14,6 +14,103 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[使用C#开发桌面hybrid应用程序]]></title>
+    <link href="http://jimliu.net/2015/11/09/developing-webapp-with-csharp/"/>
+    <id>http://jimliu.net/2015/11/09/developing-webapp-with-csharp/</id>
+    <published>2015-11-09T15:33:33.000Z</published>
+    <updated>2015-11-09T06:39:47.000Z</updated>
+    <content type="html"><![CDATA[<p>周末和基友一起开发了一个程序<a href="http://www.zhihu.com/question/22913899/answer/71352036" target="_blank" rel="external">MP3CutAd</a>（<a href="https://github.com/licstar/MP3CutAd" target="_blank" rel="external">github</a>），用的是C#做容器和“后端”，webkit做UI。</p>
+<p>因为后端的算法是用C#写的，就打算不迁移了，用C#做UI吧。但是我特么不会，距离上一次开发WinForm程序已经过去了5、6年；WPF也没有实践经验。所以就想弄个办法，用C#做后端，web做前端，赶个时髦。</p>
+<a id="more"></a>
+<p>首先想到的是用<a href="http://www.zhihu.com/question/22913899/answer/71352036" target="_blank" rel="external">Electron</a>，这是一个nodejs和chromium的绑定。</p>
+<p>为了让nodejs可以调用.NET类库，需要<a href="https://github.com/tjanczuk/edge" target="_blank" rel="external">edge.js</a>。不过在我兴冲冲的把两者装好之后，在Electron里面<code>require(&#39;edge&#39;)</code>却报错了。</p>
+<p>懒的境界是：懒得调，先看看别的方案。</p>
+<p>这次用<a href="https://github.com/cefsharp/CefSharp" target="_blank" rel="external">CefSharp</a>做容器，这是CEF（Chromium Embeded Framework）的C#版，在GitHub的Windows客户端里也用了这个项目。它提供了DEMO项目，下载下来用Visual Studio直接就能编译运行了。然后很快也实现了用C#向JS暴露对象，它提供两种，一种是暴露同步接口的，一种是JS返回值自动包装成Promise的异步接口的。我最后使用的是同步返回+callback的土鳖风格。</p>
+<p>先这么定了，就用这个方案吧。</p>
+<p>主要的缺点有以下几个：</p>
+<ul>
+<li>JS绑定目前实现得比较弱，函数参数只能传简单数据类型，连数组都不行。我弄了半天才发现，暂时用JSON来传参了。</li>
+<li>不能向JS端暴露类的构造函数，可以取而代之暴露一个工厂，因为反正都只能传递简单类型。但是这样要实现状态就会很麻烦，所以C#端只能尽可能做成无状态的。</li>
+<li>有时候窗口退出以后，cef的Chroumium进程退不干净，这个一直没排查到到底是哪里漏的，不过多半还是我自己弄得不好吧。</li>
+</ul>
+<p>优点呢：</p>
+<ul>
+<li>因为宿主是C#程序，可以充分利用各种窗体资源，天生系统窗口样式，需要做多窗口也可以。另外，可以肆无忌惮的在C#里开各种线程来跑算法。</li>
+<li>可以使用WinForm或者WPF实现主程序，这样能够获得Native UI的各种优势，比如性能。同时嵌入一个Chromium则可以当做嵌入浏览器，或者是一个需要远程更新的模块。</li>
+<li>可以实现同步的JS绑定接口（虽然我没用上）。</li>
+</ul>
+<p>既然只能传简单数据类型，那么使用JS绑定和使用HTTP服务有啥优势？反正都得用JSON了。应该说，还是有的，主要就是可以实现同步调用。但用HTTP服务的话，应该更容易mock一些，而且还能脱离宿主，直接在Chrome浏览器里开发，也许可以更提高开发效率。另外一个就是在宿主里起一个HTTP服务其实也挺蛋疼的，而且调用开销估计也会更大吧。</p>
+<p>另外还有一个方案是用<a href="https://github.com/nwjs/nw.js" target="_blank" rel="external">nw.js</a>也就是之前的node-webkit，配合edge.js。edge.js这个我没跑通，但是从它的介绍来看，要在C#端实现状态好像也没变简单。另一个是它如果暴露dll的话要按一定规则写接口，反正跟用CefSharp一样都是要封一层了……</p>
+<p>总之就是两个方向：</p>
+<p>1、用webkit/Chromium做宿主进程，绑定nodejs，再绑定.NET。<br>2、用C#做宿主进程，绑定Chromium。</p>
+<p>前者的话，代码主要用JS写，后者的话，JS和C#一半一半吧。</p>
+<p>跨平台能力方面，前者应该是更强的，因为edge.js的介绍里已经说了对Mono的支持。而Cef虽然是跨平台的，但是CefSharp目前还没发现他有说支持Mono。好在我对跨平台不感兴趣，而且这个程序当中又依赖了别的更不跨平台的东西了……不过除了CefSharp之外，还有别的项目也是Cef的C#绑定，其中有支持Mono的，我没试。</p>
+<p>具体到UI方面，我用的是<a href="https://github.com/vuejs/vue" target="_blank" rel="external">Vue</a>，配合官方提供的webpack插件vue-loader和webpack-dev-server可以实现模块热更新，这样我就不需要频繁重启宿主程序了，还是很方便。</p>
+<p>在联合调试的时候，C#端可以注意一下不要让算法跑在JS线程里面，这样Chromium那边的UI线程不会卡住。然后在Visual Studio里随便打断点就可以调试JS绑定和算法的C#代码，非常方便。</p>
+<p>体积方面，都差不多，CefSharp的发布包大概是40多MB，如果干掉一些诸如音视频、Dev Tools、GL支持这类的，应该还能小一些。Electron也是这个水平，毕竟里面还包含一个nodejs。nw.js还没试，估计也都差不多吧。</p>
+<p>结论：跨语言开发还是比较麻烦的，如果想用web做UI的话，建议尽量用nodejs绑定。如果需要用Native代码开发模块那就只能用C++写node包了，其实说到底还是挺坑的。不过用web开发UI的效率的确还是相当高，也许Electron和nw.js这种方案会越来越流行吧。而Cef方案则更倾向于在一个以Native UI为主的程序里面嵌入一个浏览器，或者一个比较需要远程更新的子模块这类的。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>周末和基友一起开发了一个程序<a href="http://www.zhihu.com/question/22913899/answer/71352036">MP3CutAd</a>（<a href="https://github.com/licstar/MP3CutAd">github</a>），用的是C#做容器和“后端”，webkit做UI。</p>
+<p>因为后端的算法是用C#写的，就打算不迁移了，用C#做UI吧。但是我特么不会，距离上一次开发WinForm程序已经过去了5、6年；WPF也没有实践经验。所以就想弄个办法，用C#做后端，web做前端，赶个时髦。</p>]]>
+    
+    </summary>
+    
+      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[《如龙0：誓约之地》简评]]></title>
+    <link href="http://jimliu.net/2015/11/08/brief-comments-on-yakuza-0/"/>
+    <id>http://jimliu.net/2015/11/08/brief-comments-on-yakuza-0/</id>
+    <published>2015-11-08T15:33:33.000Z</published>
+    <updated>2015-11-09T02:29:15.000Z</updated>
+    <content type="html"><![CDATA[<p>《如龙0：誓约之地》（港：人中之龙0：誓约的场所）是今年5月档期PS平台的一部大作，是《如龙》系列的前传，也是系列首次中文化。不过我直到最近才刚买，真是火星。除了前期有一段时间迷恋迪斯科飞镖棒球台球卡拉OK以外（怎么这么多），中后期基本上都在推主线。现在已通关，简评一下。</p>
+<a id="more"></a>
+<h4 id="画面：7分">画面：7分</h4><p>有点和这个时代跟主机性能脱节了，然而播片制作非常精良，所以看得出来他们的导演和美术都没问题，还是引擎技术实力不行啊SEGA桑。- -“话说日本的软件业据说就是层层外包，估计很多IT公司也没什么技术积累吧。从黑魂2到血源诅咒就能看出来，一有第一方支持了马上引擎的技术水准就有了质变。好吧扯远了。</p>
+<h4 id="流畅度：8分">流畅度：8分</h4><p>读盘次数合理，速度较快，但考虑到画面水平这个速度算是该有的水准。似乎好久没玩过需要手动存档的游戏了- -“（也许你可以说这是系列或者日系游戏的特色），但是存档要读条两次是闹哪样？有的地方按○跳过对话奇怪的不管用，还有，主线剧情能跳过动画而支线不可以这是闹哪样？走在街上经常莫名其妙就得看一段长达一两分钟的支线对话，然后才能选取消，推主线的时候突然一下把你拦住强行对话，很影响心情。</p>
+<h4 id="剧情叙事：8分">剧情叙事：8分</h4><p>播片很多且制作精良，从剧情容量上看已经算得上是一季日剧的容量了，内容也不错。剧情方面的扣分项在下面单起一个段落详说。</p>
+<p>叙事手法太单一，非播片段落毫无演出可言，叙事全靠播片。好在播片数量质量一定程度上弥补了叙事，很适合视频通关，也许明年1月份的《如龙·极》我不会再买了会选择视频通关吧。</p>
+<p>人设方面日式夸张中二风很地道，两个主角的性格刻画都不错，人物形象鲜明，即使我没有玩过前作也能对人物形象有深刻的印象。配角也基本上都是个个有血有肉。还有，女医生好美！还有，久濑大哥你到底要被打几次……</p>
+<h4 id="场景：室内6分，室外9分，平均8分">场景：室内6分，室外9分，平均8分</h4><p>室内场景存在感稀薄，能进的屋子本来就少，反而街边小店设计不错，尤其是便利店和杂货屋，比剧情屋精良多了。</p>
+<p>街道场景太赞了！尤其是夜间，让人时不时会有在街上漫步的想法，完事儿很想去日本旅游。</p>
+<p>缺少天气系统（锦上添花的），缺少自然场景所以不是10分，尽管如此还是太赞了。</p>
+<h4 id="战斗：7分">战斗：7分</h4><p>打击感不错，但太单一。两个主角虽然各有3种模式但基本上只有1种是从头打到尾一招鲜的，究极形态还有好多招式因为都要支线的，没玩出来，不知道什么感觉。</p>
+<p>武器系统也形同虚设，刀棍什么的同质化比较明显，手感也一般，不如直接抡拳头，也许是因为我玩的难度太低了吧。</p>
+<h4 id="音乐音效：音乐9分，音效7分，平均8分">音乐音效：音乐9分，音效7分，平均8分</h4><p>我个人对日系游戏的原创音乐是评价很高的，本作的音乐非常不错，燃的音乐很燃，感情戏里的曲子也不错（不过好像OST里没有）。而且街道上和小店里面还有店家放的音乐，结合制作精良的场景非常有感觉。</p>
+<p>音效比起音乐来说有些单薄了，尤其是战斗中音效同质很严重，拳头音效都一样的就不说了，武器音效也就基本上是钝器共享一种、利器共享一种，后期耳朵都快听麻了。</p>
+<h4 id="系统：8分">系统：8分</h4><p>核心系统方面，用钱统一了货币和经验值，跟游戏背景很搭，这个设定很赞。角色成长比较单调，升级圆盘重复度较高，而且太依赖支线解锁，我这种休闲玩家体会不全，到通关才升了1/3（还是也许因为我玩的难度太低）。</p>
+<p>周边系统方面，武器探索存在感稀薄（还是也许因为我玩的难度太低）；不动产经营个人感觉不怎么好玩（其实还没玩太明白）；夜店经营很好玩，简直可以当个单独手游了；四驱车很好玩，但也是个无底天坑。当然这些玩法共同的特点就是——都很费时间。</p>
+<h4 id="容量：8分">容量：8分</h4><p>easy难度主线通关个人用了26小时，后来玩房地产和夜店又玩了接近10小时，要刷白金估计往至少100小时看齐了，这个分配比例挺大，但如果通关时间再长的话可能会觉得过剧情有点累了。</p>
+<p>支线玩的不多，不过跟一本正经的主线相比支线实在很逗逼，而且有不少挺出彩的。同质化略高了点基本上都是当简单的GALGAME玩。</p>
+<h4 id="小游戏：10分">小游戏：10分</h4><p>买小游戏送主线不是吹的，小游戏简单而上瘾，要不是为了快点通关看完剧情我不知道要坑多久，但真是太费时间了，打个棒球、台球（妈蛋台球我一盘没赢过）不注意时间一小时就过去了，要刷白金的话真是无底天坑。</p>
+<h4 id="细节：8分">细节：8分</h4><p>勒索哥什么的挺逗的，便利店的杂志、小饭馆的餐饮、街边的垃圾都值得把玩。我去小饭馆吃饭会像现实中下馆子一样对着仅供参考的照片纠结半天吃哪个你敢信？翻译方面有的地方还是很出彩的，比如“道上兄弟”……</p>
+<p>美中不足的是因为听不懂日语，所以街头NPC那些小对话基本上听不懂，如果能听懂这些日语日常用语应该体验会更好。</p>
+<h3 id="总分：8-0分">总分：8.0分</h3><h4 id="Pros">Pros</h4><ul>
+<li>吸引人的剧情与播片</li>
+<li>制作精良的街景</li>
+<li>丰富且好玩的小游戏</li>
+</ul>
+<h4 id="Cons">Cons</h4><ul>
+<li>平庸的画面</li>
+<li>缺乏创新的战斗</li>
+</ul>
+<hr>
+<h4 id="关于剧情的扣分项：">关于剧情的扣分项：</h4><p>桐生一马的代入感非常差，他个人对于桐生线的推进作用很稀薄，远远比不上立华、尾田、堂岛组的几个大哥甚至锦山，而且桐生本身就是个外在非常冷的人，这让这个角色演出也显得很冷淡（除了最后船上大高潮的时候），根本调动不起来玩家情绪。可以说桐生基本上就是作为一个可操作的、打架很猛的家伙，让玩家见证了这一切不可逆地发生而已。</p>
+<p>真岛方面的代入感比桐生的强多了，从登场演出就比桐生强了一头。真岛的感情戏更丰富，更容易让玩家产生共鸣，直观说就是这个角色形象更“软”。而且真岛这边因为从中前期就开始与关键妹子接触，他个人对于剧情的推动力和参与程度明显强过桐生。比较不满的是真岛最后的性格巨大转变感觉有点突兀，在我大概了解了一下续作（其实应该叫前作？）的剧情后，我觉得这样的转变有一种作为前传强行填坑的感觉。</p>
+<p>由于平台和语言原因我没有玩过如龙系列的前作，因此对两位主角也应该不会有先入为主，从最终章来看应该说桐生才是第一主角，不过从刻画上讲个人认为桐生比真岛逊色了一筹。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>《如龙0：誓约之地》（港：人中之龙0：誓约的场所）是今年5月档期PS平台的一部大作，是《如龙》系列的前传，也是系列首次中文化。不过我直到最近才刚买，真是火星。除了前期有一段时间迷恋迪斯科飞镖棒球台球卡拉OK以外（怎么这么多），中后期基本上都在推主线。现在已通关，简评一下。</p>]]>
+    
+    </summary>
+    
+      <category term="站着说话不腰疼" scheme="http://jimliu.net/tags/%E7%AB%99%E7%9D%80%E8%AF%B4%E8%AF%9D%E4%B8%8D%E8%85%B0%E7%96%BC/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[使用JavaScript实现“真·函数式编程”-2]]></title>
@@ -1528,138 +1625,6 @@
     <summary type="html">
     <![CDATA[<p>继续上一篇。</p>
 <p>身为一名Web开发者，这一篇将介绍一下在Web应用当中常会出现编码问题的地方。文中经常会乱用“字符集”和“编码”，不过看明白了第一篇的话相信你不会混淆概念，而且我个人觉得这两个概念很多时候混淆也无妨……</p>]]>
-    
-    </summary>
-    
-      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[编码歪传——基础篇]]></title>
-    <link href="http://jimliu.net/2015/03/06/something-about-encoding-basic/"/>
-    <id>http://jimliu.net/2015/03/06/something-about-encoding-basic/</id>
-    <published>2015-03-06T12:23:12.000Z</published>
-    <updated>2015-03-26T11:21:23.000Z</updated>
-    <content type="html"><![CDATA[<p>子曰：乱码是一种思念，而思念是一种病。相信很多Web人常常纠结于乱码当中，可能是展现、可能是表单提交、可能是数据库、可能是接口、可能是抓取……反正任何一个涉及到输入或者输出字符的地方都有可能被你碰到过乱码。</p>
-<p>为了解释和解决乱码问题，并且明确一些常见的误区，我打算写这样一个系列，介绍一些字符编码相关的东西，目前规划了3篇。</p>
-<p>基本上内容会比较偏科普性质，希望大神们轻拍，因为我相信这些将会是非常重要的基础知识，如果你能完整的读下去，肯定会在你以后遇到乱码的时候帮助到你的思考方式，快速找到原因。</p>
-<a id="more"></a>
-<h2 id="字符">字符</h2><p>我们的语言基本上都围绕着<strong>字符</strong>，就是<strong>character</strong>，常简称<strong>char</strong>，很多时候字符会是文本的最小组成单位（注意只是“很多时候”，因为世界是奇妙的）。</p>
-<p>不是一定要文字才叫字符，一些注音字符、数学符号、某些文字里的修饰符号、特殊符号、表格符号、甚至Emoji等等，其实都是字符。</p>
-<h2 id="字符集">字符集</h2><p>字符要成套才有用，比如“英文字母”就是一个字符集，当然这么说听起来对计算机毫无意义。</p>
-<p>一般我们所说的<strong>字符集</strong>（Character Set）就是一个规范，它收录若干字符，并且给这些字符逐一分配了一个<strong>编号</strong>当作索引（为了不过早引入<strong>编码</strong>的概念造成混淆，这里我称其为“编号”）。</p>
-<h3 id="ASCII">ASCII</h3><p>ASCII是当今计算机世界最经典的字符集，它收录了英文字母和若干标点，还有一些专门供计算机使用（不是给人看）的控制字符。</p>
-<h3 id="GB系列">GB系列</h3><p><strong>GB2312</strong>是一个常见的中文字符集，其中“GB”就是“国标”（咱们国家很多不同行业的标准代号都是这样命名的）。它收录了大概几千个汉字，以及几百个西文字符。</p>
-<p><strong>GBK</strong>是微软最早在Win95里实现的对GB2312进行的扩展，追加了很多繁体字和西文字符，总计收录的字符数大概有20000多个。K就是拼音“扩展”。</p>
-<p><strong>GB18030</strong>是国标对GB2312的升级（当然中间还有其他升级，但大多被淹没在历史潮流里面了），它一下就收录了70000多个字符，最大的升级部分有繁体中文字符、新字、生僻字、少数民族文字、日韩字符等。</p>
-<p>上面三个GB系列的字符集都是为中文设计的，当然也扩充了一些东亚语文的内容（CJK字符，Chinese, Japanese, Korean），因为这些邻居的字符在中国也挺常出现的。</p>
-<h3 id="Big5">Big5</h3><p>又称大五码，是繁体中文地区，例如湾湾、港港、澳澳常用的字符集，大概收录了一万多个字符，其中以繁体中文为主。因为被Windows所接受成为繁中版的默认编码而成为了事实标准。</p>
-<h3 id="UCS">UCS</h3><p>就像中文一样，几乎每种语言都存在一个给自己的语言设计字符集的问题。</p>
-<p>ISO意识到这个问题之后，设计了一套<strong>通用字符集UCS</strong>（Universal Character Set），目的是用一套字符集表示全世界（甚至外星人！？）的所有字符！</p>
-<p>结果UCS成功了，因为互联网发展的太快了，任何国家的人每天都在互联网上浏览来自全世界的不同语言不同文字的内容，大家当然希望用一套字符集就能收录全世界所有的字符。</p>
-<h2 id="字符编码">字符编码</h2><p>很多人会把<strong>字符集</strong>和<strong>字符编码</strong>的概念搞混，其实不怪，因为这俩东西好多时候都是捆绑定义的。</p>
-<p><strong>字符编码</strong>（Character Encoding）就是按照一定的技术要求（比如以8bit为单位）对字符集中的每一个字符进行编码，以便文本能够在计算机和网络传输上使用。</p>
-<p>简单的说，就是把字符集里面的那个每个字符的编号，给弄成计算机能懂的格式。</p>
-<p>很多字符集在制定的时候，就已经配套了它的编码方案，比如ASCII、GB系列、Big5。对于这种字符集/编码，称呼上虽然模糊，但结合技术语境而言一般也不会有什么误解。</p>
-<h3 id="ASCII-1">ASCII</h3><p>标准ASCII只收录了128个字符，使用7bit可以完美编码。例如英文字母<code>A</code>的ASCII编码就是十六进制<code>0x41</code>，然后1字节剩下的一位就没啥用了，可以用来当奇偶校验。</p>
-<p>后来ASCII被扩展到了8bit，供256个字符，用8bit也就是1字节可以完美编码，并且低7字节完全兼容。</p>
-<p>ASCII是国际标准而扩展ASCII并不是，下文所说到的“兼容ASCII”都是指兼容7bit的标准ASCII。</p>
-<h3 id="GB2312">GB2312</h3><p>GB2312使用1/2字节变长编码，单字节部分是兼容ASCII，其他几千个字符都是用双字节编码。</p>
-<p>GB2312在编码的时候使用了一个“分区”的概念，小时候家里有一本区位码表，就是配合Windows里古老的“区位输入法”用的。</p>
-<h3 id="GBK">GBK</h3><p>GBK的编码方案是GB2312的超集，它完全兼容GB2312，不过把GB2312里面没定义的那些编码空间都用起来了。</p>
-<h3 id="GB18030">GB18030</h3><p>GB18030的编码方案稍微复杂一点，它用的是1/2/4字节变长编码方案。它完全兼容GB2312，基本上兼容GBK。</p>
-<h3 id="Big5-1">Big5</h3><p>Big5使用固定两字节编码，它的首字节避开了ASCII的范围，因此实际在程序实现上面它可以近似兼容ASCII，由于它的低字节包含了一些ASCII字符，这个兼容也是不完美的，具体情况可以看看维基百科，非常有趣。</p>
-<h3 id="Unicode">Unicode</h3><p>Unicode有一个非常高大上的中文名字叫万国码<del>，呵呵，这个名字真是散发着一股农业重金属的气息啊</del>。其实也是个字符集，它和UCS之间有微妙的高度雷同关系，好在两边的组织都意识到了搞分化是不好的，于是互相之间达成了高度的一致。虽然它们的确是两个不同的标准，但很多时候混淆来看也无妨。</p>
-<p>Unicode是定长编码，根据版本不同，它有2字节（对应UCS-2）、4字节（对应UCS-4）的版本。</p>
-<p>因为Unicode是定长的，它实在太简单粗暴了。例如如果用4字节的Unicode来传输英文文本就浪费了3倍的体积，而用2字节的版本也不爽，一来容量较小，二来对于英文文本也还是浪费的。于是在实现上对它进行了一定的优化，称为<strong>Unicode转换格式（Unicode Transformation Format）</strong>也就是我们耳熟能详的<strong>UTF</strong>了。</p>
-<h4 id="UTF-32">UTF-32</h4><p>UTF-32是UCS-4的最朴素的实现方式，就是简单地用定长4字节。</p>
-<p>缺点嘛很明显就是很浪费体积。</p>
-<p>优点也是有的，首先就是把它转换到Unicode最简单，而且对于“第[i]个字符”这种随机访问也很好计算，直接<code>字节数/4</code>就是了对不？</p>
-<p>但因为组合字符（比如越南语，网上用来搞一个超长的流泪图标破坏排版那种）的存在，一个UTF-32码元（4字节）严格上也并非一个文本编辑上的单元，这种情况下对于排版系统而言UTF-32没有太多优势。</p>
-<h4 id="UTF-16">UTF-16</h4><p>UTF-16是使用2/4字节实现的UCS-4变长编码。</p>
-<p>因为大多数时候用到的字符不超过65536个，所以UTF-16在大多数时候1个字符都只占2字节，这样比起UTF-32省了接近一半体积，同时它的解析也不会太麻烦。</p>
-<p>固定长的编码方式对于计算机程序而言有一个非常大的优势就是字符串处理会容易的多，尤其是正则表达式的实现。因此很多现代语言，例如C#/Java的字符串内部实现使用UTF-16，因为它是一种效率和体积比较平衡的编码方式。</p>
-<h4 id="UTF-8">UTF-8</h4><p>UTF-8应该是现在互联网上使用最广泛的统一语言编码实现方式了。</p>
-<p>它是1-4字节变长编码（原本是1-6字节，但是因为后面那些超出了Unicode定义了，后来就改成1-4字节了）。单字节的情况兼容ASCII，在这个由英文主宰的互联网环境里面这是非常好的特性，因为它在很多时候会非常节省体积，而且这种时候完全不需要编码转换。</p>
-<p>但它的缺点也相当明显，将UTF-8转换到Unicode的算法会更加复杂，效率降低。</p>
-<p>对于中文环境而言UTF-8也比较吃亏，因为使用UTF-8编码大多数中文字符需要3字节，这就比GB系列和UTF-16浪费空间。</p>
-<p>UTF-8并未编码0x10FFFF以上的部分，所以严格的说它只是UCS-4的子集。好在缺失的那部分本身就不受UCS/Unicode的重视，估计实在是太犄角旮旯了。</p>
-<p>我觉得UTF-8最终成为互联网主流很大一定程度是因为它的单字节是兼容ASCII的。</p>
-<h2 id="阶段性小结">阶段性小结</h2><h3 id="字符集-1">字符集</h3><p>收录了很多字符，并且编号，给人看的。</p>
-<h3 id="编码">编码</h3><p>实现一个字符集，将它的编号以一定规则用二进制实现，给计算机看的。</p>
-<h3 id="GB系列-1">GB系列</h3><p>中国的国标字符集/编码，GB2312和GBK已经基本上过时了，如果要良好的支持中日韩文，又逃不开GBK的魔爪（比如历史代码束缚），那可以考虑升级到GB18030，这是国标的最新版，也是最先进的一版。</p>
-<h3 id="UCS/Unicode">UCS/Unicode</h3><p>把全世界上百万个你见过的或者你没见过的字符全部收录进一套字符集，已经被全世界接受成为了国际标准。</p>
-<h3 id="UTF">UTF</h3><p>UCS/Unicode转换格式，就是实用的编码方案，用于计算机实现。</p>
-<h3 id="UTF-16-1">UTF-16</h3><p>UCS/Unicode的一种折衷了处理效率和存储空间的编码实现方案，常被各种现代语言当作字符串内部编码使用。</p>
-<h3 id="UTF-8-1">UTF-8</h3><p>UCS/Unicode的一种倾向于节省空间的编码实现方案，因为对ASCII兼容，对英文文本非常有利，成为了当今互联网的主流（甚至事实标准）。</p>
-<p><strong>如果你的网站没有任何历史包袱，直接上UTF-8别商量！</strong></p>
-<p><strong>如果你的网站有一些历史包袱，商量商量还是上UTF-8吧，包袱的接口上转换一下编码。</strong></p>
-<h2 id="预报">预报</h2><p>呵呵呵呵，虽然文章的标题叫做《编码歪传》，但其实上面的内容一点也不歪嘛。</p>
-<p>有观众看不下去了：“拜托，你讲这些什么乱七八糟的理论知识我没啥兴趣啊，我想知道的其实只是为什么我的网页会乱码啊老湿！”</p>
-<p>对于上面的问题我只想说四个字：<del>请联系我</del>请看下集：<a href="/2015/03/07/something-about-encoding-web/">《编码歪传——Web篇》</a></p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>子曰：乱码是一种思念，而思念是一种病。相信很多Web人常常纠结于乱码当中，可能是展现、可能是表单提交、可能是数据库、可能是接口、可能是抓取……反正任何一个涉及到输入或者输出字符的地方都有可能被你碰到过乱码。</p>
-<p>为了解释和解决乱码问题，并且明确一些常见的误区，我打算写这样一个系列，介绍一些字符编码相关的东西，目前规划了3篇。</p>
-<p>基本上内容会比较偏科普性质，希望大神们轻拍，因为我相信这些将会是非常重要的基础知识，如果你能完整的读下去，肯定会在你以后遇到乱码的时候帮助到你的思考方式，快速找到原因。</p>]]>
-    
-    </summary>
-    
-      <category term="编程" scheme="http://jimliu.net/tags/%E7%BC%96%E7%A8%8B/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[一个伪前端的Go入门——面向对象编程篇]]></title>
-    <link href="http://jimliu.net/2015/02/07/beginning-go-oop/"/>
-    <id>http://jimliu.net/2015/02/07/beginning-go-oop/</id>
-    <published>2015-02-07T09:42:34.000Z</published>
-    <updated>2015-03-26T11:21:23.000Z</updated>
-    <content type="html"><![CDATA[<p>伟大领袖毛主席说，烂尾是不好的。虽然学习Go对我而言多半是玩票性质的，但是既然坑已经挖了就还是先安心填吧，反正快过年了，年前尽量就不要留遗憾了嘛对不对。</p>
-<p>这一篇将主要介绍Go当中的类型系统和面向对象编程实现。</p>
-<a id="more"></a>
-<p>任何面向对象（或近似于面向对象）编程语言，只要理解了它的类型系统，基本上它的面向对象方法论就能闹明白了。</p>
-<h2 id="基础概念">基础概念</h2><p>一个典型的面向对象语言的类型系统通常都会包含以下几个概念：</p>
-<ul>
-<li>基础数据类型：如整数、浮点数、布尔、字符串等</li>
-<li>复杂数据类型：如数组、struct/class、指针等</li>
-<li>“万物之源”类型：如Java/C#里面的<code>Object</code>类型</li>
-</ul>
-<h2 id="类型约束">类型约束</h2><p>以上概念只是对类型本身的分类，而在对类型的约束方面，可体现出一门语言的面向对象方法论。例如：</p>
-<p>C++中没有“万物之源”类型，也没有接口。在函数签名中指定class是它主要的类型约束方式，使用template进行元编程可以当一点duck typing来看（不严谨）。</p>
-<p>C#和Java中的“万物之源”类型是<code>Object</code>，这一点上C#更彻底，因为它的基础数据类型也继承<code>Object</code>而在Java里则不是。C#和Java都有interface，使用class/interface是最常见的类型约束方式。除了在函数签名中约束，C#强大的泛型编程还支持在定义泛型类型的时候约束。</p>
-<p>JavaScript中有一个看起来很像“万物皆为对象”类型的<code>Object</code>，但其实它并不是所有类型的源头，这并不是很严谨。JS反正运行时访问不存在的字段就报错，这带来了不少工程化上的劣势，但是确实也增加了很多编程的灵活性。毕竟动态语言和静态语言的思路还是不一样的。</p>
-<p>由于实际生产中的JS常常会用类似<code>if (typeof obj.method === &#39;function&#39;)</code>来判断一个对象是否包含某个方法/字段，我们可以不严谨地认为JS的类型约束一方面是靠君子协议，一方面是靠“运行时手工duck typing”。</p>
-<h2 id="Go中的结构体">Go中的结构体</h2><p>基础数据类型和复杂数据类型在前作中已经介绍过了，这里就不多唠叨了。</p>
-<p>Go没有class只有struct，不过其struct上也可以定义方法，但看起来很不一样。C++/C#/Java都是在定义一个class的时候就给它定义方法，直观的感受就是成员方法都会在<code>class XXX {}</code>的那一对大括号里面。而Go中struct的成员方法则都是“后来”添加上去的。例如</p>
-<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">// 定义一个<span class="keyword">Person</span>类型</span><br><span class="line">type <span class="keyword">Person</span> struct &#123;</span><br><span class="line">  Name  string</span><br><span class="line">  Age int</span><br><span class="line">&#125;</span><br><span class="line">// 为<span class="keyword">Person</span>类型添加一个成员方法introduce</span><br><span class="line">func (this <span class="keyword">Person</span>) Introduce() &#123;</span><br><span class="line">  fmt.Println(<span class="string">"My name is"</span>, this.Name, <span class="string">"and I'm"</span>, this.Age);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>上面的代码就是给现有类型添加成员方法的办法，参数里虽然叫<code>this</code>但其实只是图这个名字比较熟悉而已，并不是固定的。</p>
-<h2 id="继承">继承</h2><p>Go里没有继承，它用了一种称为“匿名组合”的方式来满足对继承的需要，大概可以理解为<code>Mixin</code>吧。例如</p>
-<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">// 定义一个Coder类型，让它“继承”<span class="keyword">Person</span></span><br><span class="line">type Coder struct &#123;</span><br><span class="line">  <span class="keyword">Person</span></span><br><span class="line">  APM float32</span><br><span class="line">&#125;</span><br><span class="line">// 为Coder类型添加成员方法coding</span><br><span class="line">func (this Coder) Coding() &#123;</span><br><span class="line">  if this.APM &lt; 100 &#123;</span><br><span class="line">    fmt.Println(this.<span class="keyword">Person</span>.Name, <span class="string">"is coding slowly"</span>);</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    fmt.Println(this.<span class="keyword">Person</span>.Name, <span class="string">"is coding fast"</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">jim := Coder&#123;<span class="keyword">Person</span>&#123;<span class="string">"Jim Liu"</span>, 18&#125;, 300&#125;;</span><br><span class="line">jim.Introduce();</span><br><span class="line">jim.Coding();</span><br></pre></td></tr></table></figure>
-<p>这样就让<code>Coder</code>“继承”了<code>Person</code>。</p>
-<h2 id="接口">接口</h2><p>在C#和Java中定义接口，可以用来进行进行类型约束，接口实现表达的是<code>can-do</code>语义，比类型继承的<code>is-a</code>语义更加灵活。</p>
-<p>Go里也使用接口<code>interface</code>来约束类型，不过比C#和Java里的要灵活一些。</p>
-<h3 id="定义接口">定义接口</h3><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="typedef"><span class="keyword">type</span> <span class="type">IGreetable</span> interface <span class="container">&#123;</span><br><span class="line">  <span class="type">Greeting</span>(<span class="title">name</span> <span class="title">string</span>)</span><br><span class="line">&#125;</span></span></span><br></pre></td></tr></table></figure>
-<p>很简单就是写上函数签名。接口可以组合，就像对<code>struct</code>进行匿名组合一样，对<code>interface</code>也可以进行匿名组合。</p>
-<h3 id="实现接口">实现接口</h3><p>C#/Java中一个类型要实现一个接口，需要在声明类型的时候连带声明它实现了哪些接口，然后挨个实现接口所声明的方法，否则编译器会无情拒绝。</p>
-<p>上面说到由于Go的成员方法是在<code>struct</code>定义之后才添加上去的，那么一个<code>struct</code>怎么才算实现一个接口呢？Go用了一种我个人称它叫“编译时duck typing”的约束，就是说一个<code>struct</code>只要它拥有的成员函数满足一个<code>interface</code>的定义，那它就可以满足该接口的约束，例如：</p>
-<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">func (this <span class="keyword">Person</span>) Greeting(name string) &#123;</span><br><span class="line">  fmt.Println(<span class="string">"Hello"</span>, name);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这样就让<code>Person</code>实现了<code>IGreetable</code>接口，可以<code>var gre IGreetable = Coder{Person{&quot;Jim Liu&quot;, 18}, 300};</code>了。</p>
-<p>Go中的“万物之源”类型就是空接口<code>interface{}</code>，这个……在网上基本对它都是贬义，因为它就像C/C++里面的<code>void*</code>一样泛滥。</p>
-<h2 id="泛型">泛型</h2><p>为什么<code>interface{}</code>会泛滥？因为Go没有泛型。我了个去，作为一门现代静态语言竟然没有泛型？没有泛型的情况下，<code>interface{}</code>就很容易满天飞。</p>
-<p>与此同时，安全的类型转换也是有必要的，在C#中做安全类型转换可以这么做：</p>
-<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ICodable coder = <span class="keyword">person</span> as ICodable;</span><br><span class="line">if (coder != null) &#123;</span><br><span class="line">  coder.Coding();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>Go搞了一个叫“接口查询”的东西，跟上面比较像</p>
-<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">func tryCoding(<span class="keyword">person</span> IGreetable) &#123;</span><br><span class="line">  if coder, ok := <span class="keyword">person</span>.(ICodable); ok &#123;</span><br><span class="line">    coder.Coding();</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    fmt.Println(<span class="string">"Oops, not a coder."</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>上面代码里那个<code>person.(ICodable)</code>就是一个“接口查询”，这个嘛我觉得倒是挺恶心的。</p>
-<h2 id="小结">小结</h2><p>Go虽然没有常见的class、继承、虚函数等概念，但是通过匿名组合大概实现了继承和虚函数的效果。</p>
-<p>Go的接口是先定义后实现的，这样一旦定义了一个新接口，只要它的签名和某些已有类型能match上，那么旧类型也可以当新接口实例来用，比较灵活。</p>
-<p>Go没有泛型，少了一种现代静态语言的元编程和类型约束的利器，真是啧啧啧，这个实在不应该，不知道以后打不打算引入。</p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>伟大领袖毛主席说，烂尾是不好的。虽然学习Go对我而言多半是玩票性质的，但是既然坑已经挖了就还是先安心填吧，反正快过年了，年前尽量就不要留遗憾了嘛对不对。</p>
-<p>这一篇将主要介绍Go当中的类型系统和面向对象编程实现。</p>]]>
     
     </summary>
     
